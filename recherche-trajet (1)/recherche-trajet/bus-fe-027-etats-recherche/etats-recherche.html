@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-027 – Aucun résultat, quota atteint et erreurs</title>
+  <link rel="stylesheet" href="etats-recherche.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Boutons de TEST : chacun simule une situation -->
+  <div id="tests"></div>
+
+  <!-- Zone de message : aria-live => le lecteur d'écran annonce le changement -->
+  <section id="message" role="status" aria-live="polite">
+    <p id="message-icone" aria-hidden="true"></p>
+    <h2 id="message-titre"></h2>
+    <p id="message-detail"></p>
+    <button id="message-action" class="principal" type="button" hidden>Se connecter</button>
+  </section>
+</main>
+
+  <script src="etats-recherche.js"></script>
+</body>
+</html>

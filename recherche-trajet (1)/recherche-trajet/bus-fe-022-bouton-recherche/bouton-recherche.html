@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-022 – Bouton de recherche de trajet</title>
+  <link rel="stylesheet" href="bouton-recherche.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Deux champs simplifiés (les vrais champs sont les tâches 018 et 019) -->
+  <label for="depart">Départ</label>
+  <select id="depart"><option value="">— Choisir —</option></select>
+  <p id="erreur-depart" class="erreur" role="alert"></p>
+
+  <label for="destination">Destination</label>
+  <select id="destination"><option value="">— Choisir —</option></select>
+  <p id="erreur-destination" class="erreur" role="alert"></p>
+
+  <button id="rechercher" class="principal" type="button">Rechercher un trajet</button>
+  <p id="statut" role="status" aria-live="polite"></p>
+</main>
+
+  <script src="bouton-recherche.js"></script>
+</body>
+</html>
