@@ -1,0 +1,69 @@
+<main class="map-page" aria-label="Carte des bus à Maurice">
+  <div
+    #mapContainer
+    class="map"
+    aria-label="Carte interactive : utilisez les flèches pour vous déplacer"
+  ></div>
+
+  <header class="floating-header">
+    <div class="brand" aria-label="MoBis">
+      <span class="brand-icon" aria-hidden="true">🚌</span>
+      <strong>MoBis</strong>
+    </div>
+
+    <div class="status">
+      <span class="visitor">Visiteur</span>
+      <span class="demo">Démonstration</span>
+    </div>
+  </header>
+
+  @if (carteIndisponible()) {
+    <div class="map-warning" role="alert">
+      <span>
+        Le fond de carte ne se charge pas complètement.
+        Vérifiez votre connexion.
+      </span>
+      <button type="button" (click)="reessayer()">
+        Réessayer
+      </button>
+    </div>
+  }
+
+  <nav class="map-controls" aria-label="Commandes de la carte">
+    <button type="button" (click)="zoomer()" aria-label="Zoomer">
+      +
+    </button>
+
+    <button type="button" (click)="dezoomer()" aria-label="Dézoomer">
+      −
+    </button>
+
+    <button
+      type="button"
+      (click)="recentrer()"
+      aria-label="Revenir à la vue de départ"
+      title="Revenir à la vue de départ"
+    >
+      ◎
+    </button>
+  </nav>
+
+  <section class="bottom-panel" aria-label="Informations de la carte">
+    <div class="panel-handle" aria-hidden="true"></div>
+
+    <button class="search-preview" type="button" disabled>
+      <span aria-hidden="true">⌕</span>
+      <span>Où allez-vous ?</span>
+      <span class="arrow" aria-hidden="true">›</span>
+    </button>
+
+    <p class="preview-note">
+      Recherche non disponible dans cette première étape.
+    </p>
+
+    <div class="panel-footer">
+      <span>Bus à proximité</span>
+      <span>Marqueurs à ajouter</span>
+    </div>
+  </section>
+</main>
