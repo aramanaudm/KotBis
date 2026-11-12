@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-021 – Demande de permission GPS</title>
+  <link rel="stylesheet" href="permission-gps.css">
+</head>
+<body>
+<main class="carte">
+  <button id="utiliser-position" type="button">Utiliser ma position</button>
+
+  <!-- Boîte de dialogue : explique POURQUOI on demande la position -->
+  <dialog id="dialogue-gps" aria-labelledby="titre-gps">
+    <h2 id="titre-gps">Utiliser votre position ?</h2>
+    <p>Elle sert uniquement à trouver l'arrêt le plus proche. Elle n'est pas partagée avec les autres usagers.</p>
+    <button id="refuser" type="button">Refuser</button>
+    <button id="autoriser" class="principal" type="button">Autoriser</button>
+  </dialog>
+
+  <p id="resultat-gps" role="status" aria-live="polite"></p>
+</main>
+
+  <script src="permission-gps.js"></script>
+</body>
+</html>

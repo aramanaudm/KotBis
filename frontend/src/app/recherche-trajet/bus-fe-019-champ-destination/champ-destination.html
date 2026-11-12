@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-019 – Champ de sélection de la destination</title>
+  <link rel="stylesheet" href="champ-destination.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Champ de saisie de la destination + liste de suggestions -->
+  <label for="destination">Destination</label>
+  <input id="destination" type="text" autocomplete="off" placeholder="Où allez-vous ?"
+         role="combobox" aria-controls="suggestions-destination" aria-expanded="false">
+  <ul id="suggestions-destination" role="listbox" hidden></ul>
+
+  <!-- Confirme à l'utilisateur (et aux lecteurs d'écran) quel arrêt est choisi -->
+  <p id="selection-destination" aria-live="polite"></p>
+</main>
+
+  <script src="champ-destination.js"></script>
+</body>
+</html>

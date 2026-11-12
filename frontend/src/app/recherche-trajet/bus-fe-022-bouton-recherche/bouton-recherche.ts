@@ -1,0 +1,75 @@
+/**
+ * BUS-FE-022 – Créer le bouton de recherche de trajet
+ * Critère : « Le bouton lance la recherche si les champs sont valides ».
+ *
+ * Règles :
+ *  - départ ET destination obligatoires, et différents ;
+ *  - une saisie invalide affiche un message par champ et NE lance rien ;
+ *  - pendant la recherche le bouton est désactivé (pas de doublons).
+ */
+
+// Remarque TypeScript : « ! » après getElementById signifie « cet élément existe forcément
+// dans le fichier HTML » (sinon TypeScript craint qu'il soit null).
+
+/** Un arrêt (version réduite pour cette tâche). */
+interface Arret {
+  id: string;
+  nom: string;
+}
+
+/** Réponse (simulée) du service de recherche. */
+interface ReponseRecherche {
+  idDepart: string;
+  idDestination: string;
+}
+
+const ARRETS: Arret[] = [
+  { id: 'A01', nom: 'Rose Hill' },
+  { id: 'A02', nom: 'Roches Brunes' },
+  { id: 'A03', nom: 'Camp Levieux' },
+];
+
+const depart = document.getElementById('depart') as HTMLSelectElement;
+const destination = document.getElementById('destination') as HTMLSelectElement;
+const bouton = document.getElementById('rechercher') as HTMLButtonElement;
+const statut = document.getElementById('statut') as HTMLElement;
+
+// Remplit les deux listes avec les arrêts de démonstration.
+for (const liste of [depart, destination]) {
+  for (const a of ARRETS) {
+    liste.add(new Option(a.nom, a.id));
+  }
+}
+
+/** Vérifie les champs ; affiche les erreurs ; retourne true si tout est valide. */
+function valider(): boolean {
+  const erreurDepart = depart.value ? '' : 'Choisissez un départ.';
+  let erreurDestination = destination.value ? '' : 'Choisissez une destination.';
+  if (!erreurDestination && depart.value === destination.value) {
+    erreurDestination = 'Le départ et la destination doivent être différents.';
+  }
+  document.getElementById('erreur-depart')!.textContent = erreurDepart;
+  document.getElementById('erreur-destination')!.textContent = erreurDestination;
+  return !erreurDepart && !erreurDestination;
+}
+
+/** Simule l'appel au serveur (600 ms). À remplacer par le vrai appel d'API. */
+function appelerService(idDepart: string, idDestination: string): Promise<ReponseRecherche> {
+  return new Promise<ReponseRecherche>((resolve) => setTimeout(() => resolve({ idDepart, idDestination }), 600));
+}
+
+bouton.addEventListener('click', async () => {
+  if (!valider()) {
+    return; // saisie invalide : aucune requête n'est envoyée
+  }
+  bouton.disabled = true; // empêche un second clic pendant le chargement
+  statut.textContent = 'Recherche en cours…';
+  try {
+    const reponse = await appelerService(depart.value, destination.value);
+    // On prévient les autres parties de la page (résultats, détail…).
+    document.dispatchEvent(new CustomEvent('recherche-lancee', { detail: reponse }));
+    statut.textContent = 'Recherche terminée.';
+  } finally {
+    bouton.disabled = false; // le bouton est toujours réactivé, même en cas d'échec
+  }
+});

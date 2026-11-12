@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-024 – Détail d'un trajet</title>
+  <link rel="stylesheet" href="detail-trajet.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Boutons de TEST : simulent le choix d'un résultat dans la liste -->
+  <div id="choix-test"></div>
+
+  <!-- Panneau de détail : rempli selon le résultat sélectionné -->
+  <section id="detail" aria-live="polite" hidden>
+    <h2 id="detail-titre"></h2>
+    <p id="detail-contenu"></p>
+    <p id="detail-etat"></p>
+    <button id="fermer" type="button">Fermer</button>
+  </section>
+</main>
+
+  <script src="detail-trajet.js"></script>
+</body>
+</html>
