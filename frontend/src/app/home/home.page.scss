@@ -113,7 +113,7 @@
 .map-controls {
   position: absolute;
   right: 20px;
-  bottom: calc(205px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(275px + env(safe-area-inset-bottom, 0px));
   z-index: 500;
   display: grid;
   gap: 8px;
