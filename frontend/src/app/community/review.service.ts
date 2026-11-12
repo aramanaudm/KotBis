@@ -52,6 +52,28 @@ export class ReviewService {
     this.notice.set('Votre avis a été publié dans cette session de démonstration.');
   }
 
+  async updateReview(id: string, value: string): Promise<void> {
+    this.requireOwner(id);
+    const text = this.validateText(value);
+    this.items.update((items) =>
+      items.map((item) => (item.id === id ? { ...item, text, updatedAt: new Date().toISOString() } : item)),
+    );
+    this.notice.set('Votre avis a été modifié.');
+  }
+
+  async deleteReview(id: string): Promise<void> {
+    this.requireOwner(id);
+    this.items.update((items) => items.filter((item) => item.id !== id));
+    this.notice.set('Votre avis a été supprimé.');
+  }
+
+  private requireOwner(id: string): void {
+    const user = this.session();
+    if (!user || !this.reviews().some((item) => item.id === id && item.userId === user.id)) {
+      throw new Error('Vous pouvez modifier ou supprimer uniquement vos propres avis.');
+    }
+  }
+
   private validateText(value: string): string {
     const text = value.trim();
     if (!text) throw new Error('Votre avis doit contenir du texte.');

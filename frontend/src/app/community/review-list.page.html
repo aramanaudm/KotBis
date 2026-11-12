@@ -19,6 +19,10 @@
         <span class="community-badge">Bus {{ review.busLine }}</span>
       </div>
       <p class="community-review-text">{{ review.text }}</p>
+      @if (review.updatedAt) {
+      <p class="community-note">Modifié le {{ review.updatedAt | date: 'dd/MM/yyyy' : '+0400' }}</p>
+      }
+      <app-review-actions [review]="review" />
     </li>
     }
   </ul>

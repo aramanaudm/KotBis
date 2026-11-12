@@ -1,10 +1,13 @@
-<app-community-dialog title="Donner mon avis" backLink="/home/avis">
+<app-community-dialog [title]="editId ? 'Modifier mon avis' : 'Donner mon avis'" backLink="/home/avis">
   <p class="community-note">Démonstration : les avis sont conservés en mémoire jusqu'au rechargement.</p>
   @if (!user()) {
   <p class="community-notice" role="status">
     Vous devez être connecté pour publier. La connexion sera disponible avec le module de l'équipe.
   </p>
-  }
+  } @if (!canEdit()) {
+  <p role="alert" class="community-error">Cet avis est introuvable ou appartient à un autre compte.</p>
+  <a class="community-button" routerLink="/home/avis">Revenir aux avis</a>
+  } @else {
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="community-field">
       <label for="review-bus">Bus concerné *</label>
@@ -43,8 +46,9 @@
     <div class="community-actions">
       <a class="community-button community-button-outline" routerLink="/home/avis">Annuler</a>
       <button class="community-button" type="submit" [disabled]="!user() || busy()" [attr.aria-busy]="busy()">
-        {{ busy() ? 'Publication…' : "Publier l'avis" }}
+        {{ busy() ? 'Enregistrement…' : editId ? 'Enregistrer' : "Publier l'avis" }}
       </button>
     </div>
   </form>
+  }
 </app-community-dialog>

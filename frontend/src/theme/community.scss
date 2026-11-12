@@ -216,3 +216,16 @@
   border-color: var(--community-border);
   background: var(--community-surface);
 }
+.community-danger {
+  color: #a92332;
+}
+.community-button-danger {
+  background: #a92332;
+  color: #ffffff;
+}
+.community-confirmation {
+  padding: 12px;
+  margin-top: 12px;
+  border: 1px solid var(--community-border);
+  border-radius: var(--community-radius);
+}
