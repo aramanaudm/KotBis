@@ -1,0 +1,12 @@
+<div class="alert-card">
+  <div class="alert-icon">
+    <ion-icon name="warning-outline"></ion-icon>
+  </div>
+  <div class="alert-content">
+    <h4>{{ title }}</h4>
+    <p>{{ message }}</p>
+    @if (linkText) {
+      <a href="#">{{ linkText }}</a>
+    }
+  </div>
+</div>

@@ -1,0 +1,26 @@
+ion-button {
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+
+  &.primary {
+    --background: #10b981;
+    --background-activated: #059669;
+    --color: white;
+  }
+
+  &.outline {
+    --background: transparent;
+    --border-color: #10b981;
+    --border-width: 1.5px;
+    --border-style: solid;
+    --color: #10b981;
+  }
+
+  &.danger {
+    --background: #ef4444;
+    --color: white;
+  }
+}

@@ -1,0 +1,50 @@
+.destination-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .dest-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #ecfdf5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    font-size: 20px;
+
+    &.star {
+      background: #fef3c7;
+      color: #d97706;
+    }
+  }
+
+  .dest-info {
+    flex: 1;
+
+    h4 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: #6b7280;
+    }
+  }
+
+  .chevron {
+    color: #d1d5db;
+    font-size: 18px;
+  }
+}
