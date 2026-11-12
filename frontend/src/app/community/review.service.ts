@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 
 import { COMMUNITY_BUSES } from './community-buses';
 import { COMMUNITY_SESSION } from './community-session';
+import { REVIEW_MAX_LENGTH } from './review.constants';
 import type { Review } from './review.model';
 
 /** Source de démonstration en mémoire. À remplacer par le dépôt HTTP de l'équipe. */
@@ -75,6 +76,9 @@ export class ReviewService {
   }
 
   private validateText(value: string): string {
+    if (value.length > REVIEW_MAX_LENGTH) {
+      throw new Error('Un avis est limité à 600 caractères, espaces compris.');
+    }
     const text = value.trim();
     if (!text) throw new Error('Votre avis doit contenir du texte.');
     return text;

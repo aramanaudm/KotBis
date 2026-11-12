@@ -1,10 +1,12 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { COMMUNITY_BUSES } from './community-buses';
 import { CommunityDialogComponent } from './community-dialog.component';
 import { COMMUNITY_SESSION } from './community-session';
+import { REVIEW_MAX_LENGTH } from './review.constants';
 import { ReviewService } from './review.service';
 
 @Component({
@@ -17,6 +19,7 @@ export class ReviewFormPage {
   readonly buses = COMMUNITY_BUSES;
   readonly busy = signal(false);
   readonly error = signal('');
+  readonly maxLength = REVIEW_MAX_LENGTH;
   private readonly reviews = inject(ReviewService);
   private readonly router = inject(Router);
   readonly editId = inject(ActivatedRoute).snapshot.paramMap.get('id');
@@ -27,8 +30,10 @@ export class ReviewFormPage {
   );
   readonly form = inject(FormBuilder).nonNullable.group({
     busId: ['', Validators.required],
-    text: ['', [Validators.required, Validators.pattern(/\S/)]],
+    text: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(REVIEW_MAX_LENGTH)]],
   });
+  private readonly textValue = toSignal(this.form.controls.text.valueChanges, { initialValue: '' });
+  readonly characterCount = computed(() => this.textValue().length);
 
   constructor() {
     effect(() => {

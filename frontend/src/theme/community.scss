@@ -229,3 +229,11 @@
   border: 1px solid var(--community-border);
   border-radius: var(--community-radius);
 }
+.community-character-count {
+  text-align: right;
+  color: var(--community-muted);
+  font-size: 13px;
+}
+.community-character-count.community-error {
+  color: #a92332;
+}
