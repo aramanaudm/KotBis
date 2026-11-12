@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
     children: [
       {
+        path: 'avis/nouveau',
+        loadComponent: () => import('./community/review-form.page').then((m) => m.ReviewFormPage),
+      },
+      {
         path: 'avis',
         loadComponent: () => import('./community/review-list.page').then((m) => m.ReviewListPage),
       },

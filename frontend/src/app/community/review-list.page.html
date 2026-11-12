@@ -1,4 +1,8 @@
 <app-community-dialog title="Les avis">
+  <a class="community-button" routerLink="/home/avis/nouveau">Donner mon avis</a>
+  @if (notice()) {
+  <p role="status">{{ notice() }}</p>
+  }
   <p class="community-note">Avis de démonstration. Ils ne proviennent pas d'un service en ligne.</p>
   @if (reviews().length === 0) {
   <p role="status">Aucun avis pour le moment.</p>
