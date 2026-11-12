@@ -35,7 +35,7 @@ describe('SCRUM-64 — formulaire de signalement', () => {
   it('enregistre une seule fois et affiche le reçu', async () => {
     const fixture = TestBed.createComponent(ReportFormPage);
     const page = fixture.componentInstance;
-    page.form.setValue({ busId: 'b1' });
+    page.form.setValue({ busId: 'b1', categoryId: 'c1' });
     await Promise.all([page.submit(), page.submit()]);
     fixture.detectChanges();
     expect(TestBed.inject(ReportService).reports()).toHaveLength(1);
@@ -49,7 +49,7 @@ describe('SCRUM-64 — formulaire de signalement', () => {
   it('conserve la sélection lors d’une erreur', async () => {
     const fixture = TestBed.createComponent(ReportFormPage);
     const page = fixture.componentInstance;
-    page.form.setValue({ busId: 'b1' });
+    page.form.setValue({ busId: 'b1', categoryId: 'c1' });
     vi.spyOn(TestBed.inject(ReportService), 'createReport').mockRejectedValue(new Error('Indisponible'));
     await page.submit();
     expect(page.form.controls.busId.value).toBe('b1');
