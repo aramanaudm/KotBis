@@ -1,0 +1,43 @@
+/* ---------------------------------------------------------------------------
+   Charte reprise des maquettes du cahier des charges (annexe 10 : Créer mon compte,
+   Connexion, Mon espace, Paramètres) : accent vert menthe, texte bleu nuit,
+   champs et boutons très arrondis, fond gris clair, mode sombre bleu ardoise.
+   --------------------------------------------------------------------------- */
+:root {
+  --accent: #2ED6A1;          /* vert des boutons principaux (maquettes) */
+  --accent-pale: #E6FAF3;     /* fond d'un élément sélectionné */
+  --sur-accent: #17243A;      /* texte posé sur le vert */
+  --texte: #1B2A3D;           /* bleu nuit des titres et libellés */
+  --texte-doux: #6B7686;      /* textes secondaires, placeholders */
+  --fond: #F6F7F8;            /* fond de page */
+  --carte: #FFFFFF;           /* fond des cartes et des champs */
+  --bordure: #E1E5EA;
+  --erreur: #B3261E;
+  --focus: #1766DF;           /* bleu du commutateur / du focus */
+  --rayon: 12px;
+}
+/* Mode sombre : suit le réglage de l'appareil (les maquettes prévoient un mode sombre). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent-pale: #1E4036; --texte: #E6EBF1; --texte-doux: #9AA7B6;
+    --fond: #1C2938; --carte: #243447; --bordure: #35475A; --erreur: #FF8A80;
+  }
+}
+body { font-family: Ubuntu, system-ui, sans-serif; background: var(--fond); color: var(--texte); margin: 0; padding: 16px; }
+/* La « carte » arrondie qui contient chaque écran, comme dans les maquettes. */
+.carte { max-width: 420px; margin: 0 auto; background: var(--carte); border-radius: 20px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+h2 { margin: 0 0 12px; font-size: 1.25rem; }
+label { display: block; font-weight: 700; font-size: .85rem; margin-bottom: 4px; }
+input, select { font: inherit; color: var(--texte); background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+input::placeholder { color: var(--texte-doux); }
+/* Boutons : secondaire (blanc, bordé) par défaut ; « .principal » = vert menthe. */
+button { font: inherit; font-weight: 700; color: var(--texte); background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--rayon); padding: 12px; width: 100%; box-sizing: border-box; margin-bottom: 8px; cursor: pointer; }
+button.principal { background: var(--accent); color: var(--sur-accent); border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+ul { list-style: none; padding: 0; margin: 0 0 8px; }
+/* Le focus doit rester visible (accessibilité clavier). */
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* --- Spécifique à cette tâche --- */
+#suggestions-destination button { font-weight: 400; border-radius: var(--rayon); text-align: left; background: var(--carte); border: 1px solid var(--bordure); margin-bottom: 0; }
+#suggestions-destination small { color: var(--texte-doux); } /* la zone, en plus petit */
