@@ -1,0 +1,50 @@
+<app-community-dialog title="Donner mon avis" backLink="/home/avis">
+  <p class="community-note">Démonstration : les avis sont conservés en mémoire jusqu'au rechargement.</p>
+  @if (!user()) {
+  <p class="community-notice" role="status">
+    Vous devez être connecté pour publier. La connexion sera disponible avec le module de l'équipe.
+  </p>
+  }
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="community-field">
+      <label for="review-bus">Bus concerné *</label>
+      <select
+        id="review-bus"
+        formControlName="busId"
+        aria-describedby="review-bus-error"
+        [attr.aria-invalid]="form.controls.busId.touched && form.controls.busId.invalid"
+      >
+        <option value="">Sélectionnez un bus</option>
+        @for (bus of buses; track bus.id) {
+        <option [value]="bus.id">Ligne {{ bus.line }} — {{ bus.destination }}</option>
+        }
+      </select>
+      <p id="review-bus-error" class="community-error">
+        @if (form.controls.busId.touched && form.controls.busId.invalid) { Sélectionnez un bus. }
+      </p>
+    </div>
+    <div class="community-field">
+      <label for="review-text">Votre avis *</label>
+      <textarea
+        id="review-text"
+        formControlName="text"
+        rows="6"
+        aria-describedby="review-text-error"
+        [attr.aria-invalid]="form.controls.text.touched && form.controls.text.invalid"
+        placeholder="Partagez votre expérience (retard, propreté, chauffeur...)"
+      ></textarea>
+      <p id="review-text-error" class="community-error">
+        @if (form.controls.text.touched && form.controls.text.invalid) { Saisissez un avis contenant du texte. }
+      </p>
+    </div>
+    @if (error()) {
+    <p role="alert" class="community-error">{{ error() }}</p>
+    }
+    <div class="community-actions">
+      <a class="community-button community-button-outline" routerLink="/home/avis">Annuler</a>
+      <button class="community-button" type="submit" [disabled]="!user() || busy()" [attr.aria-busy]="busy()">
+        {{ busy() ? 'Publication…' : "Publier l'avis" }}
+      </button>
+    </div>
+  </form>
+</app-community-dialog>
