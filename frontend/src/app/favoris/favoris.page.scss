@@ -153,6 +153,27 @@ p {
   text-decoration: underline;
 }
 
+button.action {
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: var(--mint);
+  cursor: pointer;
+}
+
+.feedback:not(:empty) {
+  margin: 24px auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: #e6f5eb;
+  color: #174e2f;
+  text-align: center;
+}
+
+.feedback.feedback-error {
+  background: #fce8e8;
+  color: #8b1b1b;
+}
+
 .favorites {
   display: grid;
   gap: 12px;

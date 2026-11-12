@@ -19,8 +19,12 @@
       <h2 id="titre-recherche">Rechercher un trajet</h2>
       @if (trajetSelectionne(); as selection) {
       <p>{{ selection.depart }} → {{ selection.destination }}</p>
-      }
-      <p>La recherche sera disponible dans l’application KotBis.</p>
+      <button class="action" type="button" (click)="ajouter(selection)">Ajouter aux favoris</button>
+      } @else { @for (trajet of trajetsDisponibles; track trajet.id) {
+      <a class="action" routerLink="/favoris" [queryParams]="{ vue: 'recherche', etat: etat(), trajet: trajet.id }">
+        {{ trajet.depart }} → {{ trajet.destination }}
+      </a>
+      } }
       <a class="action" routerLink="/favoris" [queryParams]="{ etat: etat() }">Revenir aux favoris</a>
     </section>
     } @default { @if (favoris().length) {
@@ -58,6 +62,7 @@
       >
     </section>
     } } }
+    <p class="feedback" role="status" [class.feedback-error]="retour()?.erreur">{{ retour()?.message }}</p>
     <p class="sr-only" role="status">{{ annonce() }}</p>
   </main>
 </ion-content>
