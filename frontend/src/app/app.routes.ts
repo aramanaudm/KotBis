@@ -8,7 +8,14 @@ export const routes: Routes = [
   {
     path: 'home',
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
+    children: [
+      {
+        path: 'avis',
+        loadComponent: () => import('./community/review-list.page').then((m) => m.ReviewListPage),
+      },
+    ],
   },
+  { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
   {
     path: '',
     redirectTo: 'favoris',
