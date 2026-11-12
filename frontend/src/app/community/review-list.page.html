@@ -1,0 +1,29 @@
+<app-community-dialog title="Les avis">
+  <a class="community-button" routerLink="/home/avis/nouveau">Donner mon avis</a>
+  @if (notice()) {
+  <p role="status">{{ notice() }}</p>
+  }
+  <p class="community-note">Avis de démonstration. Ils ne proviennent pas d'un service en ligne.</p>
+  @if (reviews().length === 0) {
+  <p role="status">Aucun avis pour le moment.</p>
+  }
+  <ul class="community-reviews" aria-label="Avis publics">
+    @for (review of reviews(); track review.id) {
+    <li class="community-review">
+      <div class="community-review-heading">
+        <span class="community-avatar" aria-hidden="true">{{ review.userName.charAt(0).toUpperCase() }}</span>
+        <div class="community-author">
+          <strong>{{ review.userName }}</strong>
+          <time [attr.datetime]="review.createdAt">{{ review.createdAt | date: 'dd/MM/yyyy' : '+0400' }}</time>
+        </div>
+        <span class="community-badge">Bus {{ review.busLine }}</span>
+      </div>
+      <p class="community-review-text">{{ review.text }}</p>
+      @if (review.updatedAt) {
+      <p class="community-note">Modifié le {{ review.updatedAt | date: 'dd/MM/yyyy' : '+0400' }}</p>
+      }
+      <app-review-actions [review]="review" />
+    </li>
+    }
+  </ul>
+</app-community-dialog>
