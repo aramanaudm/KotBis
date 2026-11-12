@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
     children: [
       {
+        path: 'signaler',
+        loadComponent: () => import('./community/report-form.page').then((m) => m.ReportFormPage),
+      },
+      {
         path: 'avis/modifier/:id',
         loadComponent: () => import('./community/review-form.page').then((m) => m.ReviewFormPage),
       },
@@ -24,6 +28,7 @@ export const routes: Routes = [
     ],
   },
   { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
+  { path: 'signaler', redirectTo: 'home/signaler', pathMatch: 'full' },
   {
     path: '',
     redirectTo: 'favoris',
