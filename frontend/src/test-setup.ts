@@ -1,4 +1,10 @@
 // Polyfills for running unit tests under jsdom (the default Vitest environment).
+// jsdom ne gère pas la top layer des fenêtres natives.
+if (!HTMLDialogElement.prototype.showModal) {
+  HTMLDialogElement.prototype.showModal = function () {
+    this.open = true;
+  };
+}
 // Ionic components such as ion-menu and ion-split-pane query `window.matchMedia`,
 // which jsdom does not implement.
 if (!window.matchMedia) {

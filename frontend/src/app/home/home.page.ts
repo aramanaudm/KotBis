@@ -1,15 +1,12 @@
-import {
-  Component,
-  ElementRef,
-  OnDestroy,
-  ViewChild,
-  signal,
-} from '@angular/core';
+import type { ElementRef, OnDestroy } from '@angular/core';
+import { Component, ViewChild, signal } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
@@ -37,14 +34,10 @@ export class HomePage implements OnDestroy {
       zoomControl: false,
     });
 
-    this.tiles = L.tileLayer(
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    );
+    this.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    });
 
     this.tiles.on('tileerror', () => {
       this.carteIndisponible.set(true);
