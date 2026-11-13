@@ -1,0 +1,18 @@
+﻿{
+  "APP": {
+    "TITLE": "KotBis"
+  },
+  "NAV": {
+    "HOME": "Accueil",
+    "MAP": "Carte",
+    "PROFILE": "Profil"
+  },
+  "HOME": {
+    "WELCOME": "Bienvenue sur KotBis",
+    "SEARCH": "Rechercher un trajet ou un bus"
+  },
+  "AUTH": {
+    "LOGIN": "Connexion",
+    "REGISTER": "Inscription"
+  }
+}

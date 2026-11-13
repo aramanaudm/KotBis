@@ -1,0 +1,18 @@
+﻿{
+  "APP": {
+    "TITLE": "KotBis"
+  },
+  "NAV": {
+    "HOME": "Home",
+    "MAP": "Map",
+    "PROFILE": "Profile"
+  },
+  "HOME": {
+    "WELCOME": "Welcome to KotBis",
+    "SEARCH": "Search a trip or a bus"
+  },
+  "AUTH": {
+    "LOGIN": "Login",
+    "REGISTER": "Register"
+  }
+}
