@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.balance-badge {
+  padding: 5px 9px;
+  color: #56708c;
+  font-size: 10px;
+  background: #e4ecf5;
+  border-radius: 5px;
+}
+
+.history-card {
+  margin-top: 22px;
+}
+
+.adjust-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 14px 15px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.adjust-summary b {
+  font-size: 12px;
+}
+
+.adjust-summary span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.adjust-hint {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+app-form-field + app-form-field {
+  display: block;
+  margin-top: 15px;
+}
+
+textarea {
+  resize: vertical;
+}
