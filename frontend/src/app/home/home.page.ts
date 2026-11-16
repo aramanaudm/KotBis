@@ -13,6 +13,8 @@ interface ArretDemo {
   position: L.LatLngTuple;
   direction?: string;
   informations?: string;
+  miseAJour?: string | null;
+  source?: string | null;
 }
 
 interface BusDemo {
@@ -23,6 +25,8 @@ interface BusDemo {
   ligne?: string | null;
   direction?: string | null;
   etat?: string | null;
+  miseAJour?: string | null;
+  source?: string | null;
 }
 
 @Component({
@@ -49,7 +53,18 @@ export class HomePage implements OnDestroy {
 
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
 
-  // Arrêts entièrement fictifs pour la démonstration.
+  private readonly formatDateMaurice = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Indian/Mauritius',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  // Toutes les données renseignées sont fictives,
+  // y compris les dates et les sources de démonstration.
   private readonly arretsDemo: ArretDemo[] = [
     {
       id: 1,
@@ -57,6 +72,8 @@ export class HomePage implements OnDestroy {
       position: [-20.229, 57.463],
       direction: 'Vers le terminus démo Nord',
       informations: 'Point de départ du parcours de démonstration.',
+      miseAJour: '2026-11-16T10:00:00+04:00',
+      source: 'Jeu de données fictives KotBis',
     },
     {
       id: 2,
@@ -78,8 +95,8 @@ export class HomePage implements OnDestroy {
     },
   ];
 
-  // Bus entièrement fictifs pour tester l’affichage.
-  // Les champs manquants ne sont pas complétés automatiquement.
+  // Les champs absents restent absents :
+  // aucune valeur de remplacement n’est inventée.
   private readonly busDemo: BusDemo[] = [
     {
       id: 1,
@@ -89,6 +106,8 @@ export class HomePage implements OnDestroy {
       ligne: 'Ligne démo A',
       direction: 'Vers le terminus démo Nord',
       etat: 'En service — simulation',
+      miseAJour: '2026-11-16T10:00:00+04:00',
+      source: 'Jeu de données fictives KotBis',
     },
     {
       id: 2,
@@ -96,13 +115,11 @@ export class HomePage implements OnDestroy {
       position: [-20.234, 57.469],
       numero: 'DEMO-002',
       ligne: 'Ligne démo B',
-      // Direction et état non renseignés.
     },
     {
       id: 3,
       nom: 'Bus démo 3',
       position: [-20.238, 57.472],
-      // Numéro, ligne, direction et état non renseignés.
     },
   ];
 
@@ -247,6 +264,22 @@ export class HomePage implements OnDestroy {
     this.busSelectionne.set(null);
     this.marqueurSelectionne?.getElement()?.focus();
     this.marqueurSelectionne = undefined;
+  }
+
+  formaterDate(valeur?: string | null): string {
+    const texte = valeur?.trim();
+
+    if (!texte) {
+      return 'Non disponible';
+    }
+
+    const date = new Date(texte);
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Date non valide';
+    }
+
+    return this.formatDateMaurice.format(date);
   }
 
   zoomer(): void {

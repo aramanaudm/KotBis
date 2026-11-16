@@ -104,7 +104,7 @@
       </div>
 
       <p class="preview-note">
-        Démonstration — arrêt, position et informations fictifs.
+        Démonstration — arrêt, position, informations et horodatage fictifs.
       </p>
 
       <dl class="stop-details">
@@ -120,6 +120,12 @@
             'Aucune information complémentaire disponible.'
           }}
         </dd>
+
+        <dt>Mise à jour — heure de Maurice</dt>
+        <dd>{{ formaterDate(arret.miseAJour) }}</dd>
+
+        <dt>Source</dt>
+        <dd>{{ arret.source?.trim() || 'Non disponible' }}</dd>
       </dl>
     } @else if (busSelectionne(); as bus) {
       <div class="stop-heading">
@@ -136,7 +142,7 @@
       </div>
 
       <p class="preview-note">
-        Démonstration — bus, position et informations renseignées fictifs,
+        Démonstration — bus, position, informations et horodatage fictifs,
         sans suivi en temps réel.
       </p>
 
@@ -152,6 +158,12 @@
 
         <dt>État</dt>
         <dd>{{ bus.etat?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Mise à jour — heure de Maurice</dt>
+        <dd>{{ formaterDate(bus.miseAJour) }}</dd>
+
+        <dt>Source</dt>
+        <dd>{{ bus.source?.trim() || 'Non disponible' }}</dd>
 
         <dt>Identifiant de démonstration</dt>
         <dd>BUS-DEMO-{{ bus.id }}</dd>
