@@ -57,7 +57,9 @@
         >Rechercher un trajet</a
       >
     </section>
-    } } }
+    } } } @if (erreur()) {
+    <p role="alert">{{ erreur() }}</p>
+    }
     <p class="sr-only" role="status">{{ annonce() }}</p>
   </main>
 </ion-content>
