@@ -1,0 +1,17 @@
+<ion-content>
+  <main class="shell">
+    <a routerLink="/favoris">← Retour aux favoris</a>
+    <h1>Gestion des alertes</h1>
+    <p>Trajets d’exemple</p>
+    <ul aria-label="Alertes de trajet">
+      @for (alerte of alertes; track alerte.id) {
+      <li>
+        <span class="trajet">{{ alerte.trajet }}</span>
+        <span class="etat" [class.active]="alerte.active"> {{ alerte.active ? 'Active' : 'Inactive' }} </span>
+      </li>
+      } @empty {
+      <li>Aucune alerte enregistrée.</li>
+      }
+    </ul>
+  </main>
+</ion-content>

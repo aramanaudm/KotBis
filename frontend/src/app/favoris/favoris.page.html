@@ -23,7 +23,9 @@
       <p>La recherche sera disponible dans l’application KotBis.</p>
       <a class="action" routerLink="/favoris" [queryParams]="{ etat: etat() }">Revenir aux favoris</a>
     </section>
-    } @default { @if (favoris().length) {
+    } @default {
+    <a class="action" routerLink="/alertes">Gérer les alertes</a>
+    @if (favoris().length) {
     <ul class="favorites" aria-label="Trajets favoris enregistrés">
       @for (favori of favoris(); track favori.id) {
       <li class="favorite">

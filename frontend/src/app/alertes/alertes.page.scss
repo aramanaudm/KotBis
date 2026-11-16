@@ -1,0 +1,65 @@
+ion-content {
+  --background: #fdfdfd;
+  --color: #0b1930;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.shell {
+  width: min(100% - 32px, 832px);
+  margin-inline: auto;
+  padding-block: 40px 32px;
+}
+
+a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #00764f;
+}
+
+h1 {
+  margin-block: 12px 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+p {
+  margin-block: 0 16px;
+  color: #45536a;
+}
+
+ul {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dce4e9;
+  border-radius: 12px;
+}
+
+.trajet {
+  font-weight: 600;
+}
+
+.etat {
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: #edf0f3;
+  color: #45536a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.etat.active {
+  background: #eaf9f3;
+  color: #006344;
+}
