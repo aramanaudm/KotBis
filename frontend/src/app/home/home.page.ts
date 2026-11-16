@@ -19,6 +19,10 @@ interface BusDemo {
   id: number;
   nom: string;
   position: L.LatLngTuple;
+  numero?: string | null;
+  ligne?: string | null;
+  direction?: string | null;
+  etat?: string | null;
 }
 
 @Component({
@@ -45,7 +49,7 @@ export class HomePage implements OnDestroy {
 
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
 
-  // Données fictives pour la démonstration.
+  // Arrêts entièrement fictifs pour la démonstration.
   private readonly arretsDemo: ArretDemo[] = [
     {
       id: 1,
@@ -74,21 +78,31 @@ export class HomePage implements OnDestroy {
     },
   ];
 
+  // Bus entièrement fictifs pour tester l’affichage.
+  // Les champs manquants ne sont pas complétés automatiquement.
   private readonly busDemo: BusDemo[] = [
     {
       id: 1,
       nom: 'Bus démo 1',
       position: [-20.232, 57.461],
+      numero: 'DEMO-001',
+      ligne: 'Ligne démo A',
+      direction: 'Vers le terminus démo Nord',
+      etat: 'En service — simulation',
     },
     {
       id: 2,
       nom: 'Bus démo 2',
       position: [-20.234, 57.469],
+      numero: 'DEMO-002',
+      ligne: 'Ligne démo B',
+      // Direction et état non renseignés.
     },
     {
       id: 3,
       nom: 'Bus démo 3',
       position: [-20.238, 57.472],
+      // Numéro, ligne, direction et état non renseignés.
     },
   ];
 

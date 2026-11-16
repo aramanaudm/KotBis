@@ -136,10 +136,23 @@
       </div>
 
       <p class="preview-note">
-        Démonstration — bus et position fictifs, sans suivi en temps réel.
+        Démonstration — bus, position et informations renseignées fictifs,
+        sans suivi en temps réel.
       </p>
 
       <dl class="stop-details">
+        <dt>Numéro du bus</dt>
+        <dd>{{ bus.numero?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Ligne</dt>
+        <dd>{{ bus.ligne?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Direction</dt>
+        <dd>{{ bus.direction?.trim() || 'Non disponible' }}</dd>
+
+        <dt>État</dt>
+        <dd>{{ bus.etat?.trim() || 'Non disponible' }}</dd>
+
         <dt>Identifiant de démonstration</dt>
         <dd>BUS-DEMO-{{ bus.id }}</dd>
 
@@ -148,9 +161,6 @@
           Latitude : {{ bus.position[0] }}<br />
           Longitude : {{ bus.position[1] }}
         </dd>
-
-        <dt>Informations complémentaires</dt>
-        <dd>Aucune information complémentaire disponible.</dd>
       </dl>
     } @else {
       <button class="search-preview" type="button" disabled>
