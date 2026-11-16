@@ -36,6 +36,7 @@ export class HomePage implements OnDestroy {
 
   readonly carteIndisponible = signal(false);
   readonly arretSelectionne = signal<ArretDemo | null>(null);
+  readonly busSelectionne = signal<BusDemo | null>(null);
 
   private map?: L.Map;
   private tiles?: L.TileLayer;
@@ -44,7 +45,7 @@ export class HomePage implements OnDestroy {
 
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
 
-  // Toutes les données suivantes sont fictives.
+  // Données fictives pour la démonstration.
   private readonly arretsDemo: ArretDemo[] = [
     {
       id: 1,
@@ -122,6 +123,14 @@ export class HomePage implements OnDestroy {
     this.map.invalidateSize();
   }
 
+  private donnerFocusFiche(): void {
+    clearTimeout(this.focusTimer);
+
+    this.focusTimer = setTimeout(() => {
+      this.ficheTitre?.nativeElement.focus();
+    }, 0);
+  }
+
   private afficherArrets(): void {
     if (!this.map) {
       return;
@@ -145,22 +154,12 @@ export class HomePage implements OnDestroy {
 
       marqueur.on('click', () => {
         this.map?.closePopup();
-        this.marqueurSelectionne = marqueur;
+        this.busSelectionne.set(null);
         this.arretSelectionne.set(arret);
-
-        clearTimeout(this.focusTimer);
-        this.focusTimer = setTimeout(() => {
-          this.ficheTitre?.nativeElement.focus();
-        }, 0);
+        this.marqueurSelectionne = marqueur;
+        this.donnerFocusFiche();
       });
     }
-  }
-
-  fermerFiche(): void {
-    clearTimeout(this.focusTimer);
-    this.arretSelectionne.set(null);
-    this.marqueurSelectionne?.getElement()?.focus();
-    this.marqueurSelectionne = undefined;
   }
 
   private afficherBus(): void {
@@ -210,33 +209,30 @@ export class HomePage implements OnDestroy {
     });
 
     for (const bus of this.busDemo) {
-      const contenu = document.createElement('div');
-
-      const titre = document.createElement('strong');
-      titre.textContent = bus.nom;
-
-      const description = document.createElement('p');
-      description.textContent =
-        'Démonstration — position fictive, sans suivi en temps réel.';
-
-      contenu.append(titre, description);
-
       const marqueur = L.marker(bus.position, {
         icon: iconeBus,
-        title: `${bus.nom} — Démonstration`,
+        title: `${bus.nom} — ouvrir la fiche de démonstration`,
         alt: `${bus.nom} — position fictive`,
         keyboard: true,
         riseOnHover: true,
-      })
-        .addTo(this.map)
-        .bindPopup(contenu);
+      }).addTo(this.map);
 
       marqueur.on('click', () => {
-        clearTimeout(this.focusTimer);
+        this.map?.closePopup();
         this.arretSelectionne.set(null);
-        this.marqueurSelectionne = undefined;
+        this.busSelectionne.set(bus);
+        this.marqueurSelectionne = marqueur;
+        this.donnerFocusFiche();
       });
     }
+  }
+
+  fermerFiche(): void {
+    clearTimeout(this.focusTimer);
+    this.arretSelectionne.set(null);
+    this.busSelectionne.set(null);
+    this.marqueurSelectionne?.getElement()?.focus();
+    this.marqueurSelectionne = undefined;
   }
 
   zoomer(): void {
@@ -261,5 +257,6 @@ export class HomePage implements OnDestroy {
     this.map?.remove();
     this.map = undefined;
     this.tiles = undefined;
+    this.marqueurSelectionne = undefined;
   }
 }
