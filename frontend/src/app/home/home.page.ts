@@ -7,6 +7,12 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 
+interface ArretDemo {
+  id: number;
+  nom: string;
+  position: L.LatLngTuple;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -22,8 +28,31 @@ export class HomePage implements OnDestroy {
   private map?: L.Map;
   private tiles?: L.TileLayer;
 
-  // Vue initiale proposée pour la zone pilote.
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
+
+  // Données fictives : ces points ne représentent pas des arrêts officiels.
+  private readonly arretsDemo: ArretDemo[] = [
+    {
+      id: 1,
+      nom: 'Arrêt démo A',
+      position: [-20.229, 57.463],
+    },
+    {
+      id: 2,
+      nom: 'Arrêt démo B',
+      position: [-20.231, 57.47],
+    },
+    {
+      id: 3,
+      nom: 'Arrêt démo C',
+      position: [-20.237, 57.464],
+    },
+    {
+      id: 4,
+      nom: 'Arrêt démo D',
+      position: [-20.235, 57.474],
+    },
+  ];
 
   ionViewDidEnter(): void {
     if (this.map) {
@@ -51,7 +80,44 @@ export class HomePage implements OnDestroy {
     });
 
     this.tiles.addTo(this.map);
+    this.afficherArrets();
     this.map.invalidateSize();
+  }
+
+  private afficherArrets(): void {
+    if (!this.map) {
+      return;
+    }
+
+    const iconeArret = L.divIcon({
+      className: 'mobis-stop-marker',
+      html: '<span class="mobis-stop-dot" aria-hidden="true"></span>',
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -12],
+    });
+
+    for (const arret of this.arretsDemo) {
+      const contenu = document.createElement('div');
+
+      const titre = document.createElement('strong');
+      titre.textContent = arret.nom;
+
+      const description = document.createElement('p');
+      description.textContent = 'Démonstration — position fictive.';
+
+      contenu.append(titre, description);
+
+      L.marker(arret.position, {
+        icon: iconeArret,
+        title: `${arret.nom} — Démonstration`,
+        alt: `${arret.nom} — position fictive`,
+        keyboard: true,
+        riseOnHover: true,
+      })
+        .addTo(this.map)
+        .bindPopup(contenu);
+    }
   }
 
   zoomer(): void {
