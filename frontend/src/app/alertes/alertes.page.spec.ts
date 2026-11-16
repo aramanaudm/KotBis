@@ -47,11 +47,16 @@ describe('AlertesPage', () => {
     expect(alerte?.textContent).toContain('Rose Hill');
     expect(alerte?.textContent).toContain('07:30 · Lundi à vendredi');
     expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
+    const detail = alerte?.querySelector('details');
+    detail?.querySelector('summary')?.click();
+    expect(detail?.open).toBe(true);
+    expect(detail?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
 
     const [modifier, changerEtat] = page.querySelectorAll<HTMLButtonElement>('li:last-child .actions button');
     changerEtat.click();
     fixture.detectChanges();
     expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Inactive');
+    expect(detail?.querySelector('.etat')?.textContent?.trim()).toBe('Inactive');
 
     modifier.click();
     expect(destination.value).toBe('Rose Hill');
@@ -67,5 +72,6 @@ describe('AlertesPage', () => {
     changerEtat.click();
     fixture.detectChanges();
     expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
+    expect(detail?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
   });
 });

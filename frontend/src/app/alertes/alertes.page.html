@@ -32,6 +32,29 @@
             {{ alerte.active ? 'Désactiver' : 'Réactiver' }}
           </button>
         </div>
+        <details class="detail">
+          <summary>Détails de l’alerte</summary>
+          <dl>
+            <div>
+              <dt>État</dt>
+              <dd>
+                <span class="etat" [class.active]="alerte.active">{{ alerte.active ? 'Active' : 'Inactive' }}</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Destination</dt>
+              <dd>{{ alerte.destination }}</dd>
+            </div>
+            <div>
+              <dt>Heure du rappel</dt>
+              <dd>{{ alerte.heure ?? 'Non renseignée' }}</dd>
+            </div>
+            <div>
+              <dt>Répétition</dt>
+              <dd>{{ alerte.repetition ?? 'Non renseignée' }}</dd>
+            </div>
+          </dl>
+        </details>
       </li>
       } @empty {
       <li>Aucune alerte enregistrée.</li>

@@ -88,6 +88,38 @@ li {
   cursor: pointer;
 }
 
+.detail {
+  flex: 1 0 100%;
+  border-top: 1px solid #dce4e9;
+}
+
+.detail summary {
+  min-height: 44px;
+  padding-block: 12px;
+  color: #006344;
+  cursor: pointer;
+}
+
+.detail dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+  margin: 4px 0 0;
+}
+
+.detail dt {
+  color: #45536a;
+  font-size: 14px;
+}
+
+.detail dd {
+  margin: 4px 0 0;
+}
+
+.detail .etat {
+  display: inline-block;
+}
+
 dialog {
   box-sizing: border-box;
   width: min(100% - 24px, 520px);
