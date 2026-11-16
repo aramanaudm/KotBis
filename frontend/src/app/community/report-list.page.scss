@@ -1,0 +1,168 @@
+:host {
+  color-scheme: light;
+  font-family: Inter, system-ui, sans-serif;
+  color: #0b1930;
+  background: #fdfdfd;
+  --accent: #00764f;
+  --muted: #45536a;
+  --mint: #eaf9f3;
+  --border: #e1e9e6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+ion-content {
+  --background: #fdfdfd;
+  --color: #0b1930;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.shell {
+  width: min(100% - 32px, 832px);
+  margin-inline: auto;
+  padding-block: 49px 32px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.icon-button {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 10px;
+  color: inherit;
+}
+
+.icon-button:hover {
+  background: var(--mint);
+}
+
+.back::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: translateX(2px) rotate(45deg);
+}
+
+.note {
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.notice {
+  margin-top: 24px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--mint);
+  color: #0b1930;
+}
+
+.reports {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.report {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.report-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.report-bus {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.report-bus time {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.category {
+  margin-top: 8px;
+  color: #0b1930;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: #0b1930;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-pending {
+  border-color: var(--accent);
+  background: var(--mint);
+  color: var(--accent);
+}
+
+.status-confirmed {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.status-dismissed,
+.status-unknown {
+  color: var(--muted);
+}
+
+.status-unknown {
+  border-style: dashed;
+}
+
+@media (max-width: 600px) {
+  .shell {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+}
