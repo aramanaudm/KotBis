@@ -2,8 +2,6 @@ import express from "express";
 import { Pool } from 'pg';
 import cors from "cors";
 import "dotenv/config";
-import argon2 from 'argon2';
-import { insert, update, remove, Requete } from './commun/crud-reflect'; 
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -11,6 +9,8 @@ const PORT = Number(process.env.PORT) || 3000;
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/sante", routeurSante);
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
