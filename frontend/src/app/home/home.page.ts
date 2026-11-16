@@ -13,6 +13,12 @@ interface ArretDemo {
   position: L.LatLngTuple;
 }
 
+interface BusDemo {
+  id: number;
+  nom: string;
+  position: L.LatLngTuple;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -30,28 +36,19 @@ export class HomePage implements OnDestroy {
 
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
 
-  // Données fictives : ces points ne représentent pas des arrêts officiels.
+  // Positions fictives, sans lien avec des arrêts officiels.
   private readonly arretsDemo: ArretDemo[] = [
-    {
-      id: 1,
-      nom: 'Arrêt démo A',
-      position: [-20.229, 57.463],
-    },
-    {
-      id: 2,
-      nom: 'Arrêt démo B',
-      position: [-20.231, 57.47],
-    },
-    {
-      id: 3,
-      nom: 'Arrêt démo C',
-      position: [-20.237, 57.464],
-    },
-    {
-      id: 4,
-      nom: 'Arrêt démo D',
-      position: [-20.235, 57.474],
-    },
+    { id: 1, nom: 'Arrêt démo A', position: [-20.229, 57.463] },
+    { id: 2, nom: 'Arrêt démo B', position: [-20.231, 57.47] },
+    { id: 3, nom: 'Arrêt démo C', position: [-20.237, 57.464] },
+    { id: 4, nom: 'Arrêt démo D', position: [-20.235, 57.474] },
+  ];
+
+  // Bus fictifs : aucune position réelle ou mise à jour en direct.
+  private readonly busDemo: BusDemo[] = [
+    { id: 1, nom: 'Bus démo 1', position: [-20.232, 57.461] },
+    { id: 2, nom: 'Bus démo 2', position: [-20.234, 57.469] },
+    { id: 3, nom: 'Bus démo 3', position: [-20.238, 57.472] },
   ];
 
   ionViewDidEnter(): void {
@@ -81,6 +78,7 @@ export class HomePage implements OnDestroy {
 
     this.tiles.addTo(this.map);
     this.afficherArrets();
+    this.afficherBus();
     this.map.invalidateSize();
   }
 
@@ -99,7 +97,6 @@ export class HomePage implements OnDestroy {
 
     for (const arret of this.arretsDemo) {
       const contenu = document.createElement('div');
-
       const titre = document.createElement('strong');
       titre.textContent = arret.nom;
 
@@ -112,6 +109,42 @@ export class HomePage implements OnDestroy {
         icon: iconeArret,
         title: `${arret.nom} — Démonstration`,
         alt: `${arret.nom} — position fictive`,
+        keyboard: true,
+        riseOnHover: true,
+      })
+        .addTo(this.map)
+        .bindPopup(contenu);
+    }
+  }
+
+  private afficherBus(): void {
+    if (!this.map) {
+      return;
+    }
+
+    const iconeBus = L.divIcon({
+      className: 'kotbis-bus-marker',
+      html: '<span class="kotbis-bus-symbol" aria-hidden="true">🚌</span>',
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -22],
+    });
+
+    for (const bus of this.busDemo) {
+      const contenu = document.createElement('div');
+      const titre = document.createElement('strong');
+      titre.textContent = bus.nom;
+
+      const description = document.createElement('p');
+      description.textContent =
+        'Démonstration — position fictive, sans suivi en temps réel.';
+
+      contenu.append(titre, description);
+
+      L.marker(bus.position, {
+        icon: iconeBus,
+        title: `${bus.nom} — Démonstration`,
+        alt: `${bus.nom} — position fictive`,
         keyboard: true,
         riseOnHover: true,
       })
@@ -140,5 +173,6 @@ export class HomePage implements OnDestroy {
   ngOnDestroy(): void {
     this.map?.remove();
     this.map = undefined;
+    this.tiles = undefined;
   }
 }
