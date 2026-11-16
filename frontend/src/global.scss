@@ -98,3 +98,27 @@
   outline: 3px solid #203448;
   outline-offset: 3px;
 }
+/* SCRUM-32 : fraîcheur des données */
+.map-page .freshness {
+  padding: 10px 12px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.map-page .freshness[data-state='ancienne'] {
+  color: #993b16;
+  background: #fff1e8;
+}
+
+.map-page .freshness[data-state='recente'] {
+  color: #00664d;
+  background: #e3f5ec;
+}
+
+.map-page .freshness[data-state='inconnue'] {
+  color: #465462;
+  background: #edf0f3;
+}

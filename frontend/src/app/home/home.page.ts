@@ -29,6 +29,8 @@ interface BusDemo {
   source?: string | null;
 }
 
+type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -45,11 +47,16 @@ export class HomePage implements OnDestroy {
   readonly carteIndisponible = signal(false);
   readonly arretSelectionne = signal<ArretDemo | null>(null);
   readonly busSelectionne = signal<BusDemo | null>(null);
+  readonly maintenant = signal(Date.now());
+
+  // Seuil proposé pour la démonstration, à valider.
+  private readonly seuilAncienneteMs = 15 * 60 * 1000;
 
   private map?: L.Map;
   private tiles?: L.TileLayer;
   private marqueurSelectionne?: L.Marker;
   private focusTimer?: ReturnType<typeof setTimeout>;
+  private horloge?: ReturnType<typeof setInterval>;
 
   private readonly centre: L.LatLngTuple = [-20.233, 57.467];
 
@@ -63,8 +70,8 @@ export class HomePage implements OnDestroy {
     hour12: false,
   });
 
-  // Toutes les données renseignées sont fictives,
-  // y compris les dates et les sources de démonstration.
+  // Toutes les données renseignées sont fictives.
+  // Les dates sont fixes : elles ne représentent pas un suivi réel.
   private readonly arretsDemo: ArretDemo[] = [
     {
       id: 1,
@@ -95,8 +102,7 @@ export class HomePage implements OnDestroy {
     },
   ];
 
-  // Les champs absents restent absents :
-  // aucune valeur de remplacement n’est inventée.
+  // Les champs absents restent absents.
   private readonly busDemo: BusDemo[] = [
     {
       id: 1,
@@ -124,6 +130,8 @@ export class HomePage implements OnDestroy {
   ];
 
   ionViewDidEnter(): void {
+    this.demarrerHorloge();
+
     if (this.map) {
       this.map.invalidateSize();
       return;
@@ -152,6 +160,29 @@ export class HomePage implements OnDestroy {
     this.afficherArrets();
     this.afficherBus();
     this.map.invalidateSize();
+  }
+
+  ionViewDidLeave(): void {
+    this.arreterHorloge();
+    clearTimeout(this.focusTimer);
+  }
+
+  private demarrerHorloge(): void {
+    this.maintenant.set(Date.now());
+
+    if (this.horloge !== undefined) {
+      return;
+    }
+
+    // Actualise le calcul de l’âge, pas les données elles-mêmes.
+    this.horloge = setInterval(() => {
+      this.maintenant.set(Date.now());
+    }, 30_000);
+  }
+
+  private arreterHorloge(): void {
+    clearInterval(this.horloge);
+    this.horloge = undefined;
   }
 
   private donnerFocusFiche(): void {
@@ -184,6 +215,7 @@ export class HomePage implements OnDestroy {
       }).addTo(this.map);
 
       marqueur.on('click', () => {
+        this.maintenant.set(Date.now());
         this.map?.closePopup();
         this.busSelectionne.set(null);
         this.arretSelectionne.set(arret);
@@ -249,6 +281,7 @@ export class HomePage implements OnDestroy {
       }).addTo(this.map);
 
       marqueur.on('click', () => {
+        this.maintenant.set(Date.now());
         this.map?.closePopup();
         this.arretSelectionne.set(null);
         this.busSelectionne.set(bus);
@@ -264,6 +297,39 @@ export class HomePage implements OnDestroy {
     this.busSelectionne.set(null);
     this.marqueurSelectionne?.getElement()?.focus();
     this.marqueurSelectionne = undefined;
+  }
+
+  etatFraicheur(valeur?: string | null): EtatFraicheur {
+    const texte = valeur?.trim();
+
+    if (!texte) {
+      return 'inconnue';
+    }
+
+    const horodatage = new Date(texte).getTime();
+
+    if (!Number.isFinite(horodatage)) {
+      return 'inconnue';
+    }
+
+    const age = this.maintenant() - horodatage;
+
+    if (age < 0) {
+      return 'inconnue';
+    }
+
+    return age >= this.seuilAncienneteMs ? 'ancienne' : 'recente';
+  }
+
+  libelleFraicheur(valeur?: string | null): string {
+    switch (this.etatFraicheur(valeur)) {
+      case 'ancienne':
+        return 'Données anciennes — pas de suivi en temps réel';
+      case 'recente':
+        return 'Données récentes — temps réel non garanti';
+      default:
+        return 'Fraîcheur inconnue — date absente, invalide ou future';
+    }
   }
 
   formaterDate(valeur?: string | null): string {
@@ -300,6 +366,7 @@ export class HomePage implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.arreterHorloge();
     clearTimeout(this.focusTimer);
     this.map?.remove();
     this.map = undefined;

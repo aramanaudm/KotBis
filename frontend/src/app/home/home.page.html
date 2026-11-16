@@ -105,6 +105,15 @@
 
       <p class="preview-note">
         Démonstration — arrêt, position, informations et horodatage fictifs.
+        Aucun suivi en temps réel.
+      </p>
+
+      <p
+        class="freshness"
+        [attr.data-state]="etatFraicheur(arret.miseAJour)"
+        role="status"
+      >
+        {{ libelleFraicheur(arret.miseAJour) }}
       </p>
 
       <dl class="stop-details">
@@ -144,6 +153,14 @@
       <p class="preview-note">
         Démonstration — bus, position, informations et horodatage fictifs,
         sans suivi en temps réel.
+      </p>
+
+      <p
+        class="freshness"
+        [attr.data-state]="etatFraicheur(bus.miseAJour)"
+        role="status"
+      >
+        {{ libelleFraicheur(bus.miseAJour) }}
       </p>
 
       <dl class="stop-details">
