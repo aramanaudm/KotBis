@@ -8,6 +8,29 @@
   {{ panneauOuvert() ? 'Fermer le panneau' : 'Partage de position' }}
 </button>
 
+<div class="indicateur-zone" role="status" aria-atomic="true">
+  @if (simulationActive()) {
+    <div class="indicateur-actif">
+      <span class="point-actif" aria-hidden="true"></span>
+
+      <div>
+        <strong>Simulation de partage active</strong>
+        <span>Aucune position réelle transmise.</span>
+      </div>
+    </div>
+  }
+</div>
+
+@if (simulationActive()) {
+  <button
+    class="arret-rapide"
+    type="button"
+    (click)="arreterSimulation()"
+  >
+    Arrêter la simulation
+  </button>
+}
+
 <section
   id="panneau-partage"
   class="panneau"

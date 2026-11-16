@@ -126,3 +126,45 @@ input {
     max-height: 50dvh;
   }
 }
+/* SCRUM-70 : indicateur visible même lorsque le panneau est fermé. */
+.indicateur-actif {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #008060;
+  border-radius: 12px;
+  background: #e3f5ec;
+  color: #00664d;
+}
+
+.indicateur-actif strong,
+.indicateur-actif div > span {
+  display: block;
+}
+
+.indicateur-actif strong {
+  font-size: 0.9rem;
+}
+
+.indicateur-actif div > span {
+  margin-top: 4px;
+  font-size: 0.8rem;
+}
+
+.point-actif {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #008060;
+}
+
+.arret-rapide {
+  width: 100%;
+  margin-top: 8px;
+  background: #203448;
+  color: #fff;
+}
