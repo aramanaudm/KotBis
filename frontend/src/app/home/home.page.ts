@@ -74,9 +74,21 @@ export class HomePage implements OnDestroy {
   ];
 
   private readonly busDemo: BusDemo[] = [
-    { id: 1, nom: 'Bus démo 1', position: [-20.232, 57.461] },
-    { id: 2, nom: 'Bus démo 2', position: [-20.234, 57.469] },
-    { id: 3, nom: 'Bus démo 3', position: [-20.238, 57.472] },
+    {
+      id: 1,
+      nom: 'Bus démo 1',
+      position: [-20.232, 57.461],
+    },
+    {
+      id: 2,
+      nom: 'Bus démo 2',
+      position: [-20.234, 57.469],
+    },
+    {
+      id: 3,
+      nom: 'Bus démo 3',
+      position: [-20.238, 57.472],
+    },
   ];
 
   ionViewDidEnter(): void {
@@ -158,7 +170,40 @@ export class HomePage implements OnDestroy {
 
     const iconeBus = L.divIcon({
       className: 'kotbis-bus-marker',
-      html: '<span class="kotbis-bus-symbol" aria-hidden="true">🚌</span>',
+      html: `
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect x="5" y="3" width="14" height="16" rx="3" />
+          <path d="M9 6h6" />
+          <rect x="7.5" y="8" width="9" height="5" rx="1" />
+          <path d="M3 9v4M21 9v4M7 19v2M17 19v2" />
+          <circle
+            cx="8.5"
+            cy="16"
+            r=".8"
+            fill="#ffffff"
+            stroke="none"
+          />
+          <circle
+            cx="15.5"
+            cy="16"
+            r=".8"
+            fill="#ffffff"
+            stroke="none"
+          />
+        </svg>
+      `,
       iconSize: [44, 44],
       iconAnchor: [22, 22],
       popupAnchor: [0, -22],
@@ -166,6 +211,7 @@ export class HomePage implements OnDestroy {
 
     for (const bus of this.busDemo) {
       const contenu = document.createElement('div');
+
       const titre = document.createElement('strong');
       titre.textContent = bus.nom;
 
