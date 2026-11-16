@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-020 – Saisie manuelle sans GPS</title>
+  <link rel="stylesheet" href="saisie-manuelle.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Bouton de TEST uniquement : simule un refus du GPS -->
+  <button id="simuler-refus" type="button">Simuler : GPS refusé</button>
+
+  <!-- Bloc affiché seulement quand le GPS est refusé ou indisponible -->
+  <section id="bloc-manuel" hidden>
+    <p role="status">Position non disponible. Choisissez votre départ manuellement.</p>
+    <label for="depart-manuel">Départ (choix manuel)</label>
+    <select id="depart-manuel">
+      <option value="">— Choisir un arrêt —</option>
+    </select>
+  </section>
+
+  <!-- Prouve le critère : la recherche reste possible sans GPS -->
+  <p id="etat-recherche" aria-live="polite">Recherche : impossible (aucun départ).</p>
+</main>
+
+  <script src="saisie-manuelle.js"></script>
+</body>
+</html>
