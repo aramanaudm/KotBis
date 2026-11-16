@@ -120,6 +120,22 @@ li {
   display: inline-block;
 }
 
+.notifications {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #dce4e9;
+  border-radius: 12px;
+}
+
+.notifications h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.notifications dt {
+  font-weight: 700;
+}
+
 dialog {
   box-sizing: border-box;
   width: min(100% - 24px, 520px);

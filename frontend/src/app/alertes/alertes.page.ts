@@ -53,7 +53,7 @@ export class AlertesPage {
         ...alertes,
         { id: alertes.length + 1, destination, active: true, heure, repetition },
       ]);
-      this.annonce.set('Alerte créée pour ' + destination + '.');
+      this.annonce.set('Alerte enregistrée pour ' + destination + '. Aucune notification programmée.');
     }
     dialogue.close();
   }

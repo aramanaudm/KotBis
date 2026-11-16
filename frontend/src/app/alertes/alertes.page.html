@@ -53,6 +53,10 @@
               <dt>Répétition</dt>
               <dd>{{ alerte.repetition ?? 'Non renseignée' }}</dd>
             </div>
+            <div>
+              <dt>Notification</dt>
+              <dd>Non programmée</dd>
+            </div>
           </dl>
         </details>
       </li>
@@ -60,6 +64,27 @@
       <li>Aucune alerte enregistrée.</li>
       }
     </ul>
+    <section class="notifications" aria-labelledby="titre-notifications">
+      <h2 id="titre-notifications">Notifications</h2>
+      <p>La programmation et l’envoi des notifications sont indisponibles dans cette version.</p>
+      <details class="detail">
+        <summary>Voir les exemples d’états</summary>
+        <dl>
+          <div>
+            <dt>Alerte enregistrée</dt>
+            <dd>Les paramètres de l’alerte ont été enregistrés.</dd>
+          </div>
+          <div>
+            <dt>Notification programmée</dt>
+            <dd>Un rappel est prévu pour l’heure choisie.</dd>
+          </div>
+          <div>
+            <dt>Échec d’envoi</dt>
+            <dd>Une tentative d’envoi a échoué.</dd>
+          </div>
+        </dl>
+      </details>
+    </section>
   </main>
 </ion-content>
 

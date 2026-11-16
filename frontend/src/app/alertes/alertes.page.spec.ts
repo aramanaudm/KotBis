@@ -47,9 +47,18 @@ describe('AlertesPage', () => {
     expect(alerte?.textContent).toContain('Rose Hill');
     expect(alerte?.textContent).toContain('07:30 · Lundi à vendredi');
     expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
+    expect(page.querySelector('[role="status"]')?.textContent).toContain('Aucune notification programmée');
+    const exemples = page.querySelector('.notifications details');
+    expect(exemples?.querySelector('summary')?.textContent).toContain('Voir les exemples d’états');
+    expect(Array.from(exemples?.querySelectorAll('dt') ?? [], (etat) => etat.textContent)).toEqual([
+      'Alerte enregistrée',
+      'Notification programmée',
+      'Échec d’envoi',
+    ]);
     const detail = alerte?.querySelector('details');
     detail?.querySelector('summary')?.click();
     expect(detail?.open).toBe(true);
+    expect(detail?.textContent).toContain('Non programmée');
     expect(detail?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
 
     const [modifier, changerEtat] = page.querySelectorAll<HTMLButtonElement>('li:last-child .actions button');
