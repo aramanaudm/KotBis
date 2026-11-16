@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { AlertesPage } from './alertes.page';
 
 describe('AlertesPage', () => {
-  it('exige les trois champs et ajoute une alerte active après validation', () => {
+  it('valide la création et conserve l’état lors d’une modification', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(AlertesPage);
     const page: HTMLElement = fixture.nativeElement;
@@ -46,6 +46,26 @@ describe('AlertesPage', () => {
     const alerte = page.querySelector('li:last-child');
     expect(alerte?.textContent).toContain('Rose Hill');
     expect(alerte?.textContent).toContain('07:30 · Lundi à vendredi');
+    expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
+
+    const [modifier, changerEtat] = page.querySelectorAll<HTMLButtonElement>('li:last-child .actions button');
+    changerEtat.click();
+    fixture.detectChanges();
+    expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Inactive');
+
+    modifier.click();
+    expect(destination.value).toBe('Rose Hill');
+    expect(heure.value).toBe('07:30');
+    expect(repetition.value).toBe('Lundi à vendredi');
+    heure.value = '08:15';
+    formulaire.requestSubmit();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.alertes()).toHaveLength(3);
+    expect(alerte?.textContent).toContain('08:15 · Lundi à vendredi');
+    expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Inactive');
+
+    changerEtat.click();
+    fixture.detectChanges();
     expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
   });
 });

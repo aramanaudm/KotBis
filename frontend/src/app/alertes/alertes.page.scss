@@ -70,6 +70,24 @@ li {
   color: #45536a;
 }
 
+.actions {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions button {
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid #dce4e9;
+  border-radius: 10px;
+  background: transparent;
+  color: #006344;
+  font: inherit;
+  cursor: pointer;
+}
+
 dialog {
   box-sizing: border-box;
   width: min(100% - 24px, 520px);
