@@ -6,10 +6,10 @@
   ></div>
 
   <header class="floating-header">
-  <div class="brand" aria-label="KotBis">
-    <span class="brand-icon" aria-hidden="true">🚌</span>
-    <strong>KotBis</strong>
-  </div>
+    <div class="brand" aria-label="KotBis">
+      <span class="brand-icon" aria-hidden="true">🚌</span>
+      <strong>KotBis</strong>
+    </div>
 
     <div class="status">
       <span class="visitor">Visiteur</span>
@@ -23,6 +23,7 @@
         Le fond de carte ne se charge pas complètement.
         Vérifiez votre connexion.
       </span>
+
       <button type="button" (click)="reessayer()">
         Réessayer
       </button>
@@ -48,22 +49,60 @@
     </button>
   </nav>
 
-  <section class="bottom-panel" aria-label="Informations de la carte">
+  <section
+    class="bottom-panel"
+    aria-label="Informations de la carte"
+    (keydown.escape)="fermerFiche()"
+  >
     <div class="panel-handle" aria-hidden="true"></div>
 
-    <button class="search-preview" type="button" disabled>
-      <span aria-hidden="true">⌕</span>
-      <span>Où allez-vous ?</span>
-      <span class="arrow" aria-hidden="true">›</span>
-    </button>
+    @if (arretSelectionne(); as arret) {
+      <div class="stop-heading">
+        <h2 #ficheTitre tabindex="-1">{{ arret.nom }}</h2>
 
-    <p class="preview-note">
-      Recherche non disponible dans cette première étape.
-    </p>
+        <button
+          class="close-stop"
+          type="button"
+          (click)="fermerFiche()"
+          aria-label="Fermer la fiche de l’arrêt"
+        >
+          ✕
+        </button>
+      </div>
 
-    <div class="panel-footer">
-      <span>Bus de démonstration</span>
-      <span>3 bus — positions fictives</span>
-    </div>
+      <p class="preview-note">
+        Démonstration — arrêt, position et informations fictifs.
+      </p>
+
+      <dl class="stop-details">
+        <dt>Direction</dt>
+        <dd>
+          {{ arret.direction || 'Direction non disponible.' }}
+        </dd>
+
+        <dt>Informations</dt>
+        <dd>
+          {{
+            arret.informations ||
+            'Aucune information complémentaire disponible.'
+          }}
+        </dd>
+      </dl>
+    } @else {
+      <button class="search-preview" type="button" disabled>
+        <span aria-hidden="true">⌕</span>
+        <span>Où allez-vous ?</span>
+        <span class="arrow" aria-hidden="true">›</span>
+      </button>
+
+      <p class="preview-note">
+        Recherche non disponible dans cette première étape.
+      </p>
+
+      <div class="panel-footer">
+        <span>Bus de démonstration</span>
+        <span>3 bus — positions fictives</span>
+      </div>
+    }
   </section>
 </main>
