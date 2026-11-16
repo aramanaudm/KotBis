@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import * as L from 'leaflet';
+import { PartagePositionComponent } from '../partage-position/partage-position.component';
 
 interface ArretDemo {
   id: number;
@@ -34,6 +35,7 @@ type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [PartagePositionComponent],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
@@ -43,6 +45,9 @@ export class HomePage implements OnDestroy {
 
   @ViewChild('ficheTitre')
   private ficheTitre?: ElementRef<HTMLHeadingElement>;
+
+  @ViewChild(PartagePositionComponent)
+  private partagePosition?: PartagePositionComponent;
 
   readonly carteIndisponible = signal(false);
   readonly arretSelectionne = signal<ArretDemo | null>(null);
@@ -165,6 +170,9 @@ export class HomePage implements OnDestroy {
   ionViewDidLeave(): void {
     this.arreterHorloge();
     clearTimeout(this.focusTimer);
+
+    // Arrête la simulation et retire le consentement en quittant la page.
+    this.partagePosition?.reinitialiser();
   }
 
   private demarrerHorloge(): void {
