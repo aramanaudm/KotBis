@@ -63,3 +63,94 @@ li {
   background: #eaf9f3;
   color: #006344;
 }
+
+.horaire {
+  display: block;
+  margin-top: 4px;
+  color: #45536a;
+}
+
+dialog {
+  box-sizing: border-box;
+  width: min(100% - 24px, 520px);
+  max-height: calc(100dvh - 24px);
+  padding: clamp(18px, 5vw, 28px);
+  border: 0;
+  border-radius: 24px;
+  background: #fdfdfd;
+  color: #0b1930;
+  color-scheme: light;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+dialog::backdrop {
+  background: rgb(11 25 48 / 45%);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fermer {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+h2 {
+  margin: 20px 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+form {
+  display: grid;
+  gap: 8px;
+}
+
+label {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+input,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 64px;
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  border: 1px solid #dce4e9;
+  border-radius: 16px;
+  background: #fdfdfd;
+  color: inherit;
+  font: inherit;
+  font-size: 18px;
+}
+
+.primary {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 16px;
+  background: #27d29f;
+  color: #0b1930;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.enregistrer {
+  min-height: 64px;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+:focus-visible {
+  outline: 2px solid #00764f;
+  outline-offset: 3px;
+}

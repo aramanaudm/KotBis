@@ -1,0 +1,51 @@
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { AlertesPage } from './alertes.page';
+
+describe('AlertesPage', () => {
+  it('exige les trois champs et ajoute une alerte active après validation', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AlertesPage);
+    const page: HTMLElement = fixture.nativeElement;
+    fixture.detectChanges();
+
+    const formulaire = page.querySelector<HTMLFormElement>('form')!;
+    const dialogue = page.querySelector<HTMLDialogElement>('dialog')!;
+    // jsdom ne fournit pas les méthodes natives de la boîte de dialogue.
+    dialogue.showModal = () => {
+      dialogue.open = true;
+    };
+    dialogue.close = () => {
+      dialogue.open = false;
+    };
+    const destination = page.querySelector<HTMLSelectElement>('#destination-alerte')!;
+    const heure = page.querySelector<HTMLInputElement>('#heure-alerte')!;
+    const repetition = page.querySelector<HTMLSelectElement>('#repetition-alerte')!;
+    page.querySelector<HTMLButtonElement>('button.primary')!.click();
+    expect(dialogue.open).toBe(true);
+
+    formulaire.requestSubmit();
+    expect(fixture.componentInstance.alertes()).toHaveLength(2);
+
+    destination.value = 'Rose Hill';
+    heure.value = '07:30';
+    repetition.value = 'Lundi à vendredi';
+    for (const champ of [destination, heure, repetition]) {
+      const valeur = champ.value;
+      champ.value = '';
+      expect(champ.validity.valueMissing).toBe(true);
+      formulaire.requestSubmit();
+      expect(fixture.componentInstance.alertes()).toHaveLength(2);
+      champ.value = valeur;
+    }
+
+    formulaire.requestSubmit();
+    fixture.detectChanges();
+    expect(dialogue.open).toBe(false);
+    const alerte = page.querySelector('li:last-child');
+    expect(alerte?.textContent).toContain('Rose Hill');
+    expect(alerte?.textContent).toContain('07:30 · Lundi à vendredi');
+    expect(alerte?.querySelector('.etat')?.textContent?.trim()).toBe('Active');
+  });
+});

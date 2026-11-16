@@ -2,11 +2,17 @@
   <main class="shell">
     <a routerLink="/favoris">← Retour aux favoris</a>
     <h1>Gestion des alertes</h1>
-    <p>Trajets d’exemple</p>
+    <button class="primary" type="button" (click)="dialogue.showModal()">Créer une alerte</button>
+    <p role="status">{{ annonce() }}</p>
     <ul aria-label="Alertes de trajet">
-      @for (alerte of alertes; track alerte.id) {
+      @for (alerte of alertes(); track alerte.id) {
       <li>
-        <span class="trajet">{{ alerte.trajet }}</span>
+        <div>
+          <span class="trajet">{{ alerte.trajet }}</span>
+          @if (alerte.heure) {
+          <span class="horaire">{{ alerte.heure }} · {{ alerte.repetition }}</span>
+          }
+        </div>
         <span class="etat" [class.active]="alerte.active"> {{ alerte.active ? 'Active' : 'Inactive' }} </span>
       </li>
       } @empty {
@@ -15,3 +21,36 @@
     </ul>
   </main>
 </ion-content>
+
+<dialog #dialogue aria-labelledby="titre-formulaire-alerte" (close)="formulaire.reset()">
+  <header class="dialog-header">
+    <button class="fermer" type="button" aria-label="Fermer" (click)="dialogue.close()">×</button>
+  </header>
+  <h2 id="titre-formulaire-alerte">Créer une alerte</h2>
+  <form
+    #formulaire
+    (submit)="enregistrer($event, formulaire, dialogue, destination.value, heure.value, repetition.value)"
+  >
+    <label for="destination-alerte">Destination</label>
+    <select #destination id="destination-alerte" required>
+      <option value="">Choisir une destination</option>
+      <option>Rose Hill</option>
+      <option>Port-Louis</option>
+      <option>Curepipe</option>
+      <option>Quatre Bornes</option>
+    </select>
+
+    <label for="heure-alerte">Heure du rappel</label>
+    <input #heure id="heure-alerte" type="time" required />
+
+    <label for="repetition-alerte">Répétition</label>
+    <select #repetition id="repetition-alerte" required>
+      <option value="">Choisir une répétition</option>
+      <option>Lundi à vendredi</option>
+      <option>Tous les jours</option>
+      <option>Une seule fois</option>
+    </select>
+
+    <button class="primary enregistrer" type="submit">Enregistrer</button>
+  </form>
+</dialog>
