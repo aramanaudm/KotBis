@@ -229,10 +229,14 @@ button:focus-visible {
     bottom: 45px;
   }
 }
-/* AUTH-INTEGRATION: account entry point */
-/* Add this block to the existing home.page.scss; all existing map styles stay unchanged. */
+
 .account-access {
+  padding: 0;
   border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
   font: inherit;
   color: inherit;
   cursor: pointer;
