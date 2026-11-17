@@ -5,7 +5,6 @@ import "dotenv/config";
 import { verifierConnexionBdd, verifierPostgis, ErreurBaseDeDonnees } from "./configuration/baseDeDonnees";
 import argon2 from 'argon2';
 import { insert, update, remove, Requete } from './commun/crud-reflect'; 
-import { administrationRoutes } from './administration';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -17,8 +16,6 @@ app.use(express.json());
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
-
-app.use('/api/admin', administrationRoutes(pool));
 
 function adapterRequete(requete: Requete) {
   let index = 1;
