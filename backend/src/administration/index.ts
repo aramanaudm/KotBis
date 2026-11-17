@@ -3,11 +3,13 @@ import { Router } from 'express';
 import { roleRoutes } from './routes/role-routes';
 import { ligneRoutes } from './routes/ligne-routes';
 import { busRoutes } from './routes/bus-routes';
+import { arretRoutes } from './routes/arret-routes';
 
 export function administrationRoutes(pool: Pool): Router {
   const router = Router();
   router.use(roleRoutes(pool));
   router.use(ligneRoutes(pool));
   router.use(busRoutes(pool));
+  router.use(arretRoutes(pool));
   return router;
 }
