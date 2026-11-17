@@ -1,0 +1,153 @@
+:host {
+  display: block;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  width: 238px;
+  padding: 30px 18px;
+  color: var(--side-text);
+  background: var(--side);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  color: #ffffff;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  background: #256fee;
+  border-radius: 12px;
+}
+
+.brand-text {
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.brand-text small {
+  display: block;
+  margin-top: 3px;
+  color: #91a5bb;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+.nav-label {
+  padding: 27px 15px 12px;
+  color: #6e86a1;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+}
+
+.nav {
+  display: grid;
+  gap: 5px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-item.active {
+  color: #ffffff;
+  background: #236be7;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 22px 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+
+.traveler-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+}
+
+.sidebar-footer p {
+  margin-top: 20px;
+  color: #7990aa;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mobile-close {
+  display: none;
+  margin-left: auto;
+}
+
+.backdrop {
+  display: none;
+}
+
+@media (max-width: 1050px) {
+  .sidebar {
+    width: 205px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 238px;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .mobile-close {
+    display: inline-grid;
+  }
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 14;
+    display: block;
+    background: rgba(18, 38, 61, 0.4);
+    border: 0;
+  }
+}

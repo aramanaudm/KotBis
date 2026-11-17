@@ -1,0 +1,157 @@
+<app-page-header title="Trajets" description="Composez les trajets et l’ordre des arrêts desservis.">
+  <button class="primary" type="button" (click)="openCreate()">
+    <app-icon name="plus" />
+    Ajouter
+  </button>
+</app-page-header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input
+        type="search"
+        placeholder="Rechercher…"
+        aria-label="Rechercher un trajet"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+
+    <select
+      class="filter"
+      aria-label="Filtrer par état"
+      [value]="statusFilter()"
+      (change)="onFilter($event)"
+    >
+      <option value="">Tous les états</option>
+      <option value="active">Actif</option>
+      <option value="inactive">Inactif</option>
+    </select>
+
+    <button class="secondary" type="button" (click)="exportCsv()">
+      <app-icon name="export" />
+      Exporter CSV
+    </button>
+  </div>
+
+  <app-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [statusTones]="statusTones"
+    emptyMessage="Aucun trajet ne correspond à la recherche."
+    (edit)="openEdit($event)"
+    (remove)="askDelete($event)"
+  />
+
+  <app-pagination
+    [page]="page()"
+    [total]="filteredRoutes().length"
+    [pageSize]="pageSize"
+    (pageChange)="changePage($event)"
+  />
+</section>
+
+@if (formOpen()) {
+  <app-modal [title]="formTitle()" (close)="closeForm()">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <app-form-field
+          label="Nom du trajet"
+          forId="route-name"
+          [error]="errorFor('name', 'Le nom du trajet est obligatoire.')"
+        >
+          <input id="route-name" type="text" formControlName="name" maxlength="180" />
+        </app-form-field>
+
+        <app-form-field
+          label="Ligne"
+          forId="route-line"
+          [error]="errorFor('line', 'La ligne est obligatoire.')"
+        >
+          <input id="route-line" type="text" formControlName="line" maxlength="20" />
+        </app-form-field>
+
+        <app-form-field label="État" forId="route-status">
+          <select id="route-status" formControlName="status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </app-form-field>
+      </div>
+
+      <div class="stop-builder">
+        <span class="field-label">Arrêts dans l’ordre : départ → terminus</span>
+
+        <div class="stop-add">
+          <select
+            aria-label="Choisir un arrêt à ajouter"
+            [value]="selectedStop()"
+            (change)="onStopSelection($event)"
+          >
+            @for (stop of availableStops(); track stop.id) {
+              <option [value]="stop.name">{{ stop.name }}</option>
+            }
+          </select>
+          <button class="secondary" type="button" (click)="addStop()">
+            <app-icon name="plus" />
+            Ajouter
+          </button>
+        </div>
+
+        <div class="stop-list">
+          @for (stop of routeStops(); track $index) {
+            <span class="stop-chip">
+              {{ $index + 1 }}. {{ stop }}
+              <button
+                type="button"
+                aria-label="Monter l’arrêt"
+                [disabled]="$index === 0"
+                (click)="moveStop($index, -1)"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label="Descendre l’arrêt"
+                [disabled]="$index === routeStops().length - 1"
+                (click)="moveStop($index, 1)"
+              >
+                ↓
+              </button>
+              <button type="button" aria-label="Retirer l’arrêt" (click)="removeStop($index)">
+                ×
+              </button>
+            </span>
+          } @empty {
+            <p class="hint">Aucun arrêt sélectionné pour ce trajet.</p>
+          }
+        </div>
+      </div>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-footer">
+        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (deleteTarget(); as route) {
+  <app-modal title="Supprimer ce trajet ?" (close)="cancelDelete()">
+    <p>Le trajet {{ route.name }} sera retiré de la liste.</p>
+
+    <div class="form-footer">
+      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
+      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </app-modal>
+}
+
+@if (feedback()) {
+  <div class="toast" role="status">{{ feedback() }}</div>
+}
