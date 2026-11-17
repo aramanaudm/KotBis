@@ -8,11 +8,11 @@ import { IonButton, IonIcon } from '@ionic/angular';
   imports: [IonButton, IonIcon],
 })
 export class UiButtonComponent {
-  @Input() label: string = '';
+  @Input() label = '';
   @Input() color: 'primary' | 'outline' | 'danger' = 'primary';
   @Input() expand: 'block' | 'full' | undefined = 'block';
-  @Input() icon: string = '';
+  @Input() icon = '';
   @Input() iconSlot: 'start' | 'end' = 'end';
-  @Input() disabled: boolean = false;
+  @Input() disabled = false;
   @Input() type: 'button' | 'submit' = 'button';
 }

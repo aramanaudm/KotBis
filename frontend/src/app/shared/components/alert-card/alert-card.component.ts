@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { warningOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-alert-card',
@@ -8,7 +10,11 @@ import { IonIcon } from '@ionic/angular';
   imports: [IonIcon],
 })
 export class AlertCardComponent {
-  @Input() title: string = '';
-  @Input() message: string = '';
-  @Input() linkText: string = 'Voir les détails';
+  @Input() title = '';
+  @Input() message = '';
+  @Input() linkText = 'Voir les détails';
+
+  constructor() {
+    addIcons({ warningOutline });
+  }
 }
