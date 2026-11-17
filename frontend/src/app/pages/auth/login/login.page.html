@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/profile" text="Retour"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="brand-title">Bus Maurice</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="auth-content">
+  <div class="intro">
+    <div class="brand-mark"><ion-icon name="bus-outline"></ion-icon></div>
+    <h1>Connectez-vous pour plus de fonctionnalités</h1>
+    <p>Retrouvez vos trajets et vos préférences.</p>
+  </div>
+
+  <div class="form">
+    <ion-input fill="outline" label="Email ou pseudo" labelPlacement="stacked" placeholder="votre@email.com" type="email"></ion-input>
+    <ion-input fill="outline" label="Mot de passe" labelPlacement="stacked" type="password" placeholder="Votre mot de passe"></ion-input>
+  </div>
+
+  <a class="forgot" routerLink="/login">Mot de passe ?</a>
+
+  <ion-button expand="block" class="primary">Se connecter</ion-button>
+  <ion-button expand="block" fill="clear" routerLink="/register">Créer un compte</ion-button>
+  <ion-button expand="block" fill="clear" routerLink="/tabs/home">
+    Continuer en tant que Visiteur
+    <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+  </ion-button>
+</ion-content>

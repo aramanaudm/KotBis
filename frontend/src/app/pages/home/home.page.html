@@ -1,0 +1,63 @@
+<ion-content class="ion-padding">
+  
+  <!-- En-tête de bienvenue -->
+  <div class="welcome-header">
+    <div class="user-avatar">
+      <ion-icon name="person-outline"></ion-icon>
+    </div>
+    <div class="welcome-text">
+      <h2>Bonjour, Steve 👋</h2>
+      <p>Où souhaitez-vous aller aujourd'hui ?</p>
+    </div>
+  </div>
+
+  <!-- Barre de recherche -->
+  <div class="search-section">
+    <ion-searchbar placeholder="Rechercher un trajet, un arrêt..." mode="ios"></ion-searchbar>
+  </div>
+
+  <!-- Carte d'alerte info trafic -->
+  <div class="section-container">
+    <app-alert-card 
+      title="Perturbation sur la ligne 12" 
+      message="Retards prévus entre Rose-Hill et Port-Louis suite à des travaux."
+      linkText="Voir les détails">
+    </app-alert-card>
+  </div>
+
+  <!-- Bouton d'action principal -->
+  <div class="section-container">
+    <app-ui-button 
+      label="Rechercher un itinéraire" 
+      color="primary" 
+      icon="search-outline">
+    </app-ui-button>
+  </div>
+
+  <!-- Trajets favoris ou récents -->
+  <div class="section-container">
+    <h3 class="section-title">Destinations fréquentes</h3>
+    
+    <div class="destinations-list">
+      <app-destination-item 
+        title="Gare Victoria" 
+        subtitle="Port-Louis • Bus direct" 
+        icon="bus-outline">
+      </app-destination-item>
+
+      <app-destination-item 
+        title="Cybercité" 
+        subtitle="Ébène • Ligne 115" 
+        icon="business-outline">
+      </app-destination-item>
+
+      <app-destination-item 
+        title="Grand Baie La Croisette" 
+        subtitle="Nord • Trajet favori" 
+        icon="star-outline"
+        iconType="star">
+      </app-destination-item>
+    </div>
+  </div>
+
+</ion-content>

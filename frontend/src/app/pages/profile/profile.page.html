@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title class="brand-title">MON ESPACE</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="profile-content">
+  <section class="hero-card">
+    <div class="brand-mark"><ion-icon name="person-circle-outline"></ion-icon></div>
+    <h1>Voyagez plus simplement</h1>
+    <p>Créez votre compte gratuitement pour personnaliser vos trajets, sans limiter l'accès aux informations essentielles.</p>
+    <div class="actions">
+      <ion-button class="primary" routerLink="/register">Créer un compte</ion-button>
+      <ion-button fill="outline" routerLink="/login">Se connecter</ion-button>
+    </div>
+  </section>
+
+  <h2 class="section-title">Avec un compte, vous pouvez</h2>
+
+  <div class="benefits">
+    <div class="benefit">
+      <span class="icon"><ion-icon name="heart-outline"></ion-icon></span>
+      <div>
+        <h3>Enregistrer vos favoris</h3>
+        <p>Retrouvez vos trajets et arrêts en un geste.</p>
+      </div>
+    </div>
+    <div class="benefit">
+      <span class="icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <div>
+        <h3>Programmer des rappels</h3>
+        <p>Soyez alerté avant le départ de votre bus.</p>
+      </div>
+    </div>
+    <div class="benefit">
+      <span class="icon"><ion-icon name="star-outline"></ion-icon></span>
+      <div>
+        <h3>Cumuler des points</h3>
+        <p>Contribuez au réseau et suivez vos points.</p>
+      </div>
+    </div>
+    <div class="benefit">
+      <span class="icon"><ion-icon name="warning-outline"></ion-icon></span>
+      <div>
+        <h3>Signaler un incident</h3>
+        <p>Aidez la communauté avec des infos utiles.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guest-note">
+    <strong>Vous pouvez continuer sans compte.</strong>
+    <p>Recherche, horaires, lignes, carte et alertes restent accessibles.</p>
+    <a routerLink="/tabs/home">Continuer en tant que visiteur</a>
+  </div>
+</ion-content>

@@ -1,0 +1,145 @@
+ion-content {
+  --background: #f5f7fa;
+  --color: #12213a;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.profile-content {
+  --padding-start: 18px;
+  --padding-end: 18px;
+  --padding-top: 20px;
+  --padding-bottom: 30px;
+}
+
+.brand-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.hero-card {
+  padding: 22px 18px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 42, 61, 0.07);
+  text-align: center;
+
+  .brand-mark {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    place-items: center;
+    border-radius: 18px;
+    background: #e7f8f1;
+    color: #2cc49a;
+    font-size: 30px;
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    margin: 0 0 20px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #64748b;
+  }
+}
+
+.actions {
+  display: grid;
+  gap: 9px;
+
+  ion-button {
+    --border-radius: 14px;
+    height: 48px;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  ion-button.primary {
+    --background: #2cc49a;
+    --color: #ffffff;
+  }
+
+  ion-button[fill='outline'] {
+    --color: #2cc49a;
+    --border-color: #2cc49a;
+    --border-width: 1.5px;
+    --border-style: solid;
+  }
+}
+
+.section-title {
+  margin: 28px 0 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #12213a;
+}
+
+.benefits {
+  display: grid;
+  gap: 10px;
+}
+
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 42, 61, 0.05);
+
+  .icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 12px;
+    background: #e7f8f1;
+    color: #2cc49a;
+    font-size: 19px;
+  }
+
+  h3 {
+    margin: 0 0 3px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    font-size: 11px;
+    color: #64748b;
+  }
+}
+
+.guest-note {
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid #dcf5ea;
+  border-radius: 16px;
+  background: #f1fbf6;
+  text-align: center;
+
+  p {
+    margin: 6px 0 10px;
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  a {
+    font-size: 12px;
+    font-weight: 800;
+    color: #2cc49a;
+    text-decoration: none;
+  }
+}
