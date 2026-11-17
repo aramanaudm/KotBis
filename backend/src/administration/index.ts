@@ -7,6 +7,7 @@ import { arretRoutes } from './routes/arret-routes';
 import { zoneRoutes } from './routes/zone-routes';
 import { trajetRoutes } from './routes/trajet-routes';
 import { compteRoutes } from './routes/compte-routes';
+import { dashboardRoutes } from './routes/dashboard-routes';
 
 export function administrationRoutes(pool: Pool): Router {
   const router = Router();
@@ -17,5 +18,6 @@ export function administrationRoutes(pool: Pool): Router {
   router.use(zoneRoutes(pool));
   router.use(trajetRoutes(pool));
   router.use(compteRoutes(pool));
+  router.use(dashboardRoutes(pool));
   return router;
 }
