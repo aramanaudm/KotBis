@@ -121,3 +121,61 @@ Ce script est destiné à l’équipe **backend** pour initialiser la base parta
 
 Références : MPD v0.3 + Cahier des charges (section 6).
 
+---
+
+## Page d’accueil voyageur
+
+La migration `002_page_accueil.sql` ajoute les objets de lecture nécessaires à
+la page d’accueil, sans créer de nouvelle table :
+
+* `v_arrets_publics` — arrêts actifs et non archivés ;
+* `v_lignes_publiques` — lignes actives ;
+* `v_trajets_publics` — trajets actifs ;
+* `v_trajet_arrets_publics` — arrêts ordonnés des trajets ;
+* `v_destinations_populaires` — les trois raccourcis de la page d’accueil.
+
+Les destinations populaires sont des **arrêts existants** (`A001`, `A002`,
+`A003`). Leur ordre et leur localité sont définis dans la vue. Si le produit
+souhaite ensuite gérer ces destinations depuis le back-office, on pourra
+ajouter une table dédiée ou des colonnes de mise en avant sur `arrets`.
+
+### Application
+
+Depuis la racine du dépôt :
+
+```bash
+psql -U postgres -d kotbis -f database/kotbis_schema.sql
+psql -U postgres -d kotbis -f database/migrations/002_page_accueil.sql
+psql -U postgres -d kotbis -f database/seeds/page_accueil.sql
+psql -U postgres -d kotbis -f database/tests/page_accueil.sql
+```
+
+> `kotbis_schema.sql` ne doit être exécuté qu’une seule fois sur une base
+> vierge. Sur une base existante, exécuter uniquement la migration et le seed.
+
+### Données de démonstration
+
+Le seed ajoute :
+
+* 5 arrêts : Gare Victoria, Grand Baie, Moka, Rose-Hill, Curepipe ;
+* 2 lignes : `L001`, `L002` ;
+* 2 trajets : `T001`, `T002` ;
+* les étapes ordonnées des trajets.
+
+Les coordonnées sont fictives et servent uniquement aux tests locaux.
+
+### Documentation et contrat API
+
+Toute la documentation du ticket est consolidée dans :
+
+```text
+docs/README.md
+```
+
+Elle contient la liste des données de la page d’accueil, la décision sur les
+destinations populaires, les tables et vues utilisées, le contrat API, les
+exemples JSON et la checklist de validation Frontend.
+
+La recherche d’itinéraire et l’authentification sont hors périmètre de cette
+première version.
+
