@@ -1,0 +1,59 @@
+<ion-content class="home-content">
+  <header class="hero">
+    <p class="eyebrow">BONJOUR, BIENVENUE À BORD</p>
+    <h1>Où souhaitez-vous aller ?</h1>
+    <p class="subtitle">Trouvez le meilleur trajet en bus à travers l'île.</p>
+  </header>
+
+  <section class="search-card" aria-label="Rechercher un trajet">
+    <div class="field">
+      <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
+      <span class="field-text">
+        <span class="field-label">Départ</span>
+        <span class="field-value">Ma position actuelle</span>
+      </span>
+    </div>
+    <div class="field-divider"></div>
+    <div class="field">
+      <span class="field-icon"><ion-icon name="bus-outline"></ion-icon></span>
+      <span class="field-text">
+        <span class="field-label">Destination</span>
+        <span class="field-value">Gare Victoria, Port-Louis</span>
+      </span>
+    </div>
+    <app-ui-button label="Trouver mon bus" color="primary" icon="arrow-forward-outline"></app-ui-button>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="eyebrow">RACCOURCIS</span>
+      <h2>Destinations populaires</h2>
+    </div>
+    <div class="card list">
+      <app-destination-item title="Gare Victoria" subtitle="Port-Louis" icon="train-outline"></app-destination-item>
+      <app-destination-item title="Grand Baie" subtitle="Rivière du Rempart" icon="business-outline"></app-destination-item>
+      <app-destination-item title="Mahébourg" subtitle="Grand Port" icon="business-outline"></app-destination-item>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <span class="eyebrow">EN CE MOMENT</span>
+      <h2>Info trafic</h2>
+    </div>
+    <div class="card alert-wrap">
+      <span class="badge">1 alerte</span>
+      <app-alert-card
+        title="Travaux Rose-Hill"
+        message="Ligne 1 - arrêts déplacés temporairement jusqu'à 18 h."
+        linkText="Voir les détails">
+      </app-alert-card>
+    </div>
+  </section>
+
+  <footer class="usage">
+    <p>Vous avez utilisé <strong>3 recherches sur 10</strong></p>
+    <div class="progress"><span></span></div>
+    <a routerLink="/login">Se connecter pour débloquer toutes les recherches</a>
+  </footer>
+</ion-content>
