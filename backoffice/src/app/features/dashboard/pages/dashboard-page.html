@@ -1,0 +1,93 @@
+<app-page-header
+  title="Tableau de bord"
+  description="Une vue d’ensemble de votre réseau, au même endroit."
+>
+  <button class="secondary" type="button" (click)="exportFleet()">
+    <app-icon name="export" />
+    Exporter
+  </button>
+</app-page-header>
+
+<section class="metrics">
+  @for (metric of metrics(); track metric.label) {
+    <article class="metric">
+      <div class="metric-head">
+        {{ metric.label }}
+        <span class="metric-icon">
+          <app-icon [name]="metric.icon" />
+        </span>
+      </div>
+      <strong>{{ metric.value }}</strong>
+      <small>{{ metric.hint }}</small>
+      <a [routerLink]="metric.link">Consulter →</a>
+    </article>
+  }
+</section>
+
+<div class="dashboard-grid">
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>Le réseau en un coup d’œil</h2>
+        <p>Visualisation des zones et arrêts du réseau</p>
+      </div>
+      <span class="network-badge">{{ activeBusCount() }} en service</span>
+    </div>
+
+    <app-network-map />
+
+    <div class="map-foot">
+      <span>{{ stopCount() }} arrêts · {{ routeCount() }} trajet(s)</span>
+      <a routerLink="/zones">Gérer les zones →</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2>À votre attention</h2>
+        <p>Les éléments à vérifier aujourd’hui</p>
+      </div>
+      <app-icon name="clock" />
+    </div>
+
+    <div class="feed">
+      @for (item of attention(); track item.id) {
+        <div class="feed-row">
+          <span
+            class="round"
+            [class.red]="item.tone === 'red'"
+            [class.orange]="item.tone === 'orange'"
+          >
+            <app-icon [name]="item.icon" />
+          </span>
+          <span class="grow">
+            <b>{{ item.title }}</b>
+            <small>{{ item.subtitle }}</small>
+          </span>
+          <app-icon name="arrow" />
+        </div>
+      } @empty {
+        <p class="feed-empty">Aucun élément à traiter pour le moment.</p>
+      }
+    </div>
+  </section>
+</div>
+
+<section class="card fleet-card">
+  <div class="card-head">
+    <div>
+      <h2>Flotte de bus</h2>
+      <p>État actuel des véhicules du réseau</p>
+    </div>
+    <a class="secondary" routerLink="/bus">Voir tous les bus →</a>
+  </div>
+
+  <app-data-table
+    [columns]="fleetColumns"
+    [rows]="fleetRows()"
+    [statusTones]="statusTones"
+    [showActions]="false"
+    emptyMessage="Aucun bus dans la flotte."
+  />
+</section>

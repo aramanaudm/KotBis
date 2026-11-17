@@ -1,0 +1,63 @@
+<ion-content>
+  <main class="shell">
+    <header class="topbar">
+      <a class="icon-button back" routerLink="/favoris" [queryParams]="{ vue: 'apercu' }" aria-label="Retour"></a>
+      <h1 #titre tabindex="-1">{{ vue() ? 'KotBis' : 'Favoris' }}</h1>
+      <a class="icon-button close" routerLink="/favoris" [queryParams]="{ vue: 'apercu' }" aria-label="Fermer"></a>
+    </header>
+
+    @switch (vue()) { @case ('apercu') {
+    <section class="empty" aria-labelledby="titre-apercu">
+      <h2 id="titre-apercu">Aperçu des favoris</h2>
+      <a class="action" routerLink="/favoris" (click)="reinitialiser()">Voir l’état vide</a>
+      <a class="action" routerLink="/favoris" [queryParams]="{ etat: 'liste' }" (click)="reinitialiser()"
+        >Voir la liste</a
+      >
+    </section>
+    } @case ('recherche') {
+    <section class="empty" aria-labelledby="titre-recherche">
+      <h2 id="titre-recherche">Rechercher un trajet</h2>
+      @if (trajetSelectionne(); as selection) {
+      <p>{{ selection.depart }} → {{ selection.destination }}</p>
+      }
+      <p>La recherche sera disponible dans l’application KotBis.</p>
+      <a class="action" routerLink="/favoris" [queryParams]="{ etat: etat() }">Revenir aux favoris</a>
+    </section>
+    } @default { @if (favoris().length) {
+    <ul class="favorites" aria-label="Trajets favoris enregistrés">
+      @for (favori of favoris(); track favori.id) {
+      <li class="favorite">
+        <span class="star-tile" aria-hidden="true"><span class="star"></span></span>
+        <a
+          class="favorite-route"
+          routerLink="/favoris"
+          [queryParams]="{ vue: 'recherche', etat: etat(), trajet: favori.id }"
+        >
+          <span class="route-title"
+            >{{ favori.depart }} <span aria-hidden="true">→</span><span class="sr-only"> vers </span> {{
+            favori.destination }}</span
+          >
+          <span class="route-action">Relancer la recherche</span>
+        </a>
+        <button
+          class="icon-button close remove"
+          type="button"
+          [attr.aria-label]="'Retirer le trajet de ' + favori.depart + ' à ' + favori.destination + ' des favoris'"
+          (click)="retirer(favori, titre)"
+        ></button>
+      </li>
+      }
+    </ul>
+    } @else {
+    <section class="empty" aria-labelledby="titre-vide">
+      <span class="star-tile" aria-hidden="true"><span class="star"></span></span>
+      <h2 id="titre-vide">Aucun favori enregistré</h2>
+      <p>Enregistrez un trajet depuis son détail.</p>
+      <a class="action" routerLink="/favoris" [queryParams]="{ vue: 'recherche', etat: etat() }"
+        >Rechercher un trajet</a
+      >
+    </section>
+    } } }
+    <p class="sr-only" role="status">{{ annonce() }}</p>
+  </main>
+</ion-content>

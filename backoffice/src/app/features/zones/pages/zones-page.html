@@ -1,0 +1,132 @@
+<app-page-header title="Zones" description="Délimitez les zones de couverture du réseau sur la carte.">
+  <button class="primary" type="button" (click)="openCreate()">
+    <app-icon name="plus" />
+    Ajouter
+  </button>
+</app-page-header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input
+        type="search"
+        placeholder="Rechercher…"
+        aria-label="Rechercher une zone"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+
+    <select
+      class="filter"
+      aria-label="Filtrer par état"
+      [value]="statusFilter()"
+      (change)="onFilter($event)"
+    >
+      <option value="">Tous les états</option>
+      <option value="active">Actif</option>
+      <option value="inactive">Inactif</option>
+    </select>
+
+    <button class="secondary" type="button" (click)="exportCsv()">
+      <app-icon name="export" />
+      Exporter CSV
+    </button>
+  </div>
+
+  <app-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [statusTones]="statusTones"
+    emptyMessage="Aucune zone ne correspond à la recherche."
+    (edit)="openEdit($event)"
+    (remove)="askDelete($event)"
+  />
+
+  <app-pagination
+    [page]="page()"
+    [total]="filteredZones().length"
+    [pageSize]="pageSize"
+    (pageChange)="changePage($event)"
+  />
+</section>
+
+<section class="card map-card">
+  <div class="card-head">
+    <div>
+      <h2>Zones actives sur le réseau</h2>
+      <p>Visualisation schématique de la couverture</p>
+    </div>
+    <span class="zone-badge">{{ activeZones().length }} active(s)</span>
+  </div>
+
+  <app-zone-map [zones]="activeZones()" />
+</section>
+
+@if (formOpen()) {
+  <app-modal [title]="formTitle()" (close)="closeForm()">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <app-form-field label="Nom de la zone" forId="zone-name" [error]="nameError()">
+          <input id="zone-name" type="text" formControlName="name" maxlength="150" />
+        </app-form-field>
+
+        <app-form-field label="État" forId="zone-status">
+          <select id="zone-status" formControlName="status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </app-form-field>
+      </div>
+
+      <div class="map-editor">
+        <app-zone-map mode="edit" [vertices]="vertices()" (verticesChange)="setVertices($event)" />
+      </div>
+
+      <div class="draw-tools">
+        <button
+          class="secondary"
+          type="button"
+          [disabled]="vertices().length === 0"
+          (click)="undoVertex()"
+        >
+          Annuler le point
+        </button>
+        <button
+          class="secondary"
+          type="button"
+          [disabled]="vertices().length === 0"
+          (click)="clearVertices()"
+        >
+          Effacer
+        </button>
+        <span class="vertex-count">{{ vertices().length }} point(s)</span>
+      </div>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-footer">
+        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (deleteTarget(); as zone) {
+  <app-modal title="Supprimer cette zone ?" (close)="cancelDelete()">
+    <p>La zone {{ zone.name }} sera retirée de la liste.</p>
+
+    <div class="form-footer">
+      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
+      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </app-modal>
+}
+
+@if (feedback()) {
+  <div class="toast" role="status">{{ feedback() }}</div>
+}
