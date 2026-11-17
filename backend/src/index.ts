@@ -2,6 +2,7 @@ import express from "express";
 import { Pool } from 'pg';
 import cors from "cors";
 import "dotenv/config";
+import routeurSante from "./commun/routes/sante.routes";
 import { verifierConnexionBdd, verifierPostgis, ErreurBaseDeDonnees } from "./configuration/baseDeDonnees";
 import argon2 from 'argon2';
 import { insert, update, remove, Requete } from './commun/crud-reflect'; 
@@ -13,6 +14,9 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/sante", routeurSante);
+
+// Route de vérification du serveur
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
