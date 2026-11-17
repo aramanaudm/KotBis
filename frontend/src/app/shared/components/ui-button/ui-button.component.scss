@@ -1,0 +1,29 @@
+ion-button {
+  --border-radius: 14px;
+  --box-shadow: 0 8px 20px rgba(44, 196, 154, 0.24);
+  height: 50px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+
+  &.primary {
+    --background: #2cc49a;
+    --background-activated: #24a982;
+    --color: #ffffff;
+  }
+
+  &.outline {
+    --background: #ffffff;
+    --border-color: #2cc49a;
+    --border-width: 1.5px;
+    --border-style: solid;
+    --color: #2cc49a;
+    --box-shadow: none;
+  }
+
+  &.danger {
+    --background: #ef4444;
+    --color: #ffffff;
+  }
+}

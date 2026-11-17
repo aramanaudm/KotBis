@@ -1,0 +1,13 @@
+<ion-button
+  [expand]="expand"
+  [disabled]="disabled"
+  [type]="type"
+  [class.primary]="color === 'primary'"
+  [class.outline]="color === 'outline'"
+  [class.danger]="color === 'danger'"
+>
+  {{ label }}
+  @if (icon) {
+    <ion-icon [name]="icon" [slot]="iconSlot"></ion-icon>
+  }
+</ion-button>
