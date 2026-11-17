@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { IonIcon } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { chevronForwardOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-destination-item',
@@ -8,8 +10,12 @@ import { IonIcon } from '@ionic/angular';
   imports: [IonIcon],
 })
 export class DestinationItemComponent {
-  @Input() title: string = '';
-  @Input() subtitle: string = '';
-  @Input() icon: string = 'bus-outline';
+  @Input() title = '';
+  @Input() subtitle = '';
+  @Input() icon = 'bus-outline';
   @Input() iconType: 'default' | 'star' = 'default';
+
+  constructor() {
+    addIcons({ chevronForwardOutline });
+  }
 }
