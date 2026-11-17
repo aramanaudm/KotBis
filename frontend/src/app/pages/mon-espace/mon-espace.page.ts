@@ -301,6 +301,6 @@ export class MonEspacePage {
   }
 
   protected close(): Promise<boolean> {
-    return this.nav.navigateBack('/');
+    return this.nav.navigateBack('/home');
   }
 }
