@@ -1,22 +1,55 @@
-:root {
-  --ion-font-family: Inter, system-ui, -apple-system, sans-serif;
+// For information on how to create your own theme, please refer to:
+// https://ionicframework.com/docs/theming/
 
-  --ion-color-primary: #2cc49a;
-  --ion-color-primary-rgb: 44, 196, 154;
+/* AUTH-INTEGRATION: Bus Maurice auth theme tokens */
+/* Thème « Bus Maurice » — valeurs mesurées sur les maquettes (Bus_image.zip).
+   Tous les écrans utilisent ces variables : un futur mode sombre = les redéfinir sous une classe. */
+
+:root {
+  /* Marque */
+  --bm-green: #2ed6a1;
+  --bm-green-ink: #168b69; /* texte vert sur fond clair (liens, sur-titres) */
+  --bm-blue: #1766df;
+  --bm-navy: #223d54; /* avatar, pastilles de ligne */
+
+  /* Texte */
+  --bm-ink: #17243a; /* titres et libellés */
+  --bm-muted: #687387; /* sous-titres */
+  --bm-placeholder: #818894;
+  --bm-caption: #828b93; /* sous-lignes de liste */
+
+  /* Surfaces */
+  --bm-bg: #ffffff;
+  --bm-tile: #f3f7fd; /* fond des pastilles d'icône */
+  --bm-border: #e3e7eb; /* champs, boutons secondaires, cartes */
+  --bm-sep: #e9edf0; /* séparateurs de liste */
+  --bm-backdrop: #f0f1f3;
+
+  /* Notice (ambre) */
+  --bm-notice-bg: #fefaef;
+  --bm-notice-ink: #9e792e;
+
+  --bm-danger: #c62828;
+  --bm-radius-field: 16px;
+  --bm-radius-card: 28px;
+
+  /* Branchement sur Ionic */
+  --ion-font-family: 'Ubuntu', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ion-background-color: var(--bm-bg);
+  --ion-text-color: var(--bm-ink);
+
+  --ion-color-primary: #1766df;
+  --ion-color-primary-rgb: 23, 102, 223;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #26ac87;
-  --ion-color-primary-tint: #41caa4;
+  --ion-color-primary-shade: #1459c4;
+  --ion-color-primary-tint: #2f75e2;
 
-  --ion-color-success: #2cc49a;
-  --ion-color-success-rgb: 44, 196, 154;
-  --ion-color-success-contrast: #ffffff;
-  --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #26ac87;
-  --ion-color-success-tint: #41caa4;
-
-  --ion-background-color: #f5f7fa;
-  --ion-background-color-rgb: 245, 247, 250;
-  --ion-text-color: #12213a;
-  --ion-text-color-rgb: 18, 33, 58;
+  --ion-color-danger: #c62828;
+  --ion-color-danger-rgb: 198, 40, 40;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #af2323;
+  --ion-color-danger-tint: #cc3e3e;
 }
+

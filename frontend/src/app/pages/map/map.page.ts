@@ -7,6 +7,4 @@ import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular';
   styleUrls: ['./map.page.scss'],
   imports: [IonHeader, IonToolbar, IonTitle, IonContent],
 })
-export class MapPage {
-  constructor() {}
-}
+export class MapPage {}
