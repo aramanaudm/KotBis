@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.map-card {
+  margin-top: 22px;
+}
+
+.zone-badge {
+  padding: 5px 9px;
+  color: var(--green);
+  font-size: 10px;
+  background: #22aa7b12;
+  border-radius: 5px;
+}
+
+.map-editor {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.draw-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.draw-tools .secondary {
+  padding: 9px 12px;
+}
+
+.draw-tools button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.vertex-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .toolbar .search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}
