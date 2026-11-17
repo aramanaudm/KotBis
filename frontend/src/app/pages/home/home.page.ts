@@ -3,9 +3,10 @@ import { RouterLink } from '@angular/router';
 import { IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { arrowForwardOutline, busOutline, businessOutline, locateOutline, trainOutline } from 'ionicons/icons';
-import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
-import { DestinationItemComponent } from '../../shared/components/destination-item/destination-item.component';
+
 import { AlertCardComponent } from '../../shared/components/alert-card/alert-card.component';
+import { DestinationItemComponent } from '../../shared/components/destination-item/destination-item.component';
+import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.component';
 
 @Component({
   selector: 'app-home',
