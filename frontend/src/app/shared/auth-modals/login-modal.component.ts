@@ -15,7 +15,7 @@ import { IDENTIFIER_MESSAGES, LOGIN_PASSWORD_MESSAGES } from '../field-error/fie
   selector: 'app-login-modal',
   imports: [ReactiveFormsModule, IonIcon, BrandLogoComponent, FieldErrorComponent],
   template: `
-    <div class="bm-card">
+    <div class="bm-card bm-theme-blue">
       <button class="bm-card-close" type="button" aria-label="Fermer" (click)="dismiss('cancel')">
         <ion-icon name="close-outline"></ion-icon>
       </button>
@@ -73,14 +73,14 @@ import { IDENTIFIER_MESSAGES, LOGIN_PASSWORD_MESSAGES } from '../field-error/fie
         </div>
 
         <div class="bm-forgot">
-          <button class="bm-btn bm-btn--link is-green" type="button" (click)="dismiss('forgot')">Mot de passe oublié ?</button>
+          <button class="bm-btn bm-btn--link is-blue" type="button" (click)="dismiss('forgot')">Mot de passe oublié ?</button>
         </div>
 
         @if (serverError(); as message) {
           <p class="bm-feedback is-error" role="alert">{{ message }}</p>
         }
 
-        <button class="bm-btn bm-btn--green" type="submit" [disabled]="submitting()">
+        <button class="bm-btn bm-btn--blue" type="submit" [disabled]="submitting()">
           {{ submitting() ? 'Connexion…' : 'Se connecter' }}
         </button>
       </form>
@@ -90,7 +90,7 @@ import { IDENTIFIER_MESSAGES, LOGIN_PASSWORD_MESSAGES } from '../field-error/fie
       <button class="bm-btn bm-btn--outline" type="button" (click)="dismiss('register')">Créer un compte</button>
 
       <div class="bm-center-links">
-        <button class="bm-btn bm-btn--link is-green" type="button" (click)="dismiss('cancel')">
+        <button class="bm-btn bm-btn--link is-blue" type="button" (click)="dismiss('cancel')">
           Continuer en tant que visiteur →
         </button>
       </div>

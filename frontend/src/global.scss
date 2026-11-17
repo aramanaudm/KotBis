@@ -231,6 +231,11 @@ button {
       color: var(--bm-green-ink);
       font-size: 13px;
     }
+
+    &.is-blue {
+      color: var(--bm-blue);
+      font-size: 13px;
+    }
   }
 }
 
@@ -479,4 +484,3 @@ ion-toast.bm-toast {
   --box-shadow: 0 8px 24px rgba(23, 36, 58, 0.25);
   font-size: 13px;
 }
-
