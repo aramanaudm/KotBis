@@ -1,18 +1,51 @@
 ﻿{
   "APP": {
-    "TITLE": "KotBis"
+    "TITLE": "KotBis",
+    "BRAND": "Bus Maurice",
+    "WELCOME_ABOARD": "GOOD MORNING, WELCOME ABOARD"
   },
   "NAV": {
     "HOME": "Home",
     "MAP": "Map",
-    "PROFILE": "Profile"
+    "PROFILE": "Profile",
+    "BACK": "Back"
   },
   "HOME": {
-    "WELCOME": "Welcome to KotBis",
-    "SEARCH": "Search a trip or a bus"
+    "TITLE": "Where do you want to go?",
+    "SUBTITLE": "Find the best bus route across the island.",
+    "DEPARTURE": "Departure",
+    "MY_LOCATION": "My current location",
+    "DESTINATION": "Destination",
+    "FIND_BUS": "Find my bus",
+    "SHORTCUTS": "SHORTCUTS",
+    "POPULAR_DESTINATIONS": "Popular destinations",
+    "RIGHT_NOW": "RIGHT NOW",
+    "TRAFFIC_INFO": "Traffic info",
+    "VIEW_DETAILS": "View details",
+    "SEARCH_LIMIT": "You used {{count}} searches out of {{total}}"
   },
   "AUTH": {
     "LOGIN": "Login",
-    "REGISTER": "Register"
+    "LOGIN_TITLE": "Sign in for more features",
+    "LOGIN_SUBTITLE": "Find your trips and preferences again.",
+    "EMAIL_OR_USERNAME": "Email or username",
+    "PASSWORD": "Password",
+    "FORGOT_PASSWORD": "Forgot password?",
+    "SIGN_IN": "Sign in",
+    "CREATE_ACCOUNT": "Create an account",
+    "CONTINUE_GUEST": "Continue as a guest",
+    "REGISTER": "Register",
+    "FREE_SIGNUP": "FREE SIGN-UP",
+    "REGISTER_SUBTITLE": "A few details to personalise your trips.",
+    "PSEUDO": "Username",
+    "EMAIL": "Email",
+    "CITY": "City or area",
+    "PHONE": "Phone",
+    "CONFIRM_PASSWORD": "Confirm password",
+    "TERMS": "I accept the terms of use",
+    "CANCEL": "Cancel",
+    "MY_SPACE": "MY SPACE",
+    "TRAVEL_SIMPLE": "Travel more simply",
+    "GUEST_NOTE": "You can continue without an account."
   }
 }
