@@ -6,8 +6,8 @@ export class Bus {
   constructor(
     public id: number | null,
     public plaque: string,
-    public etat: 'actif' | 'inactif' | 'en_panne' = 'actif',
-    public actif: boolean = true,
+    public etat?: 'actif' | 'inactif' | 'en_panne',
+    public actif?: boolean,
     public archiveLe: Date | null = null,
     public creeLe: Date | null = null,
     public modifieLe: Date | null = null,

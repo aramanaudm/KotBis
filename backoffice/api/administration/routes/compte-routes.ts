@@ -1,107 +1,143 @@
 import { Router } from 'express';
 import { Pool } from 'pg';
-import { insert, update, remove } from '../../commun/crud-reflect';
+import { insert, update } from '../../commun/crud-reflect';
 import { Compte } from '../entites/compte';
-import { adapterRequete } from '../utils/adapter-requete';
+import { adapterRequete, repondreErreur } from '../utils/adapter-requete';
+
+const SELECT_COMPTES = `
+  SELECT c.id, c.email, c.role_id, c.etat, c.identifiant_public,
+         c.cree_le, c.modifie_le, c.version,
+         r.code AS role_code, r.libelle AS role_libelle,
+         v.pseudo, COALESCE(s.solde, 0) AS points
+  FROM comptes c
+  JOIN roles r ON r.id = c.role_id
+  LEFT JOIN voyageurs v ON v.compte_id = c.id
+  LEFT JOIN v_soldes_voyageurs s ON s.voyageur_id = c.id
+`;
+
+async function roleId(pool: Pool, roleId: unknown, roleCode: unknown): Promise<number | undefined> {
+  if (roleId != null && roleId !== '') {
+    return Number(roleId);
+  }
+  if (typeof roleCode === 'string' && roleCode.trim()) {
+    const codes: Record<string, string> = {
+      traveller: 'voyageur',
+      operator: 'operateur',
+      moderator: 'moderateur',
+      admin: 'administrateur',
+    };
+    const resultat = await pool.query('SELECT id FROM roles WHERE code = $1', [
+      codes[roleCode] ?? roleCode,
+    ]);
+    if (resultat.rowCount === 0) {
+      throw Object.assign(new Error("Le rôle spécifiée n'existe pas"), { code: 'ROLE_INCONNU' });
+    }
+    return Number(resultat.rows[0].id);
+  }
+  return undefined;
+}
+
+function identifiantPublic(email: string): string {
+  const base = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 30);
+  return `${base}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export function compteRoutes(pool: Pool): Router {
   const router = Router();
 
-  // GET all — jointure avec roles
   router.get('/accounts', async (_req, res) => {
     try {
-      const resultat = await pool.query(`
-        SELECT c.id, c.email, c.role_id, c.etat, c.identifiant_public,
-               c.cree_le, c.modifie_le, c.version,
-               r.code AS role_code, r.libelle AS role_libelle
-        FROM comptes c
-        JOIN roles r ON r.id = c.role_id
-        ORDER BY c.id
-      `);
+      const resultat = await pool.query(`${SELECT_COMPTES} ORDER BY c.id`);
       res.json({ success: true, data: resultat.rows });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 
-  // GET one
   router.get('/accounts/:id', async (req, res) => {
     try {
-      const resultat = await pool.query(`
-        SELECT c.id, c.email, c.role_id, c.etat, c.identifiant_public,
-               c.cree_le, c.modifie_le, c.version,
-               r.code AS role_code, r.libelle AS role_libelle
-        FROM comptes c
-        JOIN roles r ON r.id = c.role_id
-        WHERE c.id = $1
-      `, [req.params.id]);
+      const resultat = await pool.query(`${SELECT_COMPTES} WHERE c.id = $1`, [req.params.id]);
       if (resultat.rowCount === 0) return res.status(404).json({ error: 'Compte non trouvé' });
       res.json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 
-  // POST
   router.post('/accounts', async (req, res) => {
     try {
-      const { email, mot_de_passe_hash, role_id, etat, identifiant_public } = req.body;
-      if (!email || !role_id || !etat || !identifiant_public) {
-        return res.status(400).json({ error: 'email, role_id, etat et identifiant_public sont obligatoires' });
+      const { email, mot_de_passe_hash, role_id, role_code, etat, identifiant_public, pseudo } = req.body;
+      if (!email || !etat) {
+        return res.status(400).json({ error: 'email et etat sont obligatoires' });
       }
       const compte = new Compte(
         null,
         email,
         mot_de_passe_hash ?? null,
-        Number(role_id),
+        await roleId(pool, role_id, role_code),
         etat,
-        identifiant_public
+        identifiant_public || identifiantPublic(email),
       );
       const { sql, params } = adapterRequete(insert(compte));
       const resultat = await pool.query(sql + ' RETURNING *', params);
+      if (pseudo) {
+        await pool.query(`
+          INSERT INTO voyageurs (compte_id, pseudo) VALUES ($1, $2)
+          ON CONFLICT (compte_id) DO UPDATE SET pseudo = EXCLUDED.pseudo
+        `, [resultat.rows[0].id, pseudo]);
+      }
       res.status(201).json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      if (error.code === '23505') return res.status(409).json({ error: 'Cet email ou identifiant_public existe déjà' });
-      if (error.code === '23503') return res.status(400).json({ error: 'Le rôle spécifié n\'existe pas' });
-      if (error.code === '23514') return res.status(400).json({ error: 'État invalide (invite, actif, inactif)' });
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error, {
+        23505: 'Cet email, cet identifiant ou ce pseudo existe déjà',
+        23514: "État invalide (invite, actif, inactif) ou hash manquant pour un compte actif",
+        ROLE_INCONNU: "Le rôle spécifié n'existe pas",
+      });
     }
   });
 
-  // PUT
   router.put('/accounts/:id', async (req, res) => {
     try {
-      const { email, mot_de_passe_hash, role_id, etat, identifiant_public } = req.body;
+      const existant = await pool.query('SELECT id FROM comptes WHERE id = $1', [req.params.id]);
+      if (existant.rowCount === 0) return res.status(404).json({ error: 'Compte non trouvé' });
+
+      const { email, mot_de_passe_hash, role_id, role_code, etat, identifiant_public, pseudo } = req.body;
       const compte = new Compte(
         Number(req.params.id),
         email,
-        mot_de_passe_hash ?? null,
-        Number(role_id),
+        mot_de_passe_hash,
+        await roleId(pool, role_id, role_code),
         etat,
-        identifiant_public
+        identifiant_public,
       );
       const { sql, params } = adapterRequete(update(compte));
       const resultat = await pool.query(sql + ' RETURNING *', params);
-      if (resultat.rowCount === 0) return res.status(404).json({ error: 'Compte non trouvé' });
+      if (pseudo) {
+        await pool.query(`
+          INSERT INTO voyageurs (compte_id, pseudo) VALUES ($1, $2)
+          ON CONFLICT (compte_id) DO UPDATE SET pseudo = EXCLUDED.pseudo
+        `, [resultat.rows[0].id, pseudo]);
+      }
       res.json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      if (error.code === '23505') return res.status(409).json({ error: 'Cet email ou identifiant_public existe déjà' });
-      if (error.code === '23503') return res.status(400).json({ error: 'Le rôle spécifié n\'existe pas' });
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error, {
+        23505: 'Cet email, cet identifiant ou ce pseudo existe déjà',
+        23514: "État invalide (invite, actif, inactif) ou hash manquant pour un compte actif",
+        ROLE_INCONNU: "Le rôle spécifié n'existe pas",
+      });
     }
   });
 
-  // DELETE (désactivation, pas suppression physique — RG10)
   router.delete('/accounts/:id', async (req, res) => {
     try {
       const resultat = await pool.query(
-        'UPDATE comptes SET etat = $1, modifie_le = now() WHERE id = $2 RETURNING id, email, etat',
-        ['inactif', req.params.id]
+        'UPDATE comptes SET etat = $$inactif$$, modifie_le = now() WHERE id = $1 RETURNING id, email, etat',
+        [req.params.id],
       );
       if (resultat.rowCount === 0) return res.status(404).json({ error: 'Compte non trouvé' });
       res.json({ success: true, message: 'Compte désactivé', data: resultat.rows[0] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 

@@ -7,6 +7,10 @@ import { arretRoutes } from './routes/arret-routes';
 import { zoneRoutes } from './routes/zone-routes';
 import { trajetRoutes } from './routes/trajet-routes';
 import { compteRoutes } from './routes/compte-routes';
+import { staffRoutes } from './routes/staff-routes';
+import { reportRoutes } from './routes/report-routes';
+import { reviewRoutes } from './routes/review-routes';
+import { pointRoutes } from './routes/point-routes';
 import { dashboardRoutes } from './routes/dashboard-routes';
 
 export function administrationRoutes(pool: Pool): Router {
@@ -18,6 +22,10 @@ export function administrationRoutes(pool: Pool): Router {
   router.use(zoneRoutes(pool));
   router.use(trajetRoutes(pool));
   router.use(compteRoutes(pool));
+  router.use(staffRoutes(pool));
+  router.use(reportRoutes(pool));
+  router.use(reviewRoutes(pool));
+  router.use(pointRoutes(pool));
   router.use(dashboardRoutes(pool));
   return router;
 }

@@ -19,6 +19,10 @@ export class DashboardPage {
   private readonly dashboard = inject(DashboardService);
   private readonly csv = inject(CsvExportService);
 
+  constructor() {
+    this.dashboard.load();
+  }
+
   protected readonly metrics = this.dashboard.metrics;
   protected readonly attention = this.dashboard.attention;
   protected readonly activeBusCount = this.dashboard.activeBusCount;

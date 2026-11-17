@@ -8,6 +8,7 @@ export interface Bus {
   readonly line: string;
   readonly direction: string;
   readonly status: BusStatus;
+  readonly trajetCode?: string;
 }
 
 export const BUS_STATUS_LABELS: Readonly<Record<BusStatus, string>> = {

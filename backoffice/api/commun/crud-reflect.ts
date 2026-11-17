@@ -87,6 +87,7 @@ export function getChamps(entite: object): string[] {
   return Reflect.ownKeys(entite)
     .filter((cle): cle is string => typeof cle === 'string')
     .filter((cle) => typeof Reflect.get(entite, cle) !== 'function')
+    .filter((cle) => Reflect.get(entite, cle) !== undefined)
     .filter((cle) => !ignores.includes(cle))
     .map(verifierIdentifiant);
 }

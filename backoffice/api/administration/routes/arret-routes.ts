@@ -1,104 +1,127 @@
 import { Router } from 'express';
 import { Pool } from 'pg';
+import { repondreErreur } from '../utils/adapter-requete';
+
+function coordonneesValides(latitude: unknown, longitude: unknown): boolean {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  );
+}
+
+async function codeOuGeneration(pool: Pool, code: unknown, prefix: string): Promise<string> {
+  if (typeof code === 'string' && code.trim()) {
+    return code.trim();
+  }
+  const table = prefix === 'A' ? 'arrets' : 'zones';
+  const resultat = await pool.query(
+    `SELECT nextval(pg_get_serial_sequence($1, 'id'))::int AS n`,
+    [table],
+  );
+  return `${prefix}${String(resultat.rows[0].n).padStart(4, '0')}`;
+}
 
 export function arretRoutes(pool: Pool): Router {
   const router = Router();
 
-  // GET all — utilise la vue v_coordonnees_arrets
   router.get('/stops', async (_req, res) => {
     try {
       const resultat = await pool.query(`
         SELECT a.id, a.code, a.nom, a.actif, a.archive_le, a.version,
                a.cree_le, a.modifie_le,
-               ST_Y(a.position) AS latitude,
-               ST_X(a.position) AS longitude
+               ST_Y(a.position) AS latitude, ST_X(a.position) AS longitude
         FROM arrets a
         WHERE a.archive_le IS NULL
         ORDER BY a.id
       `);
       res.json({ success: true, data: resultat.rows });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 
-  // GET one
   router.get('/stops/:id', async (req, res) => {
     try {
       const resultat = await pool.query(`
         SELECT a.id, a.code, a.nom, a.actif, a.archive_le, a.version,
                a.cree_le, a.modifie_le,
-               ST_Y(a.position) AS latitude,
-               ST_X(a.position) AS longitude
+               ST_Y(a.position) AS latitude, ST_X(a.position) AS longitude
         FROM arrets a
-        WHERE a.id = $1
+        WHERE a.id = $1 AND a.archive_le IS NULL
       `, [req.params.id]);
       if (resultat.rowCount === 0) return res.status(404).json({ error: 'Arrêt non trouvé' });
       res.json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 
-  // POST — crée avec ST_MakePoint
   router.post('/stops', async (req, res) => {
     try {
       const { code, nom, latitude, longitude, actif } = req.body;
-      if (!code || !nom || latitude == null || longitude == null) {
-        return res.status(400).json({ error: 'code, nom, latitude et longitude sont obligatoires' });
+      if (!nom || latitude == null || longitude == null) {
+        return res.status(400).json({ error: 'nom, latitude et longitude sont obligatoires' });
       }
-      if (latitude < -90 || latitude > 90) {
-        return res.status(400).json({ error: 'Latitude doit être entre -90 et 90' });
+      if (!coordonneesValides(latitude, longitude)) {
+        return res.status(400).json({ error: 'Latitude [-90,90] et longitude [-180,180] invalides' });
       }
-      if (longitude < -180 || longitude > 180) {
-        return res.status(400).json({ error: 'Longitude doit être entre -180 et 180' });
-      }
+      const nouveauCode = await codeOuGeneration(pool, code, 'A');
       const resultat = await pool.query(`
         INSERT INTO arrets (code, nom, position, actif)
         VALUES ($1, $2, ST_SetSRID(ST_MakePoint($3, $4), 4326), $5)
         RETURNING id, code, nom, actif,
-                  ST_Y(position) AS latitude,
-                  ST_X(position) AS longitude
-      `, [code, nom, longitude, latitude, actif ?? true]);
+                  ST_Y(position) AS latitude, ST_X(position) AS longitude
+      `, [nouveauCode, nom, Number(longitude), Number(latitude), actif ?? true]);
       res.status(201).json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      if (error.code === '23505') return res.status(409).json({ error: 'Ce code existe déjà' });
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error, { 23505: 'Ce code existe déjà' });
     }
   });
 
-  // PUT
   router.put('/stops/:id', async (req, res) => {
     try {
+      const existant = await pool.query(
+        'SELECT id FROM arrets WHERE id = $1 AND archive_le IS NULL',
+        [req.params.id],
+      );
+      if (existant.rowCount === 0) return res.status(404).json({ error: 'Arrêt non trouvé' });
+
       const { code, nom, latitude, longitude, actif } = req.body;
+      if ((latitude != null || longitude != null) && !coordonneesValides(latitude, longitude)) {
+        return res.status(400).json({ error: 'Latitude [-90,90] et longitude [-180,180] invalides' });
+      }
       const resultat = await pool.query(`
         UPDATE arrets
-        SET code = $1, nom = $2,
-            position = ST_SetSRID(ST_MakePoint($3, $4), 4326),
-            actif = $5, modifie_le = now()
-        WHERE id = $6
+        SET code = COALESCE($1, code), nom = COALESCE($2, nom),
+            position = CASE WHEN $3::float8 IS NULL OR $4::float8 IS NULL THEN position
+                            ELSE ST_SetSRID(ST_MakePoint($3, $4), 4326) END,
+            actif = COALESCE($5, actif), modifie_le = now()
+        WHERE id = $6 AND archive_le IS NULL
         RETURNING id, code, nom, actif,
-                  ST_Y(position) AS latitude,
-                  ST_X(position) AS longitude
-      `, [code, nom, longitude, latitude, actif ?? true, req.params.id]);
-      if (resultat.rowCount === 0) return res.status(404).json({ error: 'Arrêt non trouvé' });
+                  ST_Y(position) AS latitude, ST_X(position) AS longitude
+      `, [code ?? null, nom ?? null, latitude ?? null, longitude ?? null, actif ?? null, req.params.id]);
       res.json({ success: true, data: resultat.rows[0] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error, { 23505: 'Ce code existe déjà' });
     }
   });
 
-  // DELETE (archive)
   router.delete('/stops/:id', async (req, res) => {
     try {
       const resultat = await pool.query(
-        'UPDATE arrets SET archive_le = now() WHERE id = $1 RETURNING *',
-        [req.params.id]
+        'UPDATE arrets SET archive_le = now() WHERE id = $1 AND archive_le IS NULL RETURNING id, code, nom, archive_le',
+        [req.params.id],
       );
       if (resultat.rowCount === 0) return res.status(404).json({ error: 'Arrêt non trouvé' });
       res.json({ success: true, message: 'Arrêt archivé', data: resultat.rows[0] });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (error) {
+      repondreErreur(res, error);
     }
   });
 

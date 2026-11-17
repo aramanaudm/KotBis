@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -22,6 +23,10 @@ export class StopsPage {
   private readonly stops = inject(StopsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.stops.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = STOP_STATUS_TONES;
@@ -152,8 +157,24 @@ export class StopsPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const editing = this.editingStop();
+    const stop: Omit<Stop, 'id'> = {
+      name: this.form.controls.name.value,
+      latitude: this.form.controls.latitude.value ?? 0,
+      longitude: this.form.controls.longitude.value ?? 0,
+      status: this.form.controls.status.value,
+    };
+    const operation = editing
+      ? this.stops.update(editing.id, stop)
+      : this.stops.create(stop);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Arrêt modifié.' : 'Arrêt créé.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -169,12 +190,18 @@ export class StopsPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.stops.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Arrêt archivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {

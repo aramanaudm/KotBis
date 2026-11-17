@@ -8,7 +8,7 @@ export class Ligne {
     public id: number | null,
     public code: string,
     public libelle: string,
-    public actif: boolean = true,
+    public actif?: boolean,
     public archiveLe: Date | null = null,
     public creeLe: Date | null = null,
     public modifieLe: Date | null = null,
