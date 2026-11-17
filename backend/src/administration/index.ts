@@ -6,6 +6,7 @@ import { busRoutes } from './routes/bus-routes';
 import { arretRoutes } from './routes/arret-routes';
 import { zoneRoutes } from './routes/zone-routes';
 import { trajetRoutes } from './routes/trajet-routes';
+import { compteRoutes } from './routes/compte-routes';
 
 export function administrationRoutes(pool: Pool): Router {
   const router = Router();
@@ -15,5 +16,6 @@ export function administrationRoutes(pool: Pool): Router {
   router.use(arretRoutes(pool));
   router.use(zoneRoutes(pool));
   router.use(trajetRoutes(pool));
+  router.use(compteRoutes(pool));
   return router;
 }
