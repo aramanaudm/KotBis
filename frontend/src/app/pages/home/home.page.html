@@ -1,63 +1,59 @@
-<ion-content class="ion-padding">
-  
-  <!-- En-tête de bienvenue -->
-  <div class="welcome-header">
-    <div class="user-avatar">
-      <ion-icon name="person-outline"></ion-icon>
+<ion-content class="home-content">
+  <header class="hero">
+    <p class="eyebrow">BONJOUR, BIENVENUE À BORD</p>
+    <h1>Où souhaitez-vous aller ?</h1>
+    <p class="subtitle">Trouvez le meilleur trajet en bus à travers l'île.</p>
+  </header>
+
+  <section class="search-card" aria-label="Rechercher un trajet">
+    <div class="field">
+      <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
+      <span class="field-text">
+        <span class="field-label">Départ</span>
+        <span class="field-value">Ma position actuelle</span>
+      </span>
     </div>
-    <div class="welcome-text">
-      <h2>Bonjour, Steve 👋</h2>
-      <p>Où souhaitez-vous aller aujourd'hui ?</p>
+    <div class="field-divider"></div>
+    <div class="field">
+      <span class="field-icon"><ion-icon name="bus-outline"></ion-icon></span>
+      <span class="field-text">
+        <span class="field-label">Destination</span>
+        <span class="field-value">Gare Victoria, Port-Louis</span>
+      </span>
     </div>
-  </div>
+    <app-ui-button label="Trouver mon bus" color="primary" icon="arrow-forward-outline"></app-ui-button>
+  </section>
 
-  <!-- Barre de recherche -->
-  <div class="search-section">
-    <ion-searchbar placeholder="Rechercher un trajet, un arrêt..." mode="ios"></ion-searchbar>
-  </div>
-
-  <!-- Carte d'alerte info trafic -->
-  <div class="section-container">
-    <app-alert-card 
-      title="Perturbation sur la ligne 12" 
-      message="Retards prévus entre Rose-Hill et Port-Louis suite à des travaux."
-      linkText="Voir les détails">
-    </app-alert-card>
-  </div>
-
-  <!-- Bouton d'action principal -->
-  <div class="section-container">
-    <app-ui-button 
-      label="Rechercher un itinéraire" 
-      color="primary" 
-      icon="search-outline">
-    </app-ui-button>
-  </div>
-
-  <!-- Trajets favoris ou récents -->
-  <div class="section-container">
-    <h3 class="section-title">Destinations fréquentes</h3>
-    
-    <div class="destinations-list">
-      <app-destination-item 
-        title="Gare Victoria" 
-        subtitle="Port-Louis • Bus direct" 
-        icon="bus-outline">
-      </app-destination-item>
-
-      <app-destination-item 
-        title="Cybercité" 
-        subtitle="Ébène • Ligne 115" 
-        icon="business-outline">
-      </app-destination-item>
-
-      <app-destination-item 
-        title="Grand Baie La Croisette" 
-        subtitle="Nord • Trajet favori" 
-        icon="star-outline"
-        iconType="star">
-      </app-destination-item>
+  <section class="block">
+    <div class="block-head">
+      <span class="eyebrow">RACCOURCIS</span>
+      <h2>Destinations populaires</h2>
     </div>
-  </div>
+    <div class="card list">
+      <app-destination-item title="Gare Victoria" subtitle="Port-Louis" icon="train-outline"></app-destination-item>
+      <app-destination-item title="Grand Baie" subtitle="Rivière du Rempart" icon="business-outline"></app-destination-item>
+      <app-destination-item title="Mahébourg" subtitle="Grand Port" icon="business-outline"></app-destination-item>
+    </div>
+  </section>
 
+  <section class="block">
+    <div class="block-head">
+      <span class="eyebrow">EN CE MOMENT</span>
+      <h2>Info trafic</h2>
+    </div>
+    <div class="card alert-wrap">
+      <span class="badge">1 alerte</span>
+      <app-alert-card
+        title="Travaux Rose-Hill"
+        message="Ligne 1 - arrêts déplacés temporairement jusqu'à 18 h."
+        linkText="Voir les détails">
+      </app-alert-card>
+    </div>
+  </section>
+
+  <footer class="usage">
+    <p>Vous avez utilisé <strong>3 recherches sur 10</strong></p>
+    <div class="progress"><span></span></div>
+    <a routerLink="/login">Se connecter pour débloquer toutes les recherches</a>
+  </footer>
 </ion-content>
