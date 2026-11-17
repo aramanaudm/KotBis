@@ -1,7 +1,8 @@
+import type {
+  ElementRef,
+  OnDestroy} from '@angular/core';
 import {
   Component,
-  ElementRef,
-  OnDestroy,
   ViewChild,
   signal,
 } from '@angular/core';
