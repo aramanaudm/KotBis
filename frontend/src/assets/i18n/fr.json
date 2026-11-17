@@ -1,0 +1,51 @@
+﻿{
+  "APP": {
+    "TITLE": "KotBis",
+    "BRAND": "Bus Maurice",
+    "WELCOME_ABOARD": "BONJOUR, BIENVENUE À BORD"
+  },
+  "NAV": {
+    "HOME": "Accueil",
+    "MAP": "Carte",
+    "PROFILE": "Profil",
+    "BACK": "Retour"
+  },
+  "HOME": {
+    "TITLE": "Où souhaitez-vous aller ?",
+    "SUBTITLE": "Trouvez le meilleur trajet en bus à travers l'île.",
+    "DEPARTURE": "Départ",
+    "MY_LOCATION": "Ma position actuelle",
+    "DESTINATION": "Destination",
+    "FIND_BUS": "Trouver mon bus",
+    "SHORTCUTS": "RACCOURCIS",
+    "POPULAR_DESTINATIONS": "Destinations populaires",
+    "RIGHT_NOW": "EN CE MOMENT",
+    "TRAFFIC_INFO": "Info trafic",
+    "VIEW_DETAILS": "Voir les détails",
+    "SEARCH_LIMIT": "Vous avez utilisé {{count}} recherches sur {{total}}"
+  },
+  "AUTH": {
+    "LOGIN": "Connexion",
+    "LOGIN_TITLE": "Connectez-vous pour plus de fonctionnalités",
+    "LOGIN_SUBTITLE": "Retrouvez vos trajets et vos préférences.",
+    "EMAIL_OR_USERNAME": "Email ou pseudo",
+    "PASSWORD": "Mot de passe",
+    "FORGOT_PASSWORD": "Mot de passe ?",
+    "SIGN_IN": "Se connecter",
+    "CREATE_ACCOUNT": "Créer un compte",
+    "CONTINUE_GUEST": "Continuer en tant que Visiteur",
+    "REGISTER": "Inscription",
+    "FREE_SIGNUP": "INSCRIPTION GRATUITE",
+    "REGISTER_SUBTITLE": "Quelques informations pour personnaliser vos trajets.",
+    "PSEUDO": "Pseudo",
+    "EMAIL": "Email",
+    "CITY": "Ville ou zone",
+    "PHONE": "Téléphone",
+    "CONFIRM_PASSWORD": "Confirmation",
+    "TERMS": "J'accepte les conditions d'utilisation",
+    "CANCEL": "Annuler",
+    "MY_SPACE": "MON ESPACE",
+    "TRAVEL_SIMPLE": "Voyagez plus simplement",
+    "GUEST_NOTE": "Vous pouvez continuer sans compte."
+  }
+}
