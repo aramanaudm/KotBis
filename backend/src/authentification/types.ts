@@ -1,0 +1,30 @@
+export interface ProfilUtilisateur {
+  compteId: string;
+  identifiantPublic: string;
+  email: string;
+  role: string;
+  pseudo: string | null;
+  avatarRef: string | null;
+  zoneLibre: string | null;
+  telephone: string | null;
+  creeLe: string;
+}
+
+export interface CompteAvecSecret extends ProfilUtilisateur {
+  motDePasseHash: string | null;
+  etat: string;
+}
+
+export interface SessionAuthentification {
+  empreinteJeton: string;
+}
+
+export interface SessionCreee {
+  jeton: string;
+  expireLe: string;
+}
+
+export interface DonneesConnexion {
+  identifiant: string;
+  motDePasse: string;
+}
