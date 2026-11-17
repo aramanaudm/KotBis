@@ -1,0 +1,100 @@
+<app-page-header title="Points" description="Consultez les soldes et ajustez les points des voyageurs.">
+  <button class="secondary" type="button" (click)="exportCsv()">
+    <app-icon name="export" />
+    Exporter
+  </button>
+</app-page-header>
+
+<p class="notice">
+  Barème à définir. Les ajustements seront disponibles après connexion à la base.
+</p>
+
+<section class="card">
+  <div class="card-head">
+    <div>
+      <h2>Soldes des utilisateurs</h2>
+      <p>Solde actuel de chaque compte</p>
+    </div>
+    <span class="balance-badge">{{ balances().length }} compte(s)</span>
+  </div>
+
+  <app-data-table
+    [columns]="balanceColumns"
+    [rows]="balanceRows()"
+    [showRemove]="false"
+    editLabel="Ajuster les points"
+    editIcon="plus"
+    emptyMessage="Aucun utilisateur à afficher."
+    (edit)="openAdjust($event)"
+  />
+</section>
+
+<section class="card history-card">
+  <div class="card-head">
+    <div>
+      <h2>Historique des ajustements</h2>
+      <p>Mouvements enregistrés</p>
+    </div>
+    <app-icon name="clock" />
+  </div>
+
+  <app-data-table
+    [columns]="historyColumns"
+    [rows]="historyRows()"
+    [showActions]="false"
+    emptyMessage="Aucun ajustement enregistré."
+  />
+</section>
+
+@if (adjustTarget(); as balance) {
+  <app-modal title="Ajuster les points" (close)="closeAdjust()">
+    <p class="adjust-summary">
+      <b>{{ balance.pseudo }}</b>
+      <span>{{ balance.email }} · solde actuel : {{ balance.points }} point(s)</span>
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <app-form-field
+        label="Variation (positive ou négative)"
+        forId="points-amount"
+        [error]="amountError()"
+      >
+        <input
+          id="points-amount"
+          type="number"
+          step="1"
+          min="-10000"
+          max="10000"
+          formControlName="variation"
+        />
+      </app-form-field>
+
+      <app-form-field label="Motif" forId="points-reason" [error]="reasonError()">
+        <textarea
+          id="points-reason"
+          formControlName="reason"
+          rows="3"
+          maxlength="250"
+          placeholder="Expliquez la raison de cet ajustement…"
+        ></textarea>
+      </app-form-field>
+
+      <p class="adjust-hint">
+        Une variation positive crédite des points, une variation négative en retire.
+      </p>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-footer">
+        <button class="secondary" type="button" (click)="closeAdjust()">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (feedback()) {
+  <div class="toast" role="status">{{ feedback() }}</div>
+}
