@@ -24,6 +24,15 @@ export interface SessionCreee {
   expireLe: string;
 }
 
+export interface DonneesInscription {
+  pseudo: string;
+  email: string;
+  motDePasse: string;
+  accepteConditions: boolean;
+  zoneLibre: string | null;
+  telephone: string | null;
+}
+
 export interface DonneesConnexion {
   identifiant: string;
   motDePasse: string;

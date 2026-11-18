@@ -69,7 +69,7 @@ Serveur KotBis démarré sur le port 3000
 Voici les étapes pour tester les fonctionnalités d'authentification et de gestion de compte.
 
 ### 1. Inscription (`POST /api/inscription`)
-Cette route insère les données dans les tables `comptes` et `voyageurs` de manière sécurisée (transaction SQL). Le mot de passe est haché avec Argon2id.
+Cette route valide les données, hache le mot de passe avec Argon2id et insère le compte et le profil voyageur dans une transaction SQL. Le rôle `voyageur` est imposé par le serveur : un rôle envoyé par le client est ignoré.
 
 *   **Méthode :** `POST`
 *   **URL :** `http://localhost:3000/api/inscription`
@@ -78,11 +78,19 @@ Cette route insère les données dans les tables `comptes` et `voyageurs` de man
 {
   "pseudo": "maya974",
   "email": "maya@email.com",
-  "motDePasse": "monSuperMotDePasse123"
+  "motDePasse": "monSuperMotDePasse123",
+  "accepteConditions": true,
+  "zoneLibre": "Port-Louis",
+  "telephone": "+230 5555 1234"
 }
 ```
-*   **Résultat attendu :** `201 Created` avec un JSON contenant l'ID, le pseudo et l'email.
-*   **Test d'erreur :** Relancez la requête avec le même email. Vous devez recevoir une erreur `409 Conflict`.
+*   **Champs obligatoires :** `pseudo`, `email`, `motDePasse`, `accepteConditions`.
+*   **Champs optionnels :** `zoneLibre` (ou `city`), `telephone` (ou `phone`).
+*   **Alias acceptés :** `pseudonyme`, `password`, `conditionsAcceptees`, `city`, `ville`, `phone`.
+*   **Validation :** pseudonyme de 3 à 20 caractères (lettres, chiffres, `.`, `-`, `_`) ; mot de passe de 8 à 128 caractères avec au moins une lettre et un chiffre ; e-mail valide ; téléphone facultatif au format souple.
+*   **Résultat attendu :** `201 Created` avec `{ "utilisateur": { ... } }`. Aucun mot de passe, hash ou secret n'est renvoyé.
+*   **Doublons :** `409 Conflict` avec `EMAIL_DEJA_UTILISE` ou `PSEUDO_DEJA_UTILISE` (comparaison insensible à la casse).
+*   **Données invalides :** `422 Unprocessable Entity` avec `DONNEES_INVALIDES` et les détails du champ.
 
 ### 2. Connexion (`POST /api/connexion`)
 Cette route vérifie les identifiants et crée une session en base. Elle renvoie un jeton opaque valide pendant 24 h par défaut (`SESSION_DUREE_MINUTES`).
@@ -152,18 +160,19 @@ Pour vérifier que la sécurité est bien en place :
 
 *   **Hachage Argon2id :** Les mots de passe ne sont jamais stockés en clair. Le hachage est effectué avant insertion en base.
 *   **Transactions SQL :** L'inscription et les opérations de session utilisent une transaction (`BEGIN` / `COMMIT` / `ROLLBACK`) pour garantir la cohérence des données.
+*   **Inscription :** Le rôle `voyageur` est imposé côté serveur, les conditions d'utilisation sont obligatoires et les doublons d'e-mail/pseudonyme sont refusés en `409`.
 *   **Sessions en base :** La connexion génère un jeton opaque de 32 octets. Seule son empreinte SHA-256 est stockée dans la table `sessions` (`empreinte_jeton`). Le middleware de session vérifie l'expiration, la révocation et l'état du compte, puis expose le `compteId` courant aux routes protégées. Le renouvellement révoque l'ancienne session et en crée une nouvelle.
 *   **Limitation des tentatives :** Les échecs de connexion sont limités par adresse IP et identifiant (`MAX_TENTATIVES_CONNEXION` sur `FENETRE_TENTATIVES_MINUTES`).
 *   **Erreurs normalisées :** Les réponses d'erreur utilisent un format commun `{ "erreur": { "code": "...", "message": "..." } }` et ne révèlent aucun secret.
-*   **Alignement BDD :** Le code utilise les tables `comptes`, `voyageurs` et `sessions` définies dans le script `kotbis_schema.sql` fourni par l'équipe Back-Office.
+*   **Alignement BDD :** Le code utilise les tables `comptes`, `voyageurs` et `sessions` définies dans le script `kotbis_schema.sql` fourni par l'équipe Back-Office. Le téléphone optionnel nécessite la colonne `voyageurs.telephone` de la migration BDD `database/migrations/001_authentification.sql`.
 
 ## 📂 Structure du projet
 
-*   `src/index.ts` : Point d'entrée de l'application (Express), montage des routeurs et routes d'inscription/profil.
-*   `src/authentification/` : Logique KBE-23 (validation, service, dépôt PostgreSQL, jetons et mots de passe).
+*   `src/index.ts` : Point d'entrée de l'application (Express), montage des routeurs et routes de profil encore inline.
+*   `src/authentification/` : Inscription, validation, service, dépôt PostgreSQL, jetons et mots de passe.
 *   `src/middlewares/` : Middleware de session, limitation des tentatives et gestion des erreurs.
 *   `src/commun/erreurs.ts` : Erreurs métier et codes HTTP associés.
 *   `src/configuration/baseDeDonnees.ts` : Configuration et vérification de la connexion à PostgreSQL/PostGIS.
 *   `src/commun/crud-reflect.ts` : Module de génération de requêtes SQL par réflexion (utilisé pour l'administration et les tests).
 *   `documentation/` : Contient les cahiers des charges et guides de l'équipe.
-*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:connexion-sessions`, `npm run typecheck`).
+*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:inscription`, `npm run test:connexion-sessions`, `npm run typecheck`).

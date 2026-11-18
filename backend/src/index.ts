@@ -8,7 +8,6 @@ import {
   ErreurBaseDeDonnees,
   obtenirPool
 } from "./configuration/baseDeDonnees";
-import argon2 from 'argon2';
 import { DepotAuthentificationPostgres } from "./authentification/depot";
 import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
@@ -30,59 +29,6 @@ const serviceAuthentification = new ServiceAuthentification(
 );
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
-
-app.post('/api/inscription', async (req, res) => {
-  const client = await obtenirPool().connect();
-  try {
-    const { pseudo, email, motDePasse } = req.body;
-
-    if (!motDePasse || motDePasse.length < 8) {
-      return res.status(400).json({ error: "Le mot de passe doit faire au moins 8 caractères." });
-    }
-    
-    const hash = await argon2.hash(motDePasse, {
-      type: argon2.argon2id,
-    });
-    await client.query('BEGIN');
-
-    const identifiantPublic = `user_${Date.now()}`;
-    const requeteCompte = `
-      INSERT INTO comptes (email, mot_de_passe_hash, identifiant_public, role_id, etat) 
-      VALUES ($1, $2, $3, (SELECT id FROM roles WHERE code = 'voyageur'), 'actif') 
-      RETURNING id
-    `;
-    const resultatCompte = await client.query(requeteCompte, [email, hash, identifiantPublic]);
-    const compteId = resultatCompte.rows[0].id;
-    const requeteVoyageur = `
-      INSERT INTO voyageurs (compte_id, pseudo) 
-      VALUES ($1, $2) 
-      RETURNING compte_id, pseudo
-    `;
-    const resultatVoyageur = await client.query(requeteVoyageur, [compteId, pseudo]);
-
-    await client.query('COMMIT');
-
-    res.status(201).json({ 
-      success: true, 
-      message: "Compte créé !", 
-      data: {
-        id: compteId,
-        email: email,
-        pseudo: resultatVoyageur.rows[0].pseudo
-      } 
-    });
-  } catch (error: any) {
-    await client.query('ROLLBACK');
-
-    if (error.code === '23505') {
-      return res.status(409).json({ error: "Cet email ou ce pseudo est déjà utilisé." });
-    }
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de la création du compte." });
-  } finally {
-    client.release();
-  }
-});
 
 app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();

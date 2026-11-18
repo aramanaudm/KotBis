@@ -1,10 +1,27 @@
 import { ErreurValidation } from "../commun/erreurs";
-import type { DonneesConnexion } from "./types";
+import type { DonneesConnexion, DonneesInscription } from "./types";
 
-const LONGUEUR_MAX_IDENTIFIANT = 254;
+const LONGUEUR_MAX_EMAIL = 254;
+const LONGUEUR_MIN_MOT_DE_PASSE = 8;
 const LONGUEUR_MAX_MOT_DE_PASSE = 128;
+const LONGUEUR_MIN_PSEUDO = 3;
+const LONGUEUR_MAX_PSEUDO = 20;
+const LONGUEUR_MAX_ZONE = 60;
+const LONGUEUR_MAX_TELEPHONE = 20;
+
+const PSEUDO_VALIDE = /^[\p{L}\p{N}._-]+$/u;
+const EMAIL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const TELEPHONE_VALIDE = /^\+?[\d\s().-]{6,20}$/;
+const LETTRE = /\p{L}/u;
+const CHIFFRE = /\p{N}/u;
+const CARACTERES_CONTROLE = /[\u0000-\u001F\u007F]/;
+
 const CHAMPS_IDENTIFIANT = ["identifiant", "identifier", "email", "pseudo", "pseudonyme"] as const;
 const CHAMPS_MOT_DE_PASSE = ["motDePasse", "password"] as const;
+const CHAMPS_PSEUDO = ["pseudo", "pseudonyme"] as const;
+const CHAMPS_ZONE = ["zoneLibre", "city", "ville"] as const;
+const CHAMPS_TELEPHONE = ["telephone", "phone"] as const;
+const CHAMPS_CONDITIONS = ["accepteConditions", "conditionsAcceptees"] as const;
 
 function estObjet(valeur: unknown): valeur is Record<string, unknown> {
   return typeof valeur === "object" && valeur !== null && !Array.isArray(valeur);
@@ -23,6 +40,117 @@ function lireChamp(corps: Record<string, unknown>, noms: readonly string[]): unk
   return undefined;
 }
 
+function texteObligatoire(valeur: unknown, champ: string, longueurMax: number): string {
+  if (typeof valeur !== "string") {
+    throw erreurChamp(champ, `Le champ ${champ} est obligatoire.`);
+  }
+
+  const texte = valeur.trim();
+  if (!texte) {
+    throw erreurChamp(champ, `Le champ ${champ} est obligatoire.`);
+  }
+  if (texte.length > longueurMax) {
+    throw erreurChamp(champ, `Le champ ${champ} ne doit pas dépasser ${longueurMax} caractères.`);
+  }
+  return texte;
+}
+
+function texteOptionnel(valeur: unknown, champ: string, longueurMax: number): string | null {
+  if (valeur === undefined || valeur === null) {
+    return null;
+  }
+  if (typeof valeur !== "string") {
+    throw erreurChamp(champ, `Le champ ${champ} doit être un texte.`);
+  }
+
+  const texte = valeur.trim();
+  if (!texte) {
+    return null;
+  }
+  if (texte.length > longueurMax) {
+    throw erreurChamp(champ, `Le champ ${champ} ne doit pas dépasser ${longueurMax} caractères.`);
+  }
+  return texte;
+}
+
+function validerEmail(valeur: unknown): string {
+  const email = texteObligatoire(valeur, "email", LONGUEUR_MAX_EMAIL).toLowerCase();
+  if (!EMAIL_VALIDE.test(email)) {
+    throw erreurChamp("email", "L'adresse e-mail n'est pas valide.");
+  }
+  return email;
+}
+
+function validerMotDePasse(valeur: unknown, champ: string): string {
+  if (typeof valeur !== "string") {
+    throw erreurChamp(champ, `Le champ ${champ} est obligatoire.`);
+  }
+  if (valeur.length < LONGUEUR_MIN_MOT_DE_PASSE || valeur.length > LONGUEUR_MAX_MOT_DE_PASSE) {
+    throw erreurChamp(
+      champ,
+      `Le mot de passe doit contenir entre ${LONGUEUR_MIN_MOT_DE_PASSE} et ${LONGUEUR_MAX_MOT_DE_PASSE} caractères.`
+    );
+  }
+  if (CARACTERES_CONTROLE.test(valeur)) {
+    throw erreurChamp(champ, "Le mot de passe contient des caractères non autorisés.");
+  }
+  if (!LETTRE.test(valeur) || !CHIFFRE.test(valeur)) {
+    throw erreurChamp(champ, "Le mot de passe doit contenir au moins une lettre et un chiffre.");
+  }
+  return valeur;
+}
+
+function validerPseudo(valeur: unknown): string {
+  const pseudo = texteObligatoire(valeur, "pseudo", LONGUEUR_MAX_PSEUDO);
+  if (pseudo.length < LONGUEUR_MIN_PSEUDO || !PSEUDO_VALIDE.test(pseudo)) {
+    throw erreurChamp(
+      "pseudo",
+      `Le pseudonyme doit contenir entre ${LONGUEUR_MIN_PSEUDO} et ${LONGUEUR_MAX_PSEUDO} caractères (lettres, chiffres, point, tiret ou underscore).`
+    );
+  }
+  return pseudo;
+}
+
+function validerTelephone(valeur: unknown): string | null {
+  if (valeur === undefined || valeur === null) {
+    return null;
+  }
+  if (typeof valeur !== "string") {
+    throw erreurChamp("telephone", "Le numéro de téléphone doit être un texte.");
+  }
+
+  const telephone = valeur.trim();
+  if (!telephone) {
+    return null;
+  }
+  const chiffres = telephone.match(/\d/g)?.length ?? 0;
+  if (telephone.length > LONGUEUR_MAX_TELEPHONE || !TELEPHONE_VALIDE.test(telephone) || chiffres < 6) {
+    throw erreurChamp("telephone", "Le numéro de téléphone n'est pas valide.");
+  }
+  return telephone;
+}
+
+function aAccepteConditions(corps: Record<string, unknown>): boolean {
+  return CHAMPS_CONDITIONS.some((champ) => corps[champ] === true);
+}
+
+export function validerInscription(corps: unknown): DonneesInscription {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const pseudo = validerPseudo(lireChamp(corps, CHAMPS_PSEUDO));
+  const email = validerEmail(corps.email);
+  const motDePasse = validerMotDePasse(lireChamp(corps, CHAMPS_MOT_DE_PASSE), "motDePasse");
+  if (!aAccepteConditions(corps)) {
+    throw erreurChamp("accepteConditions", "L'acceptation des conditions d'utilisation est obligatoire.");
+  }
+  const zoneLibre = texteOptionnel(lireChamp(corps, CHAMPS_ZONE), "zoneLibre", LONGUEUR_MAX_ZONE);
+  const telephone = validerTelephone(lireChamp(corps, CHAMPS_TELEPHONE));
+
+  return { pseudo, email, motDePasse, accepteConditions: true, zoneLibre, telephone };
+}
+
 export function validerConnexion(corps: unknown): DonneesConnexion {
   if (!estObjet(corps)) {
     throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
@@ -33,10 +161,10 @@ export function validerConnexion(corps: unknown): DonneesConnexion {
     throw erreurChamp("identifiant", "L'identifiant (e-mail ou pseudonyme) est obligatoire.");
   }
   const identifiant = identifiantBrut.trim();
-  if (identifiant.length > LONGUEUR_MAX_IDENTIFIANT) {
+  if (identifiant.length > LONGUEUR_MAX_EMAIL) {
     throw erreurChamp(
       "identifiant",
-      `L'identifiant ne doit pas dépasser ${LONGUEUR_MAX_IDENTIFIANT} caractères.`
+      `L'identifiant ne doit pas dépasser ${LONGUEUR_MAX_EMAIL} caractères.`
     );
   }
 

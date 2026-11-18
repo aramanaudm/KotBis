@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from "pg";
-import { ErreurApi } from "../commun/erreurs";
+import { ErreurApi, ErreurConflit } from "../commun/erreurs";
 import {
   avecTransaction,
   codeErreurPostgres,
@@ -28,6 +28,15 @@ interface LigneSession extends LigneProfil {
   session_id: string;
 }
 
+export interface DonneesCreationCompte {
+  pseudo: string;
+  email: string;
+  motDePasseHash: string;
+  identifiantPublic: string;
+  zoneLibre: string | null;
+  telephone: string | null;
+}
+
 export interface SessionActive extends ProfilUtilisateur {
   sessionId: string;
 }
@@ -38,6 +47,7 @@ export interface DepotAuthentification {
     client: PoolClient,
     identifiant: string
   ): Promise<CompteAvecSecret | null>;
+  creerCompteVoyageur(client: PoolClient, donnees: DonneesCreationCompte): Promise<ProfilUtilisateur>;
   creerSession(
     client: PoolClient,
     compteId: string,
@@ -94,12 +104,29 @@ function versCompte(ligne: LigneCompte): CompteAvecSecret {
   };
 }
 
+function contrainteUnique(erreur: unknown): string | undefined {
+  if (erreur && typeof erreur === "object" && "constraint" in erreur) {
+    return String((erreur as { constraint: unknown }).constraint);
+  }
+  return undefined;
+}
+
 function mapperErreur(erreur: unknown): unknown {
   if (erreur instanceof ErreurApi || erreur instanceof ErreurConnexionBdd) {
     return erreur;
   }
 
   const code = codeErreurPostgres(erreur);
+  if (code === "23505") {
+    const contrainte = contrainteUnique(erreur);
+    if (contrainte === "uq_comptes_email") {
+      return new ErreurConflit("EMAIL_DEJA_UTILISE", "Cette adresse e-mail est déjà utilisée.");
+    }
+    if (contrainte === "uq_voyageurs_pseudo") {
+      return new ErreurConflit("PSEUDO_DEJA_UTILISE", "Ce pseudonyme est déjà utilisé.");
+    }
+    return new ErreurConflit("VALEUR_DEJA_UTILISEE", "Une valeur unique est déjà utilisée.");
+  }
   if (code) {
     return new ErreurConnexionBdd(code);
   }
@@ -137,6 +164,59 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
       [identifiant]
     );
     return parPseudo.rows[0] ? versCompte(parPseudo.rows[0]) : null;
+  }
+
+  async creerCompteVoyageur(
+    client: PoolClient,
+    donnees: DonneesCreationCompte
+  ): Promise<ProfilUtilisateur> {
+    const comptes = await client.query<{
+      compte_id: string;
+      email: string;
+      identifiant_public: string;
+      cree_le: Date;
+    }>(
+      `INSERT INTO comptes (email, mot_de_passe_hash, role_id, etat, identifiant_public)
+       SELECT $1, $2, r.id, 'actif', $3
+       FROM roles r
+       WHERE r.code = 'voyageur'
+       RETURNING id::text AS compte_id, email, identifiant_public, cree_le`,
+      [donnees.email, donnees.motDePasseHash, donnees.identifiantPublic]
+    );
+
+    const compte = comptes.rows[0];
+    if (!compte) {
+      throw new ErreurConnexionBdd("ROLE_VOYAGEUR_ABSENT");
+    }
+
+    const voyageurs = await client.query<{
+      pseudo: string;
+      avatar_ref: string | null;
+      zone_libre: string | null;
+      telephone: string | null;
+    }>(
+      `INSERT INTO voyageurs (compte_id, pseudo, zone_libre, telephone)
+       VALUES ($1, $2, $3, $4)
+       RETURNING pseudo, avatar_ref, zone_libre, telephone`,
+      [compte.compte_id, donnees.pseudo, donnees.zoneLibre, donnees.telephone]
+    );
+
+    const voyageur = voyageurs.rows[0];
+    if (!voyageur) {
+      throw new ErreurConnexionBdd("VOYAGEUR_NON_CREE");
+    }
+
+    return {
+      compteId: compte.compte_id,
+      identifiantPublic: compte.identifiant_public,
+      email: compte.email,
+      role: "voyageur",
+      pseudo: voyageur.pseudo,
+      avatarRef: voyageur.avatar_ref,
+      zoneLibre: voyageur.zone_libre,
+      telephone: voyageur.telephone,
+      creeLe: compte.cree_le.toISOString()
+    };
   }
 
   async creerSession(

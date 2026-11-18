@@ -31,6 +31,13 @@ export class ErreurAuthentification extends ErreurApi {
   }
 }
 
+export class ErreurConflit extends ErreurApi {
+  constructor(code = "CONFLIT", message = "La ressource est déjà utilisée.") {
+    super(409, code, message);
+    this.name = "ErreurConflit";
+  }
+}
+
 export class ErreurTropDeRequetes extends ErreurApi {
   constructor(message = "Trop de tentatives. Veuillez réessayer plus tard.") {
     super(429, "TROP_DE_TENTATIVES", message);
