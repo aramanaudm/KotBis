@@ -1,5 +1,7 @@
 import type { Routes } from '@angular/router';
 
+import { staffGuard } from './admin-signalements/staff.guard';
+
 export const routes: Routes = [
   { path: 'mon-espace', loadComponent: () => import('./pages/mon-espace/mon-espace.page').then(m => m.MonEspacePage) },
   {
@@ -30,6 +32,16 @@ export const routes: Routes = [
   },
   { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
   { path: 'signaler', redirectTo: 'home/signaler', pathMatch: 'full' },
+  {
+    path: 'signalements',
+    loadComponent: () => import('./community/report-list.page').then((m) => m.ReportListPage),
+  },
+  {
+    path: 'admin/signalements',
+    canActivate: [staffGuard],
+    loadComponent: () =>
+      import('./admin-signalements/admin-signalements.page').then((m) => m.AdminSignalementsPage),
+  },
   {
     path: '',
     redirectTo: 'home',

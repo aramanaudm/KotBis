@@ -1,0 +1,38 @@
+<ion-content>
+  <main class="shell">
+    <header class="topbar">
+      <a class="icon-button back" routerLink="/home" aria-label="Retour à la carte"></a>
+      <h1>Mes signalements</h1>
+    </header>
+
+    <p class="note">Démonstration : vos signalements ne sont conservés que pendant cette session.</p>
+
+    @if (!user()) {
+    <p class="notice" role="status">
+      Vous devez être connecté pour consulter vos signalements. La connexion sera disponible avec le module de l’équipe.
+    </p>
+    } @else if (rows().length === 0) {
+    <p class="notice" role="status">Vous n’avez envoyé aucun signalement pour le moment.</p>
+    } @else {
+    <ul class="reports" aria-label="Mes signalements">
+      @for (row of rows(); track row.report.id) {
+      <li class="report">
+        <div class="report-head">
+          <div class="report-bus">
+            <strong>Bus {{ row.report.busLine }}</strong>
+            <time [attr.datetime]="row.report.createdAt"
+              >{{ row.report.createdAt | date: 'dd/MM/yyyy HH:mm' : '+0400' }}</time
+            >
+          </div>
+          <span class="status status-{{ row.status.tone }}">
+            <span aria-hidden="true">{{ row.status.symbol }}</span>
+            <span>{{ row.status.label }}</span>
+          </span>
+        </div>
+        <p class="category">Catégorie : {{ row.report.categoryLabel }}</p>
+      </li>
+      }
+    </ul>
+    }
+  </main>
+</ion-content>

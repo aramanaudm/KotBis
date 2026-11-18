@@ -1,0 +1,18 @@
+<ion-content>
+  <main class="shell">
+    <h1>Administration des signalements</h1>
+
+    <p class="notice" role="status">
+      Interface en préparation. Le traitement des signalements n’est pas encore disponible.
+    </p>
+
+    <section aria-labelledby="titre-statuts">
+      <h2 id="titre-statuts">Statuts prévus</h2>
+      <ul class="statuts">
+        @for (statut of statuts; track statut) {
+        <li>{{ statut }}</li>
+        }
+      </ul>
+    </section>
+  </main>
+</ion-content>
