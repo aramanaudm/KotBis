@@ -1,0 +1,12 @@
+<div class="overlay" (click)="onBackdrop($event)">
+  <section class="dialog" role="dialog" aria-modal="true" [attr.aria-label]="title()">
+    <div class="dialog-head">
+      <h2>{{ title() }}</h2>
+      <button class="icon-button" type="button" aria-label="Fermer" (click)="close.emit()">
+        <app-icon name="close" />
+      </button>
+    </div>
+
+    <ng-content />
+  </section>
+</div>

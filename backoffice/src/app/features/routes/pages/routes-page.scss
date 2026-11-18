@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+.stop-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.field-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.stop-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stop-add select {
+  flex: 1;
+}
+
+.stop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.stop-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.stop-chip button {
+  padding: 0 4px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+}
+
+.stop-chip button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .toolbar .search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .stop-add {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

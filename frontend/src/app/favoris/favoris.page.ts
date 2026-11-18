@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 
@@ -27,49 +27,43 @@ function lireFavoris(): number[] {
   imports: [IonContent, RouterLink],
 })
 export class FavorisPage {
-  readonly etat = input<string>();
-  readonly vue = input<string>();
-  readonly trajet = input<string>();
-  readonly favorisRetires = signal<readonly number[]>([]);
-  readonly annonce = signal('');
-  readonly erreur = signal('');
-  private readonly favorisEnregistres = signal<readonly number[]>([]);
-  readonly favoris = computed(() =>
-    EXEMPLES.filter(
-      ({ id }) =>
-        this.favorisEnregistres().includes(id) || (this.etat() === 'liste' && !this.favorisRetires().includes(id)),
-    ),
-  );
-  readonly trajetSelectionne = computed(() => EXEMPLES.find((favori) => String(favori.id) === this.trajet()));
+  readonly retour = signal<{ message: string; erreur: boolean } | null>(null);
+  private readonly idsFavoris = signal<readonly number[]>([]);
+  readonly favoris = computed(() => EXEMPLES.filter(({ id }) => this.idsFavoris().includes(id)));
+  readonly trajetsAjoutables = computed(() => EXEMPLES.filter(({ id }) => !this.idsFavoris().includes(id)));
 
   constructor() {
     try {
-      this.favorisEnregistres.set(lireFavoris());
+      this.idsFavoris.set(lireFavoris());
     } catch {
-      this.erreur.set('Impossible de lire les favoris enregistrés.');
+      // Le stockage peut être inaccessible ou contenir des données illisibles.
+    }
+  }
+
+  ajouter(favori: TrajetFavori, prochainElement: HTMLElement): void {
+    try {
+      const ids = [...new Set([...lireFavoris(), favori.id])];
+      localStorage.setItem(CLE_FAVORIS, JSON.stringify(ids));
+      this.idsFavoris.set(ids);
+      this.retour.set({ message: 'Trajet enregistré dans les favoris.', erreur: false });
+      prochainElement.focus();
+    } catch {
+      this.retour.set({ message: 'Impossible d’enregistrer ce favori. Réessayez.', erreur: true });
     }
   }
 
   retirer(favori: TrajetFavori, prochainElement: HTMLElement): void {
-    if (this.favorisEnregistres().includes(favori.id)) {
-      try {
-        const ids = lireFavoris().filter((id) => id !== favori.id);
-        localStorage.setItem(CLE_FAVORIS, JSON.stringify(ids));
-        this.favorisEnregistres.set(ids);
-      } catch {
-        this.erreur.set('Impossible de retirer ce favori. Réessayez.');
-        return;
-      }
+    try {
+      const ids = lireFavoris().filter((id) => id !== favori.id);
+      localStorage.setItem(CLE_FAVORIS, JSON.stringify(ids));
+      this.idsFavoris.set(ids);
+      this.retour.set({
+        message: `Trajet de ${favori.depart} à ${favori.destination} retiré des favoris.`,
+        erreur: false,
+      });
+      prochainElement.focus();
+    } catch {
+      this.retour.set({ message: 'Impossible de retirer ce favori. Réessayez.', erreur: true });
     }
-    this.erreur.set('');
-    this.favorisRetires.update((ids) => [...ids, favori.id]);
-    this.annonce.set(`Trajet de ${favori.depart} à ${favori.destination} retiré des favoris.`);
-    prochainElement.focus();
-  }
-
-  reinitialiser(): void {
-    this.favorisRetires.set([]);
-    this.annonce.set('');
-    this.erreur.set('');
   }
 }
