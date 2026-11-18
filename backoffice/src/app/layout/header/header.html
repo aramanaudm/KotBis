@@ -16,8 +16,6 @@
   </div>
 
   <div class="header-actions">
-   
-
     <select
       class="language-select"
       aria-label="Langue"
@@ -37,8 +35,8 @@
       <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
     </button>
 
-    <span class="avatar" [attr.title]="session.currentUser().name">
-      {{ session.currentUser().initials }}
+    <span class="avatar" [attr.title]="session.currentUser()?.name ?? 'Invité'">
+      {{ session.currentUser()?.initials ?? '—' }}
     </span>
   </div>
 </header>

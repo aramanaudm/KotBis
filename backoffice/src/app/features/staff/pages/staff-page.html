@@ -1,13 +1,12 @@
-<app-page-header title="Personnel" description="Gérez les agents et leurs rôles dans le back-office.">
+<app-page-header
+  title="Personnel"
+  description="Gérez les agents et leurs rôles dans le back-office."
+>
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
     Ajouter
   </button>
 </app-page-header>
-
-<p class="notice">
-  Les rôles et permissions seront appliqués lors du branchement à l’authentification.
-</p>
 
 <section class="card">
   <div class="toolbar">
@@ -29,8 +28,9 @@
       (change)="onFilter($event)"
     >
       <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusLabels[status] }}</option>
+      }
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
@@ -43,7 +43,10 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
+    [showToggle]="true"
+    toggleLabel="Activer / Désactiver"
     emptyMessage="Aucun membre ne correspond à la recherche."
+    (toggle)="toggleStatus($event)"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -61,7 +64,7 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <app-form-field
-          label="Nom"
+          label="Nom affiché"
           forId="staff-name"
           [error]="errorFor('name', 'Le nom est obligatoire.')"
         >
@@ -78,17 +81,22 @@
 
         <app-form-field label="Rôle" forId="staff-role">
           <select id="staff-role" formControlName="role">
-            <option value="operator">Opérateur</option>
-            <option value="moderator">Modérateur</option>
-            <option value="admin">Administrateur</option>
+            @for (role of roles; track role) {
+              <option [value]="role">{{ roleLabels[role] }}</option>
+            }
           </select>
         </app-form-field>
 
         <app-form-field label="État" forId="staff-status">
           <select id="staff-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
           </select>
+        </app-form-field>
+
+        <app-form-field label="Fonction" forId="staff-function">
+          <input id="staff-function" type="text" formControlName="function" maxlength="100" />
         </app-form-field>
       </div>
 
@@ -98,7 +106,9 @@
 
       <div class="form-footer">
         <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
       </div>
     </form>
   </app-modal>
@@ -106,7 +116,7 @@
 
 @if (deleteTarget(); as member) {
   <app-modal title="Supprimer ce membre ?" (close)="cancelDelete()">
-    <p>Le membre {{ member.name }} sera retiré de la liste.</p>
+    <p>Le compte et le profil personnel de {{ member.name }} seront supprimés.</p>
 
     <div class="form-footer">
       <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>

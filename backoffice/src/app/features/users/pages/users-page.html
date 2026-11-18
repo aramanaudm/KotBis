@@ -1,13 +1,12 @@
-<app-page-header title="Utilisateurs" description="Consultez les comptes voyageurs et les rôles associés.">
+<app-page-header
+  title="Utilisateurs"
+  description="Gérez les comptes voyageurs, leurs coordonnées et leur accès au réseau KotBis."
+>
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
     Ajouter
   </button>
 </app-page-header>
-
-<p class="notice">
-  Les rôles et permissions seront appliqués lors du branchement à l’authentification.
-</p>
 
 <section class="card">
   <div class="toolbar">
@@ -29,8 +28,9 @@
       (change)="onFilter($event)"
     >
       <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      @for (status of statuses; track status) {
+        <option [value]="status">{{ statusLabels[status] }}</option>
+      }
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
@@ -43,7 +43,13 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
+    [showView]="true"
+    [showToggle]="true"
+    viewLabel="Voir détail"
+    toggleLabel="Activer / Désactiver"
     emptyMessage="Aucun utilisateur ne correspond à la recherche."
+    (view)="openDetail($event)"
+    (toggle)="toggleStatus($event)"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -55,6 +61,49 @@
     (pageChange)="changePage($event)"
   />
 </section>
+
+@if (detailTarget(); as user) {
+  <app-modal title="Détail de l’utilisateur" (close)="closeDetail()">
+    <div class="detail-grid">
+      <div>
+        <span class="detail-label">Utilisateur</span>
+        <strong>{{ user.pseudo }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Email</span>
+        <strong>{{ user.email }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Rôle</span>
+        <strong>{{ roleLabels[user.role] }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">État</span>
+        <strong>{{ statusLabels[user.status] }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Ville</span>
+        <strong>{{ user.city }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Points</span>
+        <strong>{{ user.points }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Créé le</span>
+        <strong>{{ formatDate(user.createdAt) }}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Avatar</span>
+        <strong>{{ user.avatarRef ?? '—' }}</strong>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button class="secondary" type="button" (click)="closeDetail()">Fermer</button>
+    </div>
+  </app-modal>
+}
 
 @if (formOpen()) {
   <app-modal [title]="formTitle()" (close)="closeForm()">
@@ -78,18 +127,22 @@
 
         <app-form-field label="Rôle" forId="user-role">
           <select id="user-role" formControlName="role">
-            <option value="traveller">Voyageur</option>
-            <option value="operator">Opérateur</option>
-            <option value="moderator">Modérateur</option>
-            <option value="admin">Administrateur</option>
+            @for (role of roles; track role) {
+              <option [value]="role">{{ roleLabels[role] }}</option>
+            }
           </select>
         </app-form-field>
 
         <app-form-field label="État" forId="user-status">
           <select id="user-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            @for (status of statuses; track status) {
+              <option [value]="status">{{ statusLabels[status] }}</option>
+            }
           </select>
+        </app-form-field>
+
+        <app-form-field label="Ville" forId="user-city">
+          <input id="user-city" type="text" formControlName="city" maxlength="120" />
         </app-form-field>
       </div>
 
@@ -99,7 +152,9 @@
 
       <div class="form-footer">
         <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
       </div>
     </form>
   </app-modal>
@@ -107,7 +162,7 @@
 
 @if (deleteTarget(); as user) {
   <app-modal title="Supprimer cet utilisateur ?" (close)="cancelDelete()">
-    <p>Le compte {{ user.pseudo }} sera retiré de la liste.</p>
+    <p>Le compte voyageur de {{ user.pseudo }} sera retiré de la liste.</p>
 
     <div class="form-footer">
       <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>

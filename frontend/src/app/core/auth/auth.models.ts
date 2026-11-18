@@ -15,6 +15,8 @@ export const EMPTY_COUNTERS: Readonly<AccountCounters> = {
   points: 0,
 };
 
+export type UserRole = 'voyageur' | 'operateur' | 'moderateur' | 'administrateur';
+
 /** Compte tel que stocké localement (inclut le secret haché : ne jamais l'exposer à l'UI). */
 export interface StoredAccount {
   id: string;
@@ -24,6 +26,7 @@ export interface StoredAccount {
   city?: string;
   /** Facultatif à l'inscription (« Téléphone »). */
   phone?: string;
+  role?: UserRole;
   salt: string;
   passwordHash: string;
   createdAt: string;
@@ -41,12 +44,7 @@ export interface RegisterPayload {
   phone?: string;
 }
 
-export type AuthErrorCode =
-  | 'PSEUDO_TAKEN'
-  | 'EMAIL_TAKEN'
-  | 'INVALID_CREDENTIALS'
-  | 'INVALID_RESET_CODE'
-  | 'UNKNOWN';
+export type AuthErrorCode = 'PSEUDO_TAKEN' | 'EMAIL_TAKEN' | 'INVALID_CREDENTIALS' | 'INVALID_RESET_CODE' | 'UNKNOWN';
 
 export class AuthError extends Error {
   constructor(

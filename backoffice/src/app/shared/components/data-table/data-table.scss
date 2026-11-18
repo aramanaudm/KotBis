@@ -29,6 +29,21 @@ td:first-child {
   font-weight: 600;
 }
 
+.cell-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 10px;
+  color: var(--ink);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  background: rgba(120, 144, 171, 0.16);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
 .actions {
   display: flex;
   gap: 5px;

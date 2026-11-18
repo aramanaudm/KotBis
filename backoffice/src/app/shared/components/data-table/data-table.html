@@ -28,6 +28,9 @@
                   [label]="row.values[column.key]"
                   [tone]="statusTone(row.values[column.key])"
                 />
+              } @else if (column.type === 'avatar') {
+                <span class="cell-avatar">{{ initials(row.values[column.key]) }}</span>
+                <span>{{ row.values[column.key] }}</span>
               } @else {
                 {{ row.values[column.key] }}
               }
@@ -37,6 +40,28 @@
           @if (showActions()) {
             <td>
               <div class="actions">
+                @if (showView()) {
+                  <button
+                    class="icon-button"
+                    type="button"
+                    [attr.aria-label]="viewLabel()"
+                    [attr.title]="viewLabel()"
+                    (click)="view.emit(row)"
+                  >
+                    <app-icon [name]="viewIcon()" />
+                  </button>
+                }
+                @if (showToggle()) {
+                  <button
+                    class="icon-button"
+                    type="button"
+                    [attr.aria-label]="toggleLabel()"
+                    [attr.title]="toggleLabel()"
+                    (click)="toggle.emit(row)"
+                  >
+                    <app-icon [name]="toggleIcon()" />
+                  </button>
+                }
                 @if (showEdit()) {
                   <button
                     class="icon-button"

@@ -11,10 +11,10 @@
 --   Administrateur : admin.test@kotbis.fr                                  / Admin123!
 --
 -- Deux formats de hash sont fournis pour les deux équipes :
---   * mot_de_passe_hash + sel : SHA-256 hexadécimal de "<sel>:<mot de passe>",
+--   * mot_de_passe_hash : Argon2id (sel inclus), colonne lue directement par
+--     argon2.verify() dans backend/src/index.ts (route /api/connexion).
+--   * sel + mot_de_passe_hash_frontend : SHA-256 hexadécimal de "<sel>:<mot de passe>",
 --     identique à AuthService.hash() (frontend : salt + passwordHash).
---   * mot_de_passe_hash_argon2 : Argon2id, format utilisé par l'inscription backend
---     (dépendance argon2, voir backend/README.md).
 
 BEGIN;
 
@@ -29,11 +29,11 @@ ON CONFLICT DO NOTHING;
 -- 2. Champs complémentaires nécessaires au formulaire et à AuthService.
 ALTER TABLE comptes
     ADD COLUMN IF NOT EXISTS sel TEXT,
-    ADD COLUMN IF NOT EXISTS mot_de_passe_hash_argon2 TEXT,
+    ADD COLUMN IF NOT EXISTS mot_de_passe_hash_frontend TEXT,
     ADD COLUMN IF NOT EXISTS telephone VARCHAR(20);
 
-COMMENT ON COLUMN comptes.sel IS 'Sel hexadécimal (16 octets) : SHA-256("<sel>:<mot de passe>"), voir AuthService.hash()';
-COMMENT ON COLUMN comptes.mot_de_passe_hash_argon2 IS 'Hash Argon2id (sel inclus) attendu par argon2.verify() côté backend';
+COMMENT ON COLUMN comptes.sel IS 'Sel hexadécimal (16 octets) utilisé avec mot_de_passe_hash_frontend';
+COMMENT ON COLUMN comptes.mot_de_passe_hash_frontend IS 'SHA-256("<sel>:<mot de passe>") conforme à AuthService.hash()';
 COMMENT ON COLUMN comptes.telephone IS 'Téléphone facultatif saisi à l''inscription (RegisterPayload.phone)';
 
 -- 3. Codes de réinitialisation du mot de passe (RESETS_KEY côté frontend, TTL 15 min).
@@ -52,17 +52,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_codes_reinitialisation_actifs
     ON codes_reinitialisation (compte_id) WHERE consomme_le IS NULL;
 
 -- 4. Comptes de test (états 'actif' : hash obligatoire, conforme à chk_comptes_actif_hash).
-INSERT INTO comptes (email, mot_de_passe_hash, sel, mot_de_passe_hash_argon2, role_id, etat, identifiant_public, telephone)
+INSERT INTO comptes (email, mot_de_passe_hash, sel, mot_de_passe_hash_frontend, role_id, etat, identifiant_public, telephone)
 VALUES
   ('voyageur.test@kotbis.fr',
-   '5b17c53c0783c8c87c74772b732ca1b09a29e6003a6688237829118ad7e78ce8',
-   '1a2b3c4d5e6f708192a3b4c5d6e7f809',
    '$argon2id$v=19$m=65536,t=3,p=4$gSvw/xyxGyaKBFUCOGhN3w$tf/IjXCrRGvd1TzhEpMrIo/N0Hv2uBIQ64nY3PlIGjc',
+   '1a2b3c4d5e6f708192a3b4c5d6e7f809',
+   '5b17c53c0783c8c87c74772b732ca1b09a29e6003a6688237829118ad7e78ce8',
    1, 'actif', 'test-voyageur', '+33 1 23 45 67 89'),
   ('admin.test@kotbis.fr',
-   '104b20cbb2ab1d0a585fc92860f62162f79b3b071238bbd75e50031c6ec23cdd',
-   '9f8e7d6c5b4a39281706f5e4d3c2b1a0',
    '$argon2id$v=19$m=65536,t=3,p=4$xOHN6O6BqA6rsEUgXKpVOA$3/NdRKpedDlZUtHjQW4xm4SEcPsU7G2kijb3oVYhMmM',
+   '9f8e7d6c5b4a39281706f5e4d3c2b1a0',
+   '104b20cbb2ab1d0a585fc92860f62162f79b3b071238bbd75e50031c6ec23cdd',
    4, 'actif', 'test-administrateur', '+33 1 98 76 54 32')
 ON CONFLICT DO NOTHING;
 
