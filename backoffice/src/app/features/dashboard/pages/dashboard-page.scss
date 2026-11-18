@@ -1,0 +1,182 @@
+:host {
+  display: block;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 17px;
+  margin-bottom: 24px;
+}
+
+.metric {
+  padding: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+
+.metric-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.metric-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--blue);
+  background: #2069e710;
+  border-radius: 10px;
+}
+
+.metric strong {
+  display: block;
+  margin: 9px 0 8px;
+  font-size: 29px;
+  letter-spacing: -1px;
+}
+
+.metric small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.metric a {
+  margin-left: 4px;
+  color: var(--blue);
+  font-size: 10px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.network-badge {
+  padding: 5px 9px;
+  color: var(--green);
+  font-size: 10px;
+  background: #22aa7b12;
+  border-radius: 5px;
+}
+
+.map-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  color: var(--muted);
+  font-size: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.map-foot a {
+  color: var(--blue);
+}
+
+.feed {
+  padding: 0 23px 15px;
+}
+
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  font-size: 11px;
+  border-bottom: 1px solid var(--line);
+}
+
+.feed-row:last-child {
+  border-bottom: 0;
+}
+
+.feed-row b {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.feed-row small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.round {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  color: var(--blue);
+  background: #2069e70c;
+  border-radius: 10px;
+}
+
+.round.orange {
+  color: var(--orange);
+  background: #ed9c1515;
+}
+
+.round.red {
+  color: var(--red);
+  background: #e35d6412;
+}
+
+.grow {
+  flex: 1;
+}
+
+.feed-empty {
+  padding: 18px 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.fleet-card {
+  margin-bottom: 10px;
+}
+
+.fleet-card a.secondary {
+  padding: 11px 15px;
+}
+
+@media (max-width: 1050px) {
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .metrics {
+    gap: 10px;
+  }
+
+  .metric {
+    padding: 15px;
+  }
+
+  .metric strong {
+    font-size: 25px;
+  }
+
+  .map-foot {
+    padding: 14px 17px;
+  }
+
+  .feed {
+    padding: 0 17px 15px;
+  }
+}
