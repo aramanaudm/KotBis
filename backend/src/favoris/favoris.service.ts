@@ -1,6 +1,6 @@
 // Règles métier des favoris (EF-FAV-001 à 006, EF-AUTH-017, CA-031).
-import { ErreurApi } from "../commun/erreur-api";
-import type { CompteAuthentifie } from "../utilisateurs/comptes.types";
+import type { ProfilUtilisateur } from "../authentification/types";
+import { ErreurApi } from "../commun/erreurs";
 import { FavoriExistantErreur, type DepotFavoris, type ReferentielReseau } from "./favoris.depot";
 import {
   LIMITE_FAVORIS,
@@ -8,8 +8,12 @@ import {
   type ArretResume,
   type Favori,
   type FavoriEnregistre,
-  type NouveauFavori
+  type NouveauFavori,
+  type TrajetPropose
 } from "./favoris.types";
+
+// Compte connecté tel que posé par le middleware de session (KBE-23)
+export type CompteFavoris = Pick<ProfilUtilisateur, "compteId" | "role">;
 
 function resumer(id: number, arret: ArretReseau | undefined): ArretResume {
   return { id, code: arret?.code ?? null, nom: arret?.nom ?? null };
@@ -22,9 +26,9 @@ export class FavorisService {
   ) {}
 
   // EF-FAV-002 / EF-AUTH-017 : uniquement les favoris du compte connecté
-  async lister(compte: CompteAuthentifie): Promise<Favori[]> {
-    this.exigerVoyageur(compte);
-    const favoris = await this.depot.lister(compte.id);
+  async lister(compte: CompteFavoris): Promise<Favori[]> {
+    const voyageurId = this.exigerVoyageur(compte);
+    const favoris = await this.depot.lister(voyageurId);
     const ids = new Set<number>();
     for (const f of favoris) {
       ids.add(f.arretArriveeId);
@@ -35,8 +39,8 @@ export class FavorisService {
   }
 
   // EF-FAV-001 / EF-FAV-005
-  async ajouter(compte: CompteAuthentifie, nouveau: NouveauFavori): Promise<Favori> {
-    this.exigerVoyageur(compte);
+  async ajouter(compte: CompteFavoris, nouveau: NouveauFavori): Promise<Favori> {
+    const voyageurId = this.exigerVoyageur(compte);
 
     // On n'enregistre pas un favori vers un arrêt déjà hors service
     const ids = [nouveau.arretArriveeId, ...(nouveau.arretDepartId !== null ? [nouveau.arretDepartId] : [])];
@@ -45,12 +49,12 @@ export class FavorisService {
       throw new ErreurApi(422, "ARRET_INDISPONIBLE", "Un des arrêts choisis n'existe pas ou n'est plus desservi.");
     }
 
-    if ((await this.depot.compter(compte.id)) >= LIMITE_FAVORIS) {
+    if ((await this.depot.compter(voyageurId)) >= LIMITE_FAVORIS) {
       throw new ErreurApi(422, "LIMITE_FAVORIS", `Vous ne pouvez pas enregistrer plus de ${LIMITE_FAVORIS} favoris.`);
     }
 
     try {
-      const enregistre = await this.depot.ajouter(compte.id, nouveau);
+      const enregistre = await this.depot.ajouter(voyageurId, nouveau);
       return this.presenter(enregistre, arrets);
     } catch (erreur) {
       if (erreur instanceof FavoriExistantErreur) {
@@ -60,19 +64,31 @@ export class FavorisService {
     }
   }
 
-  // EF-FAV-004 / CA-031 : le favori d'un autre compte renvoie 404, comme un favori inexistant
-  async supprimer(compte: CompteAuthentifie, id: number): Promise<void> {
+  // Trajets de la table trajets que le voyageur peut ajouter en favori
+  async listerTrajets(compte: CompteFavoris, recherche: string | null, limite: number): Promise<TrajetPropose[]> {
     this.exigerVoyageur(compte);
-    if (!(await this.depot.supprimer(compte.id, id))) {
+    return this.reseau.rechercherTrajets(recherche, limite);
+  }
+
+  // EF-FAV-004 / CA-031 : le favori d'un autre compte renvoie 404, comme un favori inexistant
+  async supprimer(compte: CompteFavoris, id: number): Promise<void> {
+    const voyageurId = this.exigerVoyageur(compte);
+    if (!(await this.depot.supprimer(voyageurId, id))) {
       throw new ErreurApi(404, "FAVORI_INTROUVABLE", "Favori introuvable.");
     }
   }
 
-  // Les favoris sont rattachés à un voyageur (relation voyageurs → favoris)
-  private exigerVoyageur(compte: CompteAuthentifie): void {
+  // Les favoris sont rattachés à un voyageur (relation voyageurs → favoris).
+  // Renvoie l'identifiant du voyageur (comptes.id, reçu en texte depuis la session).
+  private exigerVoyageur(compte: CompteFavoris): number {
     if (compte.role !== "voyageur") {
       throw new ErreurApi(403, "ACCES_INTERDIT", "Les favoris sont réservés aux voyageurs.");
     }
+    const voyageurId = Number(compte.compteId);
+    if (!Number.isSafeInteger(voyageurId) || voyageurId <= 0) {
+      throw new ErreurApi(401, "SESSION_INVALIDE", "Session absente, expirée ou révoquée.");
+    }
+    return voyageurId;
   }
 
   private async chargerArrets(ids: number[]): Promise<Map<number, ArretReseau>> {

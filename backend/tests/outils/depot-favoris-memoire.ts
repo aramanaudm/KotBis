@@ -1,8 +1,8 @@
 // Dépôt des favoris et référentiel réseau en mémoire, réservés aux tests (aucun PostgreSQL).
-// La règle anti-doublon reproduit l'index unique proposé à l'équipe BDD :
+// La règle anti-doublon reproduit l'index unique uq_favoris de la table favoris :
 // (voyageur_id, type, COALESCE(arret_depart_id, 0), arret_arrivee_id).
 import { FavoriExistantErreur, type DepotFavoris, type ReferentielReseau } from "../../src/favoris/favoris.depot";
-import type { ArretReseau, FavoriEnregistre, NouveauFavori } from "../../src/favoris/favoris.types";
+import type { ArretReseau, FavoriEnregistre, NouveauFavori, TrajetPropose } from "../../src/favoris/favoris.types";
 
 export class DepotFavorisMemoire implements DepotFavoris {
   favoris: FavoriEnregistre[] = [];
@@ -49,9 +49,19 @@ export class DepotFavorisMemoire implements DepotFavoris {
 
 export class ReferentielReseauMemoire implements ReferentielReseau {
   arrets = new Map<number, ArretReseau>();
+  trajets: TrajetPropose[];
 
-  constructor(arrets: ArretReseau[] = []) {
+  constructor(arrets: ArretReseau[] = [], trajets: TrajetPropose[] = []) {
     for (const a of arrets) this.arrets.set(a.id, { ...a });
+    this.trajets = trajets;
+  }
+
+  async rechercherTrajets(recherche: string | null, limite: number): Promise<TrajetPropose[]> {
+    const texte = recherche?.toLowerCase();
+    return this.trajets
+      .filter((t) => this.arrets.get(t.depart.id)?.disponible && this.arrets.get(t.arrivee.id)?.disponible)
+      .filter((t) => !texte || [t.nom, t.direction, t.ligne, t.depart.nom, t.arrivee.nom].some((v) => v.toLowerCase().includes(texte)))
+      .slice(0, limite);
   }
 
   async trouverArrets(ids: number[]): Promise<ArretReseau[]> {

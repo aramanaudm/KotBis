@@ -14,6 +14,11 @@ import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
 import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
+import { DepotFavorisPostgres } from "./favoris/favoris.depot.postgres";
+import { FavorisControleur } from "./favoris/favoris.controleur";
+import { creerRoutesFavoris } from "./favoris/favoris.routes";
+import { FavorisService } from "./favoris/favoris.service";
+import { ReferentielReseauPostgres } from "./favoris/reseau.referentiel.postgres";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -30,6 +35,17 @@ const serviceAuthentification = new ServiceAuthentification(
 );
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
+
+// KBE-40 : favoris du voyageur connecté
+app.use(
+  "/api/favoris",
+  creerRoutesFavoris(
+    middlewareSession,
+    new FavorisControleur(
+      new FavorisService(new DepotFavorisPostgres(obtenirPool), new ReferentielReseauPostgres())
+    )
+  )
+);
 
 app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();

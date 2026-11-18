@@ -1,15 +1,15 @@
 // Tests unitaires du service des favoris (KBE-40), dépôts en mémoire.
 import test, { beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { ErreurApi } from "../src/commun/erreur-api";
-import { FavorisService } from "../src/favoris/favoris.service";
+import { ErreurApi } from "../src/commun/erreurs";
+import { FavorisService, type CompteFavoris } from "../src/favoris/favoris.service";
 import { LIMITE_FAVORIS, type NouveauFavori } from "../src/favoris/favoris.types";
-import type { CompteAuthentifie } from "../src/utilisateurs/comptes.types";
 import { DepotFavorisMemoire, ReferentielReseauMemoire } from "./outils/depot-favoris-memoire";
 
-const ALICE: CompteAuthentifie = { id: 10, role: "voyageur", etat: "actif" };
-const BOB: CompteAuthentifie = { id: 11, role: "voyageur", etat: "actif" };
-const OPERATEUR: CompteAuthentifie = { id: 20, role: "operateur", etat: "actif" };
+// compteId arrive en texte depuis la session (KBE-23)
+const ALICE: CompteFavoris = { compteId: "10", role: "voyageur" };
+const BOB: CompteFavoris = { compteId: "11", role: "voyageur" };
+const OPERATEUR: CompteFavoris = { compteId: "20", role: "operateur" };
 
 const PORT_LOUIS = 1;
 const CUREPIPE = 2;
@@ -101,7 +101,7 @@ test("Ajout refusé vers un arrêt indisponible ou inexistant (422)", async () =
 
 test(`Limite de ${LIMITE_FAVORIS} favoris par compte`, async () => {
   for (let i = 0; i < LIMITE_FAVORIS; i++) {
-    await depot.ajouter(ALICE.id, { type: "destination", arretDepartId: null, arretArriveeId: 1000 + i, libelle: null });
+    await depot.ajouter(Number(ALICE.compteId), { type: "destination", arretDepartId: null, arretArriveeId: 1000 + i, libelle: null });
   }
   await rejette(service.ajouter(ALICE, destination(CUREPIPE)), 422, "LIMITE_FAVORIS");
   await service.ajouter(BOB, destination(CUREPIPE));
@@ -143,4 +143,8 @@ test("Un compte du personnel n'a pas de favoris (403)", async () => {
   await rejette(service.lister(OPERATEUR), 403, "ACCES_INTERDIT");
   await rejette(service.ajouter(OPERATEUR, destination(CUREPIPE)), 403, "ACCES_INTERDIT");
   await rejette(service.supprimer(OPERATEUR, 1), 403, "ACCES_INTERDIT");
+});
+
+test("Un identifiant de compte invalide dans la session est refusé (401)", async () => {
+  await rejette(service.lister({ compteId: "abc", role: "voyageur" }), 401, "SESSION_INVALIDE");
 });

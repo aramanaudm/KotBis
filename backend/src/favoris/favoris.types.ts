@@ -17,7 +17,7 @@ export interface NouveauFavori {
   libelle: string | null;
 }
 
-// Favori tel que stocké (future table favoris, proposée à l'équipe BDD)
+// Favori tel que stocké dans la table favoris
 export interface FavoriEnregistre extends NouveauFavori {
   id: number;
   voyageurId: number;
@@ -49,4 +49,18 @@ export interface Favori {
   creeLe: string;
   // EF-FAV-006 : false si un arrêt ou sa ligne n'est plus actif ; le client ne relance alors pas la recherche
   disponible: boolean;
+}
+
+// Trajet du réseau proposé à l'ajout (table trajets) : ses premier et dernier arrêts
+// deviennent le départ et l'arrivée du favori.
+export const LIMITE_TRAJETS_PROPOSES = 20;
+export const LONGUEUR_MAX_RECHERCHE = 100;
+
+export interface TrajetPropose {
+  trajetId: number;
+  ligne: string;
+  nom: string;
+  direction: string;
+  depart: { id: number; nom: string };
+  arrivee: { id: number; nom: string };
 }
