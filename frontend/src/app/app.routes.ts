@@ -20,6 +20,10 @@ export const routes: Routes = [
         loadComponent: () => import('./community/report-form.page').then((m) => m.ReportFormPage),
       },
       {
+        path: 'mes-signalements',
+        loadComponent: () => import('./community/report-list.page').then((m) => m.ReportListPage),
+      },
+      {
         path: 'avis/modifier/:id',
         loadComponent: () => import('./community/review-form.page').then((m) => m.ReviewFormPage),
       },
@@ -35,6 +39,8 @@ export const routes: Routes = [
   },
   { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
   { path: 'signaler', redirectTo: 'home/signaler', pathMatch: 'full' },
+  // SCRUM-67 : « Signalements » dans Mon espace ouvre cette route (SectionNavigator).
+  { path: 'signalements', redirectTo: 'home/mes-signalements', pathMatch: 'full' },
   {
     path: '',
     redirectTo: 'home',

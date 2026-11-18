@@ -282,3 +282,33 @@
     grid-template-columns: 1fr;
   }
 }
+/* SCRUM-67 : statut d'un signalement. Le libellé et le symbole portent le statut, la couleur ne fait que l'appuyer. */
+.community-report-status {
+  margin: 12px 0 4px;
+}
+.community-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.community-status[data-status='A_VERIFIER'] {
+  color: #8a4b00;
+  background: #fff4e0;
+}
+.community-status[data-status='CONFIRME'] {
+  color: var(--community-green-ink);
+  background: var(--community-tile);
+}
+.community-status[data-status='REJETE'] {
+  color: #b42318;
+  background: #fdecea;
+}
+.community-status[data-status='CLOTURE'] {
+  color: var(--community-muted);
+  background: #eef1f5;
+}

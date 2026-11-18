@@ -1,0 +1,37 @@
+<app-community-dialog title="Mes signalements">
+  <p class="community-note">Démonstration : les signalements de cette session ne proviennent pas d'un service en ligne.</p>
+  @if (!user()) {
+  <p role="status" class="community-notice">
+    Connectez-vous pour suivre vos signalements. La connexion sera disponible avec le module de l'équipe.
+  </p>
+  } @else { @if (reports().length === 0) {
+  <p role="status" class="community-notice">Vous n'avez envoyé aucun signalement pour le moment.</p>
+  } @else {
+  <ul class="community-reviews" aria-label="Mes signalements">
+    @for (report of reports(); track report.id) {
+    <li class="community-review community-report">
+      <div class="community-review-heading">
+        <span class="community-badge">Bus {{ report.busLine }}</span>
+        <div class="community-author">
+          <strong>{{ report.categoryLabel }}</strong>
+          <time [attr.datetime]="report.createdAt"
+            >Envoyé le {{ report.createdAt | date: 'dd/MM/yyyy HH:mm' : '+0400' }}</time
+          >
+        </div>
+      </div>
+      <p class="community-report-status">
+        <span class="community-status" [attr.data-status]="report.status">
+          <span aria-hidden="true">{{ status(report.status).symbol }}</span>
+          Statut : {{ status(report.status).label }}
+        </span>
+      </p>
+      <p class="community-note">{{ status(report.status).hint }}</p>
+    </li>
+    }
+  </ul>
+  } }
+  <div class="community-actions">
+    <a class="community-button community-button-outline" routerLink="/home">Retour à la carte</a>
+    <a class="community-button" routerLink="/home/signaler">Signaler un bus</a>
+  </div>
+</app-community-dialog>
