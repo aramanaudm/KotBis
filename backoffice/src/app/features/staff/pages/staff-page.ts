@@ -65,6 +65,7 @@ export class StaffPage implements OnInit {
     role: this.formBuilder.nonNullable.control<StaffRole>('operateur'),
     status: this.formBuilder.nonNullable.control<StaffStatus>('actif'),
     function: ['', [Validators.maxLength(100)]],
+    motDePasse: ['', [Validators.minLength(8)]],
   });
 
   protected readonly filteredStaff = computed(() => {
@@ -139,7 +140,14 @@ export class StaffPage implements OnInit {
   protected openCreate(): void {
     this.editingMember.set(null);
     this.formError.set('');
-    this.form.reset({ name: '', email: '', role: 'operateur', status: 'actif', function: '' });
+    this.form.reset({
+      name: '',
+      email: '',
+      role: 'operateur',
+      status: 'actif',
+      function: '',
+      motDePasse: '',
+    });
     this.formOpen.set(true);
   }
 
@@ -155,6 +163,7 @@ export class StaffPage implements OnInit {
       role: member.role,
       status: member.status,
       function: member.function === '—' ? '' : member.function,
+      motDePasse: '',
     });
     this.formOpen.set(true);
   }
@@ -240,7 +249,7 @@ export class StaffPage implements OnInit {
     );
   }
 
-  protected errorFor(name: 'name' | 'email', message: string): string {
+  protected errorFor(name: 'name' | 'email' | 'motDePasse', message: string): string {
     const control = this.form.controls[name];
     return control.touched && control.invalid ? message : '';
   }

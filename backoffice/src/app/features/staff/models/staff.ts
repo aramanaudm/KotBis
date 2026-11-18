@@ -19,6 +19,7 @@ export interface StaffPayload {
   readonly role: StaffRole;
   readonly status: StaffStatus;
   readonly function: string;
+  readonly motDePasse?: string;
 }
 
 export const STAFF_ROLE_LABELS: Readonly<Record<StaffRole, string>> = {

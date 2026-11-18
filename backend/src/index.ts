@@ -73,6 +73,55 @@ const verifierToken = (req: any, res: any, next: any) => {
   }
 };
 
+const verifierAdmin = (req: any, res: any, next: any) => {
+  verifierToken(req, res, () => {
+    const role = req.utilisateur?.role;
+    const roleId = Number(req.utilisateur?.role_id);
+    if (role !== 'administrateur' && roleId !== 4) {
+      return res.status(403).json({ erreur: "Accès réservé aux administrateurs." });
+    }
+    next();
+  });
+};
+
+const ETATS_COMPTE = new Set(['actif', 'inactif', 'invite']);
+const ROLES_VOYAGEUR = new Set(['voyageur', 'operateur', 'moderateur', 'administrateur']);
+const ROLES_PERSONNEL = new Set(['operateur', 'moderateur', 'administrateur']);
+
+const nettoyer = (valeur: unknown, longueur: number): string =>
+  String(valeur ?? '')
+    .trim()
+    .slice(0, longueur);
+
+const idCompte = (valeur: string): number | null => {
+  const id = Number(valeur);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
+
+const identifiantPublic = (): string =>
+  `u_${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
+
+const hacherMotDePasse = async (motDePasse?: string): Promise<string> => {
+  const valeur = motDePasse?.trim() || crypto.randomBytes(24).toString('hex');
+  return argon2.hash(valeur, { type: argon2.argon2id });
+};
+
+const SELECT_VOYAGEUR = `
+  SELECT c.id, c.email, c.etat, v.pseudo, v.zone_libre, v.avatar_ref, v.cree_le,
+         r.code AS role, COALESCE(s.solde, 0) AS points
+  FROM voyageurs v
+  JOIN comptes c ON c.id = v.compte_id
+  JOIN roles r ON r.id = c.role_id
+  LEFT JOIN v_soldes_voyageurs s ON s.voyageur_id = v.compte_id
+`;
+
+const SELECT_PERSONNEL = `
+  SELECT c.id, c.email, c.etat, p.nom_affiche, p.fonction, p.cree_le, r.code AS role
+  FROM personnel p
+  JOIN comptes c ON c.id = p.compte_id
+  JOIN roles r ON r.id = c.role_id
+`;
+
 app.post('/api/inscription', async (req, res) => {
   const client = await pool.connect();
   try {
@@ -303,6 +352,393 @@ app.delete('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) =>
   } catch (error: any) {
     await client.query('ROLLBACK');
     res.status(500).json({ erreur: "Erreur lors de la suppression du compte." });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/api/voyageurs', verifierAdmin, async (_req, res) => {
+  try {
+    const resultat = await pool.query(`${SELECT_VOYAGEUR} ORDER BY c.cree_le DESC`);
+    return res.json(resultat.rows);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ erreur: "Impossible de charger les voyageurs." });
+  }
+});
+
+app.post('/api/voyageurs', verifierAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const pseudo = nettoyer(req.body.pseudo, 60);
+    const email = nettoyer(req.body.email, 254).toLowerCase();
+    const role = nettoyer(req.body.role, 30) || 'voyageur';
+    const etat = nettoyer(req.body.etat ?? req.body.status, 20) || 'actif';
+    const city = nettoyer(req.body.city ?? req.body.zone_libre, 120) || null;
+    const avatarRef = nettoyer(req.body.avatarRef ?? req.body.avatar_ref, 120) || null;
+    const motDePasse = typeof req.body.motDePasse === 'string' ? req.body.motDePasse : '';
+
+    if (!pseudo || !email) {
+      return res.status(400).json({ erreur: "Le pseudo et l'email sont requis." });
+    }
+    if (!ROLES_VOYAGEUR.has(role)) {
+      return res.status(400).json({ erreur: "Rôle invalide." });
+    }
+    if (!ETATS_COMPTE.has(etat)) {
+      return res.status(400).json({ erreur: "État invalide." });
+    }
+    if (motDePasse.trim() && motDePasse.trim().length < 8) {
+      return res.status(400).json({ erreur: "Le mot de passe doit faire au moins 8 caractères." });
+    }
+
+    const hash = await hacherMotDePasse(motDePasse);
+    const invitation = motDePasse.trim() ? null : crypto.randomBytes(24).toString('hex');
+    const expiration = motDePasse.trim() ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await client.query('BEGIN');
+    const compte = await client.query(
+      `INSERT INTO comptes
+         (email, mot_de_passe_hash, identifiant_public, role_id, etat, invitation_hash, invitation_expire_le)
+       VALUES ($1, $2, $3, (SELECT id FROM roles WHERE code = $4), $5, $6, $7)
+       RETURNING id`,
+      [email, hash, identifiantPublic(), role, etat, invitation, expiration],
+    );
+    const id = compte.rows[0].id;
+    await client.query(
+      `INSERT INTO voyageurs (compte_id, pseudo, zone_libre, avatar_ref)
+       VALUES ($1, $2, $3, $4)`,
+      [id, pseudo, city, avatarRef],
+    );
+    await client.query('COMMIT');
+
+    const ligne = await pool.query(`${SELECT_VOYAGEUR} WHERE c.id = $1`, [id]);
+    return res.status(201).json(ligne.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') {
+      return res.status(409).json({ erreur: "Cet email ou ce pseudo est déjà utilisé." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la création du voyageur." });
+  } finally {
+    client.release();
+  }
+});
+
+app.put('/api/voyageurs/:id', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ erreur: "Identifiant invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    const pseudo = nettoyer(req.body.pseudo, 60);
+    const email = nettoyer(req.body.email, 254).toLowerCase();
+    const role = nettoyer(req.body.role, 30) || 'voyageur';
+    const etat = nettoyer(req.body.etat ?? req.body.status, 20) || 'actif';
+    const city = nettoyer(req.body.city ?? req.body.zone_libre, 120) || null;
+    const avatarRef = nettoyer(req.body.avatarRef ?? req.body.avatar_ref, 120) || null;
+    const motDePasse = typeof req.body.motDePasse === 'string' ? req.body.motDePasse : '';
+
+    if (!pseudo || !email) {
+      return res.status(400).json({ erreur: "Le pseudo et l'email sont requis." });
+    }
+    if (!ROLES_VOYAGEUR.has(role)) {
+      return res.status(400).json({ erreur: "Rôle invalide." });
+    }
+    if (!ETATS_COMPTE.has(etat)) {
+      return res.status(400).json({ erreur: "État invalide." });
+    }
+    if (motDePasse.trim() && motDePasse.trim().length < 8) {
+      return res.status(400).json({ erreur: "Le mot de passe doit faire au moins 8 caractères." });
+    }
+
+    const existant = await client.query('SELECT mot_de_passe_hash FROM comptes WHERE id = $1', [id]);
+    if (existant.rowCount === 0) {
+      return res.status(404).json({ erreur: "Voyageur introuvable." });
+    }
+
+    const hash = motDePasse.trim()
+      ? await hacherMotDePasse(motDePasse)
+      : existant.rows[0].mot_de_passe_hash || (await hacherMotDePasse());
+
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE comptes
+       SET email = $1, role_id = (SELECT id FROM roles WHERE code = $2), etat = $3,
+           mot_de_passe_hash = $4, modifie_le = now()
+       WHERE id = $5`,
+      [email, role, etat, hash, id],
+    );
+    await client.query(
+      `UPDATE voyageurs
+       SET pseudo = $1, zone_libre = $2, avatar_ref = $3, modifie_le = now()
+       WHERE compte_id = $4`,
+      [pseudo, city, avatarRef, id],
+    );
+    await client.query('COMMIT');
+
+    const ligne = await pool.query(`${SELECT_VOYAGEUR} WHERE c.id = $1`, [id]);
+    return res.json(ligne.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') {
+      return res.status(409).json({ erreur: "Cet email ou ce pseudo est déjà utilisé." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la mise à jour du voyageur." });
+  } finally {
+    client.release();
+  }
+});
+
+app.patch('/api/voyageurs/:id/etat', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  const etat = nettoyer(req.body.etat ?? req.body.status, 20);
+  if (id === null || !ETATS_COMPTE.has(etat)) {
+    return res.status(400).json({ erreur: "Identifiant ou état invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    const existant = await client.query('SELECT mot_de_passe_hash FROM comptes WHERE id = $1', [id]);
+    if (existant.rowCount === 0) {
+      return res.status(404).json({ erreur: "Voyageur introuvable." });
+    }
+    const hash = existant.rows[0].mot_de_passe_hash || (await hacherMotDePasse());
+    await client.query(
+      'UPDATE comptes SET etat = $1, mot_de_passe_hash = $2, modifie_le = now() WHERE id = $3',
+      [etat, hash, id],
+    );
+    const ligne = await pool.query(`${SELECT_VOYAGEUR} WHERE c.id = $1`, [id]);
+    return res.json(ligne.rows[0]);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors du changement d'état." });
+  } finally {
+    client.release();
+  }
+});
+
+app.delete('/api/voyageurs/:id', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ erreur: "Identifiant invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const profil = await client.query('SELECT 1 FROM voyageurs WHERE compte_id = $1', [id]);
+    if (profil.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ erreur: "Voyageur introuvable." });
+    }
+    await client.query('DELETE FROM sessions WHERE compte_id = $1', [id]);
+    await client.query('DELETE FROM voyageurs WHERE compte_id = $1', [id]);
+    await client.query('DELETE FROM comptes WHERE id = $1', [id]);
+    await client.query('COMMIT');
+    return res.json({ message: "Voyageur supprimé." });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23503') {
+      return res.status(409).json({ erreur: "Ce compte est lié à d'autres données." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la suppression du voyageur." });
+  } finally {
+    client.release();
+  }
+});
+
+app.get('/api/personnel', verifierAdmin, async (_req, res) => {
+  try {
+    const resultat = await pool.query(`${SELECT_PERSONNEL} ORDER BY c.cree_le DESC`);
+    return res.json(resultat.rows);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ erreur: "Impossible de charger le personnel." });
+  }
+});
+
+app.post('/api/personnel', verifierAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const nom = nettoyer(req.body.nom_affiche ?? req.body.name, 120);
+    const email = nettoyer(req.body.email, 254).toLowerCase();
+    const role = nettoyer(req.body.role, 30) || 'operateur';
+    const etat = nettoyer(req.body.etat ?? req.body.status, 20) || 'actif';
+    const fonction = nettoyer(req.body.fonction ?? req.body.function, 100) || null;
+    const motDePasse = typeof req.body.motDePasse === 'string' ? req.body.motDePasse : '';
+
+    if (!nom || !email) {
+      return res.status(400).json({ erreur: "Le nom et l'email sont requis." });
+    }
+    if (!ROLES_PERSONNEL.has(role)) {
+      return res.status(400).json({ erreur: "Rôle invalide." });
+    }
+    if (!ETATS_COMPTE.has(etat)) {
+      return res.status(400).json({ erreur: "État invalide." });
+    }
+    if (motDePasse.trim() && motDePasse.trim().length < 8) {
+      return res.status(400).json({ erreur: "Le mot de passe doit faire au moins 8 caractères." });
+    }
+
+    const hash = await hacherMotDePasse(motDePasse);
+    const invitation = motDePasse.trim() ? null : crypto.randomBytes(24).toString('hex');
+    const expiration = motDePasse.trim() ? null : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await client.query('BEGIN');
+    const compte = await client.query(
+      `INSERT INTO comptes
+         (email, mot_de_passe_hash, identifiant_public, role_id, etat, invitation_hash, invitation_expire_le)
+       VALUES ($1, $2, $3, (SELECT id FROM roles WHERE code = $4), $5, $6, $7)
+       RETURNING id`,
+      [email, hash, identifiantPublic(), role, etat, invitation, expiration],
+    );
+    const id = compte.rows[0].id;
+    await client.query(
+      `INSERT INTO personnel (compte_id, nom_affiche, fonction) VALUES ($1, $2, $3)`,
+      [id, nom, fonction],
+    );
+    await client.query('COMMIT');
+
+    const ligne = await pool.query(`${SELECT_PERSONNEL} WHERE c.id = $1`, [id]);
+    return res.status(201).json(ligne.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') {
+      return res.status(409).json({ erreur: "Cet email est déjà utilisé." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la création du membre." });
+  } finally {
+    client.release();
+  }
+});
+
+app.put('/api/personnel/:id', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ erreur: "Identifiant invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    const nom = nettoyer(req.body.nom_affiche ?? req.body.name, 120);
+    const email = nettoyer(req.body.email, 254).toLowerCase();
+    const role = nettoyer(req.body.role, 30) || 'operateur';
+    const etat = nettoyer(req.body.etat ?? req.body.status, 20) || 'actif';
+    const fonction = nettoyer(req.body.fonction ?? req.body.function, 100) || null;
+    const motDePasse = typeof req.body.motDePasse === 'string' ? req.body.motDePasse : '';
+
+    if (!nom || !email) {
+      return res.status(400).json({ erreur: "Le nom et l'email sont requis." });
+    }
+    if (!ROLES_PERSONNEL.has(role)) {
+      return res.status(400).json({ erreur: "Rôle invalide." });
+    }
+    if (!ETATS_COMPTE.has(etat)) {
+      return res.status(400).json({ erreur: "État invalide." });
+    }
+    if (motDePasse.trim() && motDePasse.trim().length < 8) {
+      return res.status(400).json({ erreur: "Le mot de passe doit faire au moins 8 caractères." });
+    }
+
+    const existant = await client.query('SELECT mot_de_passe_hash FROM comptes WHERE id = $1', [id]);
+    if (existant.rowCount === 0) {
+      return res.status(404).json({ erreur: "Membre introuvable." });
+    }
+
+    const hash = motDePasse.trim()
+      ? await hacherMotDePasse(motDePasse)
+      : existant.rows[0].mot_de_passe_hash || (await hacherMotDePasse());
+
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE comptes
+       SET email = $1, role_id = (SELECT id FROM roles WHERE code = $2), etat = $3,
+           mot_de_passe_hash = $4, modifie_le = now()
+       WHERE id = $5`,
+      [email, role, etat, hash, id],
+    );
+    await client.query(
+      `UPDATE personnel
+       SET nom_affiche = $1, fonction = $2, modifie_le = now()
+       WHERE compte_id = $3`,
+      [nom, fonction, id],
+    );
+    await client.query('COMMIT');
+
+    const ligne = await pool.query(`${SELECT_PERSONNEL} WHERE c.id = $1`, [id]);
+    return res.json(ligne.rows[0]);
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') {
+      return res.status(409).json({ erreur: "Cet email est déjà utilisé." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la mise à jour du membre." });
+  } finally {
+    client.release();
+  }
+});
+
+app.patch('/api/personnel/:id/etat', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  const etat = nettoyer(req.body.etat ?? req.body.status, 20);
+  if (id === null || !ETATS_COMPTE.has(etat)) {
+    return res.status(400).json({ erreur: "Identifiant ou état invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    const existant = await client.query('SELECT mot_de_passe_hash FROM comptes WHERE id = $1', [id]);
+    if (existant.rowCount === 0) {
+      return res.status(404).json({ erreur: "Membre introuvable." });
+    }
+    const hash = existant.rows[0].mot_de_passe_hash || (await hacherMotDePasse());
+    await client.query(
+      'UPDATE comptes SET etat = $1, mot_de_passe_hash = $2, modifie_le = now() WHERE id = $3',
+      [etat, hash, id],
+    );
+    const ligne = await pool.query(`${SELECT_PERSONNEL} WHERE c.id = $1`, [id]);
+    return res.json(ligne.rows[0]);
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors du changement d'état." });
+  } finally {
+    client.release();
+  }
+});
+
+app.delete('/api/personnel/:id', verifierAdmin, async (req, res) => {
+  const id = idCompte(req.params.id);
+  if (id === null) {
+    return res.status(400).json({ erreur: "Identifiant invalide." });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const profil = await client.query('SELECT 1 FROM personnel WHERE compte_id = $1', [id]);
+    if (profil.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ erreur: "Membre introuvable." });
+    }
+    await client.query('DELETE FROM sessions WHERE compte_id = $1', [id]);
+    await client.query('DELETE FROM personnel WHERE compte_id = $1', [id]);
+    await client.query('DELETE FROM comptes WHERE id = $1', [id]);
+    await client.query('COMMIT');
+    return res.json({ message: "Membre supprimé." });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23503') {
+      return res.status(409).json({ erreur: "Ce compte est lié à d'autres données." });
+    }
+    console.error(error);
+    return res.status(500).json({ erreur: "Erreur lors de la suppression du membre." });
   } finally {
     client.release();
   }

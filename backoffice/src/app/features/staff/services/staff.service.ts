@@ -42,7 +42,6 @@ export class StaffService {
   private readonly session = inject(SessionService);
   private readonly baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
   private readonly staff = signal<StaffMember[]>([...INITIAL_STAFF]);
-  private readonly apiAvailable = signal(true);
 
   readonly all = this.staff.asReadonly();
   readonly total = computed(() => this.staff().length);
@@ -57,10 +56,9 @@ export class StaffService {
         this.http.get<ApiStaffMember[]>(`${this.baseUrl}/personnel`, { headers: this.headers() }),
       );
       this.staff.set(response.filter(this.isStaff).map(this.toMember));
-      this.apiAvailable.set(true);
     } catch (error) {
       if (this.isUnavailable(error)) {
-        this.apiAvailable.set(false);
+        this.error.set('API indisponible : affichage des données de référence.');
         return;
       }
       this.error.set(this.message(error));
@@ -80,8 +78,7 @@ export class StaffService {
       this.staff.update((items) => [...items, member]);
       return member;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.createLocal(payload);
-      throw this.toError(error);
+      throw this.toError(error, "Impossible d'ajouter le membre.");
     }
   }
 
@@ -96,8 +93,7 @@ export class StaffService {
       this.staff.update((items) => items.map((item) => (item.id === id ? member : item)));
       return member;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.updateLocal(id, payload);
-      throw this.toError(error);
+      throw this.toError(error, 'Impossible de mettre à jour le membre.');
     }
   }
 
@@ -114,8 +110,7 @@ export class StaffService {
       this.staff.update((items) => items.map((item) => (item.id === id ? member : item)));
       return member;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.updateLocal(id, { status });
-      throw this.toError(error);
+      throw this.toError(error, "Impossible de changer l'état du membre.");
     }
   }
 
@@ -125,29 +120,9 @@ export class StaffService {
         this.http.delete(`${this.baseUrl}/personnel/${id}`, { headers: this.headers() }),
       );
     } catch (error) {
-      if (!this.isUnavailable(error)) throw this.toError(error);
+      throw this.toError(error, 'Impossible de supprimer le membre.');
     }
     this.staff.update((items) => items.filter((item) => item.id !== id));
-  }
-
-  private createLocal(payload: StaffPayload): StaffMember {
-    const member: StaffMember = {
-      ...payload,
-      id: `local-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    this.apiAvailable.set(false);
-    this.staff.update((items) => [...items, member]);
-    return member;
-  }
-
-  private updateLocal(id: string, patch: Partial<StaffPayload>): StaffMember {
-    const current = this.staff().find((item) => item.id === id);
-    if (!current) throw new Error('Membre introuvable.');
-    const member: StaffMember = { ...current, ...patch };
-    this.apiAvailable.set(false);
-    this.staff.update((items) => items.map((item) => (item.id === id ? member : item)));
-    return member;
   }
 
   private readonly isStaff = (api: ApiStaffMember): boolean =>
@@ -174,13 +149,13 @@ export class StaffService {
     return error instanceof HttpErrorResponse && [0, 404, 405, 501].includes(error.status);
   }
 
-  private message(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) return 'Impossible de charger le personnel.';
+  private message(error: unknown, fallback = 'Impossible de charger le personnel.'): string {
+    if (!(error instanceof HttpErrorResponse)) return fallback;
     const body = error.error as { erreur?: string; error?: string } | null;
-    return body?.erreur ?? body?.error ?? 'Impossible de charger le personnel.';
+    return body?.erreur ?? body?.error ?? fallback;
   }
 
-  private toError(error: unknown): Error {
-    return new Error(this.message(error));
+  private toError(error: unknown, fallback?: string): Error {
+    return new Error(this.message(error, fallback));
   }
 }

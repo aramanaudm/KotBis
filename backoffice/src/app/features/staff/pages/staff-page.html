@@ -98,6 +98,19 @@
         <app-form-field label="Fonction" forId="staff-function">
           <input id="staff-function" type="text" formControlName="function" maxlength="100" />
         </app-form-field>
+
+        <app-form-field
+          label="Mot de passe (optionnel)"
+          forId="staff-password"
+          [error]="errorFor('motDePasse', '8 caractères minimum.')"
+        >
+          <input
+            id="staff-password"
+            type="password"
+            formControlName="motDePasse"
+            autocomplete="new-password"
+          />
+        </app-form-field>
       </div>
 
       @if (formError()) {

@@ -68,7 +68,6 @@ export class UsersService {
   private readonly session = inject(SessionService);
   private readonly baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
   private readonly users = signal<User[]>([...INITIAL_USERS]);
-  private readonly apiAvailable = signal(true);
 
   readonly all = this.users.asReadonly();
   readonly total = computed(() => this.users().length);
@@ -83,10 +82,9 @@ export class UsersService {
         this.http.get<ApiUser[]>(`${this.baseUrl}/voyageurs`, { headers: this.headers() }),
       );
       this.users.set(response.filter(this.isUser).map(this.toUser));
-      this.apiAvailable.set(true);
     } catch (error) {
       if (this.isUnavailable(error)) {
-        this.apiAvailable.set(false);
+        this.error.set('API indisponible : affichage des données de référence.');
         return;
       }
       this.error.set(this.message(error));
@@ -104,8 +102,7 @@ export class UsersService {
       this.users.update((items) => [...items, user]);
       return user;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.createLocal(payload);
-      throw this.toError(error);
+      throw this.toError(error, "Impossible d'ajouter l'utilisateur.");
     }
   }
 
@@ -120,8 +117,7 @@ export class UsersService {
       this.users.update((items) => items.map((item) => (item.id === id ? user : item)));
       return user;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.updateLocal(id, payload);
-      throw this.toError(error);
+      throw this.toError(error, "Impossible de mettre à jour l'utilisateur.");
     }
   }
 
@@ -138,8 +134,7 @@ export class UsersService {
       this.users.update((items) => items.map((item) => (item.id === id ? user : item)));
       return user;
     } catch (error) {
-      if (this.isUnavailable(error)) return this.updateLocal(id, { status });
-      throw this.toError(error);
+      throw this.toError(error, "Impossible de changer l'état de l'utilisateur.");
     }
   }
 
@@ -149,31 +144,9 @@ export class UsersService {
         this.http.delete(`${this.baseUrl}/voyageurs/${id}`, { headers: this.headers() }),
       );
     } catch (error) {
-      if (!this.isUnavailable(error)) throw this.toError(error);
+      throw this.toError(error, "Impossible de supprimer l'utilisateur.");
     }
     this.users.update((items) => items.filter((item) => item.id !== id));
-  }
-
-  private createLocal(payload: UserPayload): User {
-    const user: User = {
-      ...payload,
-      id: `local-${Date.now()}`,
-      avatarRef: null,
-      createdAt: new Date().toISOString(),
-      points: 0,
-    };
-    this.apiAvailable.set(false);
-    this.users.update((items) => [...items, user]);
-    return user;
-  }
-
-  private updateLocal(id: string, patch: Partial<UserPayload>): User {
-    const current = this.users().find((item) => item.id === id);
-    if (!current) throw new Error('Utilisateur introuvable.');
-    const user: User = { ...current, ...patch };
-    this.apiAvailable.set(false);
-    this.users.update((items) => items.map((item) => (item.id === id ? user : item)));
-    return user;
   }
 
   private readonly isUser = (api: ApiUser): boolean =>
@@ -200,13 +173,13 @@ export class UsersService {
     return error instanceof HttpErrorResponse && [0, 404, 405, 501].includes(error.status);
   }
 
-  private message(error: unknown): string {
-    if (!(error instanceof HttpErrorResponse)) return 'Impossible de charger les utilisateurs.';
+  private message(error: unknown, fallback = 'Impossible de charger les utilisateurs.'): string {
+    if (!(error instanceof HttpErrorResponse)) return fallback;
     const body = error.error as { erreur?: string; error?: string } | null;
-    return body?.erreur ?? body?.error ?? 'Impossible de charger les utilisateurs.';
+    return body?.erreur ?? body?.error ?? fallback;
   }
 
-  private toError(error: unknown): Error {
-    return new Error(this.message(error));
+  private toError(error: unknown, fallback?: string): Error {
+    return new Error(this.message(error, fallback));
   }
 }

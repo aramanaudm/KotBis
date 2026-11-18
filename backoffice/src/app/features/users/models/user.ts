@@ -21,6 +21,7 @@ export interface UserPayload {
   readonly role: UserRole;
   readonly status: UserStatus;
   readonly city: string;
+  readonly motDePasse?: string;
 }
 
 export const USER_ROLE_LABELS: Readonly<Record<UserRole, string>> = {

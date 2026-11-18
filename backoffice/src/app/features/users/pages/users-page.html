@@ -144,6 +144,19 @@
         <app-form-field label="Ville" forId="user-city">
           <input id="user-city" type="text" formControlName="city" maxlength="120" />
         </app-form-field>
+
+        <app-form-field
+          label="Mot de passe (optionnel)"
+          forId="user-password"
+          [error]="errorFor('motDePasse', '8 caractères minimum.')"
+        >
+          <input
+            id="user-password"
+            type="password"
+            formControlName="motDePasse"
+            autocomplete="new-password"
+          />
+        </app-form-field>
       </div>
 
       @if (formError()) {

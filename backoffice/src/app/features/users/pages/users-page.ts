@@ -66,6 +66,7 @@ export class UsersPage implements OnInit {
     role: this.formBuilder.nonNullable.control<UserRole>('voyageur'),
     status: this.formBuilder.nonNullable.control<UserStatus>('actif'),
     city: ['', [Validators.maxLength(120)]],
+    motDePasse: ['', [Validators.minLength(8)]],
   });
 
   protected readonly filteredUsers = computed(() => {
@@ -149,7 +150,14 @@ export class UsersPage implements OnInit {
   protected openCreate(): void {
     this.editingUser.set(null);
     this.formError.set('');
-    this.form.reset({ pseudo: '', email: '', role: 'voyageur', status: 'actif', city: '' });
+    this.form.reset({
+      pseudo: '',
+      email: '',
+      role: 'voyageur',
+      status: 'actif',
+      city: '',
+      motDePasse: '',
+    });
     this.formOpen.set(true);
   }
 
@@ -165,6 +173,7 @@ export class UsersPage implements OnInit {
       role: user.role,
       status: user.status,
       city: user.city === '—' ? '' : user.city,
+      motDePasse: '',
     });
     this.formOpen.set(true);
   }
@@ -250,7 +259,7 @@ export class UsersPage implements OnInit {
     );
   }
 
-  protected errorFor(name: 'pseudo' | 'email', message: string): string {
+  protected errorFor(name: 'pseudo' | 'email' | 'motDePasse', message: string): string {
     const control = this.form.controls[name];
     return control.touched && control.invalid ? message : '';
   }
