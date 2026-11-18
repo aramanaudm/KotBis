@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import * as L from 'leaflet';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { PartagePositionComponent } from '../partage-position/partage-position.component';
 
 interface ArretDemo {
@@ -35,7 +36,7 @@ type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [PartagePositionComponent],
+  imports: [PartagePositionComponent, RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })

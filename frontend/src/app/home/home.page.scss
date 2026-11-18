@@ -209,6 +209,18 @@ button:focus-visible {
   font-size: 0.8rem;
 }
 
+.community-actions {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.community-actions .community-button {
+  border-radius: 16px;
+}
+
 @media (max-width: 480px) {
   .floating-header {
     right: 12px;
@@ -232,7 +244,7 @@ button:focus-visible {
 
   .map-controls {
     right: 12px;
-    bottom: calc(220px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(285px + env(safe-area-inset-bottom, 0px));
   }
 }
 
