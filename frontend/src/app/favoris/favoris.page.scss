@@ -148,8 +148,7 @@ p {
   text-decoration: none;
 }
 
-.action:hover,
-.favorite-route:hover .route-action {
+.action:hover {
   text-decoration: underline;
 }
 
@@ -193,22 +192,22 @@ button.action {
   background: #fff;
 }
 
-.favorite-route {
-  display: grid;
-  gap: 5px;
-  width: fit-content;
-  min-height: 44px;
-  align-content: center;
-  text-decoration: none;
-}
-
 .route-title {
   font-weight: 650;
   overflow-wrap: anywhere;
 }
-.route-action {
-  color: var(--accent);
-  font-size: 14px;
+.catalogue {
+  margin-top: 32px;
+}
+
+.catalogue .favorites {
+  margin-top: 12px;
+}
+
+.trajet-disponible {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 .remove {
   color: var(--muted);
@@ -216,17 +215,6 @@ button.action {
 .remove::before,
 .remove::after {
   width: 15px;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
