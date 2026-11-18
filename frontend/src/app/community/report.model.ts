@@ -8,6 +8,7 @@ export interface BusReport {
   readonly busId: string;
   readonly busLine: string;
   readonly categoryId: string;
+  readonly categoryLabel: string;
   readonly comment: string;
   readonly userId: string;
   readonly userName: string;
