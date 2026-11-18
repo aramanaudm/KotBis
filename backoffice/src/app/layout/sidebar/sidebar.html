@@ -1,0 +1,48 @@
+<aside class="sidebar" [class.open]="open()">
+  <div class="brand">
+    <span class="brand-mark">
+      <app-icon name="bus" />
+    </span>
+    <div class="brand-text">
+      KotBis
+      <small>BACK-OFFICE</small>
+    </div>
+    <button
+      class="icon-button mobile-close"
+      type="button"
+      (click)="closeMenu()"
+      aria-label="Fermer le menu"
+    >
+      <app-icon name="close" />
+    </button>
+  </div>
+
+  <div class="nav-label">GESTION DU RÉSEAU</div>
+
+  <nav class="nav" aria-label="Navigation principale">
+    @for (item of navItems; track item.route) {
+      <a
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeMenu()"
+      >
+        <app-icon [name]="item.icon" />
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="traveler-link" href="/">
+      <app-icon name="back" />
+      <span>Interface voyageurs</span>
+    </a>
+    <p>Espace d’administration<br />Mauritius · Maurice</p>
+  </div>
+</aside>
+
+@if (open()) {
+  <button class="backdrop" type="button" aria-label="Fermer le menu" (click)="closeMenu()"></button>
+}

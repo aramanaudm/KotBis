@@ -1,0 +1,44 @@
+<header class="app-header">
+  <div class="header-left">
+    <button
+      class="icon-button menu-button"
+      type="button"
+      (click)="menuToggle.emit()"
+      aria-label="Ouvrir le menu"
+    >
+      <app-icon name="menu" />
+    </button>
+    <span class="breadcrumb">
+      Administration
+      <span class="separator">/</span>
+      <b>{{ pageTitle() }}</b>
+    </span>
+  </div>
+
+  <div class="header-actions">
+   
+
+    <select
+      class="language-select"
+      aria-label="Langue"
+      [value]="language()"
+      (change)="setLanguage($event)"
+    >
+      <option value="fr">FR</option>
+      <option value="en">EN</option>
+    </select>
+
+    <button
+      class="icon-button"
+      type="button"
+      (click)="theme.toggle()"
+      [attr.aria-label]="theme.isDark() ? 'Activer le thème clair' : 'Activer le thème sombre'"
+    >
+      <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
+    </button>
+
+    <span class="avatar" [attr.title]="session.currentUser().name">
+      {{ session.currentUser().initials }}
+    </span>
+  </div>
+</header>

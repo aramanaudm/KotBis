@@ -1,0 +1,20 @@
+:host {
+  display: block;
+}
+
+.danger {
+  padding: 12px 17px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--red);
+  border: 0;
+  border-radius: 9px;
+}
+
+@media (max-width: 700px) {
+  .toolbar .search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}
