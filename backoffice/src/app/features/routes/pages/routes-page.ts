@@ -33,9 +33,10 @@ export class RoutesPage {
 
   protected readonly pageSize = 6;
   protected readonly statusTones = ROUTE_STATUS_TONES;
-  protected readonly columns: readonly TableColumn[] = [
+   protected readonly columns: readonly TableColumn[] = [
     { key: 'name', label: 'Trajet' },
     { key: 'line', label: 'Ligne' },
+    { key: 'direction', label: 'Direction' },
     { key: 'stops', label: 'Arrêts' },
     { key: 'status', label: 'État', type: 'status' },
   ];
@@ -87,16 +88,17 @@ export class RoutesPage {
 
     return this.filteredRoutes()
       .slice(start, start + this.pageSize)
-      .map((route) => ({
+            .map((route) => ({
         id: route.id,
         values: {
           name: route.name,
           line: route.line,
+          direction: route.direction,
           stops: `${route.stops.length} arrêt(s)`,
           status: ROUTE_STATUS_LABELS[route.status],
         },
       }));
-  });
+       });
 
   protected readonly formTitle = computed(() =>
     this.editingRoute() ? 'Modifier · Trajet' : 'Ajouter · Trajet',
