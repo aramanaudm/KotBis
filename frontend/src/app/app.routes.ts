@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 
 export const routes: Routes = [
+  { path: 'mon-espace', loadComponent: () => import('./pages/mon-espace/mon-espace.page').then((m) => m.MonEspacePage) },
   {
     path: 'favoris',
     loadComponent: () => import('./favoris/favoris.page').then((m) => m.FavorisPage),
@@ -18,7 +19,7 @@ export const routes: Routes = [
   { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
   {
     path: '',
-    redirectTo: 'favoris',
+    redirectTo: 'home',
     pathMatch: 'full',
   },
 ];

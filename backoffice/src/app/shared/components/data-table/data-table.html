@@ -1,0 +1,69 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        @for (column of columns(); track column.key) {
+          <th>{{ column.label }}</th>
+        }
+        @if (showActions()) {
+          <th>Actions</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @if (rows().length === 0) {
+        <tr>
+          <td class="empty" [attr.colspan]="columns().length + (showActions() ? 1 : 0)">
+            {{ emptyMessage() }}
+          </td>
+        </tr>
+      }
+
+      @for (row of rows(); track row.id) {
+        <tr>
+          @for (column of columns(); track column.key) {
+            <td>
+              @if (column.type === 'status') {
+                <app-status-badge
+                  [label]="row.values[column.key]"
+                  [tone]="statusTone(row.values[column.key])"
+                />
+              } @else {
+                {{ row.values[column.key] }}
+              }
+            </td>
+          }
+
+          @if (showActions()) {
+            <td>
+              <div class="actions">
+                @if (showEdit()) {
+                  <button
+                    class="icon-button"
+                    type="button"
+                    [attr.aria-label]="editLabel()"
+                    [attr.title]="editLabel()"
+                    (click)="edit.emit(row)"
+                  >
+                    <app-icon [name]="editIcon()" />
+                  </button>
+                }
+                @if (showRemove()) {
+                  <button
+                    class="icon-button"
+                    type="button"
+                    [attr.aria-label]="removeLabel()"
+                    [attr.title]="removeLabel()"
+                    (click)="remove.emit(row)"
+                  >
+                    <app-icon [name]="removeIcon()" />
+                  </button>
+                }
+              </div>
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
