@@ -198,20 +198,31 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       });
     } else {
       for (const zone of zones) {
-        const points = this.toLatLngs(zone.vertices);
+        const valide =
+          zone.vertices.length >= 3 &&
+          zone.vertices.every(
+            ([longitude, latitude]) =>
+              Number.isFinite(longitude) &&
+              Number.isFinite(latitude) &&
+              longitude >= -180 &&
+              longitude <= 180 &&
+              latitude >= -90 &&
+              latitude <= 90,
+          );
 
-        if (points.length < 3) {
+        if (!valide) {
           continue;
         }
+
+        const points = this.toLatLngs(zone.vertices);
 
         const polygon = L.polygon(points, {
           color: '#2069e7',
           fillColor: '#2069e7',
-          fillOpacity: 0.2,
-          weight: 2,
+          fillOpacity: 0.3,
+          weight: 3,
         }).addTo(this.layers);
 
-        // textContent affiche le nom sans l'interpréter comme du HTML.
         const label = document.createElement('span');
         label.textContent = zone.name;
         polygon.bindPopup(label);
@@ -220,20 +231,23 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       }
     }
 
-    // Cadrer les zones une fois, sans déplacer la carte à chaque clic.
+    // Centrer la carte sur les contours valides.
     if (!this.framed && bounds.isValid()) {
       this.map.fitBounds(bounds, {
         padding: [25, 25],
         maxZoom: 14,
       });
+
       this.framed = true;
     }
   }
 
   private toLatLngs(points: readonly ZonePoint[]): L.LatLngTuple[] {
-    // Leaflet attend [latitude, longitude].
     return points.map(
-      ([longitude, latitude]): L.LatLngTuple => [latitude, longitude],
+      ([longitude, latitude]): L.LatLngTuple => [
+        latitude,
+        longitude,
+      ],
     );
   }
 
