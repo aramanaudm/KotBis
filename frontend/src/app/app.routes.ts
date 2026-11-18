@@ -31,8 +31,20 @@ export const routes: Routes = [
   { path: 'avis', redirectTo: 'home/avis', pathMatch: 'full' },
   { path: 'signaler', redirectTo: 'home/signaler', pathMatch: 'full' },
   {
+    path: 'login',
+    loadComponent: () => import('./pages/auth/login/login.page').then(m => m.LoginPage),
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./pages/auth/register/register.page').then(m => m.RegisterPage),
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',
+  },
+  {
+    path: '**',
+    redirectTo: 'home',
   },
 ];
