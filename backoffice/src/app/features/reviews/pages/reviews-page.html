@@ -1,0 +1,79 @@
+<app-page-header title="Avis" description="Modérez les avis publiés par les voyageurs.">
+  <button class="secondary" type="button" (click)="exportCsv()">
+    <app-icon name="export" />
+    Exporter
+  </button>
+</app-page-header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input
+        type="search"
+        placeholder="Rechercher…"
+        aria-label="Rechercher un avis"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+
+    <select
+      class="filter"
+      aria-label="Filtrer par statut"
+      [value]="statusFilter()"
+      (change)="onFilter($event)"
+    >
+      <option value="">Tous les statuts</option>
+      <option value="pending">À vérifier</option>
+      <option value="published">Publié</option>
+      <option value="hidden">Masqué</option>
+    </select>
+  </div>
+
+  <app-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [statusTones]="statusTones"
+    [showRemove]="false"
+    editLabel="Traiter l’avis"
+    editIcon="check"
+    emptyMessage="Aucun avis ne correspond à la recherche."
+    (edit)="openReview($event)"
+  />
+
+  <app-pagination
+    [page]="page()"
+    [total]="filteredReviews().length"
+    [pageSize]="pageSize"
+    (pageChange)="changePage($event)"
+  />
+</section>
+
+@if (reviewTarget(); as review) {
+  <app-modal title="Traiter l’avis" (close)="closeReview()">
+    <div class="review-summary">
+      <p class="review-reference">{{ review.author }} · {{ review.route }}</p>
+      <p class="review-comment">{{ review.comment }}</p>
+    </div>
+
+    <form (submit)="saveReview($event)">
+      <app-form-field label="Statut" forId="review-status">
+        <select id="review-status" [value]="reviewStatus()" (change)="onReviewStatus($event)">
+          <option value="pending">À vérifier</option>
+          <option value="published">Publié</option>
+          <option value="hidden">Masqué</option>
+        </select>
+      </app-form-field>
+
+      <div class="form-footer">
+        <button class="secondary" type="button" (click)="closeReview()">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (feedback()) {
+  <div class="toast" role="status">{{ feedback() }}</div>
+}
