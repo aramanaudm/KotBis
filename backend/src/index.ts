@@ -12,7 +12,7 @@ import { DepotAuthentificationPostgres } from "./authentification/depot";
 import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
-import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
+import { creerMiddlewareSession } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
 
 const app = express();
@@ -30,28 +30,6 @@ const serviceAuthentification = new ServiceAuthentification(
 );
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
-
-app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
-  const client = await obtenirPool().connect();
-  try {
-    const compteId = obtenirUtilisateurCourant(req).compteId;
-
-    await client.query('BEGIN');
-    
-    await client.query('DELETE FROM voyageurs WHERE compte_id = $1', [compteId]);
-    await client.query('DELETE FROM sessions WHERE compte_id = $1', [compteId]);
-    await client.query('DELETE FROM comptes WHERE id = $1', [compteId]);
-
-    await client.query('COMMIT');
-    res.json({ message: "Compte supprimé avec succès." });
-
-  } catch (error: any) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ erreur: "Erreur lors de la suppression du compte." });
-  } finally {
-    client.release();
-  }
-});
 
 app.use("/api/utilisateurs", creerRouteurUtilisateurs(serviceAuthentification, middlewareSession));
 

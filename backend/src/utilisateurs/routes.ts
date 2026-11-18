@@ -5,6 +5,7 @@ import {
   validerAvatar,
   validerChangementEmail,
   validerChangementMotDePasse,
+  validerDemandeSuppression,
   validerMiseAJourProfil
 } from "../authentification/validation";
 
@@ -62,6 +63,18 @@ export function creerRouteurUtilisateurs(
     );
     reponse.set("Cache-Control", "no-store");
     reponse.status(204).send();
+  });
+
+  routeur.delete("/moi", async (requete, reponse) => {
+    const utilisateur = obtenirUtilisateurCourant(requete);
+    const donnees = validerDemandeSuppression(requete.body);
+    const demande = await service.demanderSuppression(
+      utilisateur.compteId,
+      donnees.motDePasse,
+      donnees.motif
+    );
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(202).json({ demande });
   });
 
   return routeur;

@@ -83,6 +83,7 @@ export interface DepotAuthentification {
     empreinteCode: string
   ): Promise<{ id: string } | null>;
   marquerCodeUtilise(client: PoolClient, codeId: string): Promise<boolean>;
+  creerDemandeSuppression(client: PoolClient, compteId: string, motif: string | null): Promise<void>;
 }
 
 const COLONNES_PROFIL = `
@@ -459,6 +460,23 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
       [codeId]
     );
     return (resultat.rowCount ?? 0) > 0;
+  }
+
+  async creerDemandeSuppression(
+    client: PoolClient,
+    compteId: string,
+    motif: string | null
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO demandes_suppression (compte_id, motif)
+       SELECT $1, $2
+       WHERE NOT EXISTS (
+         SELECT 1
+         FROM demandes_suppression
+         WHERE compte_id = $1 AND statut = 'en_attente'
+       )`,
+      [compteId, motif]
+    );
   }
 
   private async exigerProfil(client: PoolClient, compteId: string): Promise<ProfilUtilisateur> {

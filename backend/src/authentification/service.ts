@@ -315,6 +315,24 @@ export class ServiceAuthentification {
     return compte;
   }
 
+  async demanderSuppression(
+    compteId: string,
+    motDePasse: string,
+    motif: string | null
+  ): Promise<{ statut: "en_attente" }> {
+    const compte = await this.exigerCompte(compteId);
+    if (!(await verifierMotDePasse(compte.motDePasseHash, motDePasse))) {
+      throw new ErreurAuthentification(
+        "MOT_DE_PASSE_INCORRECT",
+        "Le mot de passe actuel est incorrect."
+      );
+    }
+    await this.depot.avecTransaction((client) =>
+      this.depot.creerDemandeSuppression(client, compteId, motif)
+    );
+    return { statut: "en_attente" };
+  }
+
   private async creerSession(compte: CompteAvecSecret): Promise<SessionCreee> {
     const jeton = genererJetonSession();
     const empreinteJeton = hacherJeton(jeton);

@@ -60,3 +60,8 @@ export interface ChampsProfilModifiables {
   avatarRef?: string | null;
   telephone?: string | null;
 }
+
+export interface DonneesSuppressionCompte {
+  motDePasse: string;
+  motif: string | null;
+}

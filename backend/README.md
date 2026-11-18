@@ -155,13 +155,16 @@ Cette route vérifie les identifiants et crée une session en base. Elle renvoie
 *   **Sécurité :** les champs `compteId`, `email`, `role`, mot de passe et secrets de session sont ignorés ou refusés. Aucun mot de passe, hash ou jeton n'est renvoyé.
 *   **Erreurs :** un pseudonyme déjà pris renvoie `409 PSEUDO_DEJA_UTILISE` ; un champ invalide ou un corps sans champ modifiable renvoie `422`.
 
-### 8. Suppression de compte (`DELETE /api/utilisateurs/moi`) 🔒
-*Requiert une authentification.*
+### 8. Demande de suppression de compte (`DELETE /api/utilisateurs/moi`) 🔒
+*Requiert une authentification et le mot de passe actuel.*
 
 *   **Méthode :** `DELETE`
 *   **URL :** `http://localhost:3000/api/utilisateurs/moi`
+*   **Corps :** `{ "motDePasse": "motDePasseActuel", "motif": "..." }`. Le motif est facultatif (600 caractères maximum) et l'alias `reason` est accepté.
 *   **Onglet "Authorization" :** Sélectionnez `Bearer Token` et collez votre jeton.
-*   **Résultat attendu :** `200 OK`. Supprime le profil `voyageurs`, les sessions associées et le compte `comptes`.
+*   **Résultat attendu :** `202 Accepted` avec `{ "demande": { "statut": "en_attente" } }`.
+*   **Traitement :** aucune donnée n'est supprimée immédiatement. La demande est enregistrée dans `demandes_suppression` et traitée après validation des règles de conservation par le Back-Office et la BDD. Le compte, le profil, les sessions et les historiques restent inchangés.
+*   **Sécurité :** un mot de passe incorrect renvoie `401 MOT_DE_PASSE_INCORRECT` ; un corps invalide renvoie `422`. Une seule demande en attente est conservée par compte.
 
 ### 9. Tests de sécurité (routes protégées)
 Pour vérifier que la sécurité est bien en place :
@@ -182,7 +185,8 @@ Pour vérifier que la sécurité est bien en place :
 *   **Limitation des tentatives :** Les échecs de connexion sont limités par adresse IP et identifiant (`MAX_TENTATIVES_CONNEXION` sur `FENETRE_TENTATIVES_MINUTES`). Les tentatives de réinitialisation sont limitées par e-mail (`MAX_TENTATIVES_REINITIALISATION`).
 *   **Réinitialisation :** Le code à six chiffres est haché avec SHA-256, expire après `CODE_REINITIALISATION_DUREE_MINUTES`, est à usage unique et n'est jamais renvoyé en production. La demande répond `202` même si le compte est inconnu ou inactif.
 *   **Erreurs normalisées :** Les réponses d'erreur utilisent un format commun `{ "erreur": { "code": "...", "message": "..." } }` et ne révèlent aucun secret.
-*   **Alignement BDD :** Le code utilise les tables `comptes`, `voyageurs`, `sessions` et `codes_reinitialisation` définies dans le script `kotbis_schema.sql` fourni par l'équipe Back-Office. Le téléphone optionnel et la réinitialisation nécessitent la migration BDD `database/migrations/001_authentification.sql`.
+*   **Demande de suppression :** l'identité est vérifiée par le mot de passe actuel. La demande est seulement mise en attente dans `demandes_suppression` ; aucune donnée liée n'est supprimée ou anonymisée avant validation des règles de conservation.
+*   **Alignement BDD :** Le code utilise les tables `comptes`, `voyageurs`, `sessions`, `codes_reinitialisation` et `demandes_suppression` définies dans le script `kotbis_schema.sql` fourni par l'équipe Back-Office. Le téléphone optionnel, la réinitialisation et les demandes de suppression nécessitent la migration BDD `database/migrations/001_authentification.sql`.
 
 ## 📂 Structure du projet
 
@@ -194,4 +198,4 @@ Pour vérifier que la sécurité est bien en place :
 *   `src/configuration/baseDeDonnees.ts` : Configuration et vérification de la connexion à PostgreSQL/PostGIS.
 *   `src/commun/crud-reflect.ts` : Module de génération de requêtes SQL par réflexion (utilisé pour l'administration et les tests).
 *   `documentation/` : Contient les cahiers des charges et guides de l'équipe.
-*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:inscription`, `npm run test:connexion-sessions`, `npm run test:mot-de-passe-email`, `npm run test:profil`, `npm run typecheck`).
+*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:inscription`, `npm run test:connexion-sessions`, `npm run test:mot-de-passe-email`, `npm run test:profil`, `npm run test:suppression`, `npm run typecheck`).
