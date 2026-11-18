@@ -37,3 +37,19 @@ export interface DonneesConnexion {
   identifiant: string;
   motDePasse: string;
 }
+
+export interface DonneesReinitialisation {
+  email: string;
+  code: string;
+  nouveauMotDePasse: string;
+}
+
+export interface DonneesChangementMotDePasse {
+  motDePasseActuel: string;
+  nouveauMotDePasse: string;
+}
+
+export interface DonneesChangementEmail {
+  email: string;
+  motDePasse: string;
+}
