@@ -180,6 +180,18 @@ CREATE TABLE historique_signalements (
 );
 CREATE INDEX idx_hist_signalements_signalement ON historique_signalements (signalement_id);
 
+CREATE TABLE favoris (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  voyageur_id      BIGINT NOT NULL REFERENCES voyageurs(compte_id) ON DELETE CASCADE,
+  type             VARCHAR(20) NOT NULL CHECK (type IN ('destination','trajet')),
+  arret_depart_id  BIGINT REFERENCES arrets(id),
+  arret_arrivee_id BIGINT NOT NULL REFERENCES arrets(id),
+  libelle          VARCHAR(80),
+  cree_le          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uq_favoris ON favoris
+  (voyageur_id, type, COALESCE(arret_depart_id, 0), arret_arrivee_id);
+
 CREATE TABLE avis (
     id                    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     reference             VARCHAR(30) NOT NULL UNIQUE,
