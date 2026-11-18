@@ -99,9 +99,13 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+        const mauriceBounds = L.latLngBounds([-20.6, 57.2], [-19.9, 57.9]);
+
     this.map = L.map(this.canvas().nativeElement, {
       scrollWheelZoom: false,
       doubleClickZoom: false,
+      minZoom: 9,                 
+      maxBounds: mauriceBounds,   
     }).setView([-20.25, 57.55], 10);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -130,13 +134,15 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       this.map?.invalidateSize();
     });
 
-    this.observer.observe(this.canvas().nativeElement);
-    
-    // Force le recalcul de la taille après le rendu
+       this.observer.observe(this.canvas().nativeElement);
     setTimeout(() => {
-      this.map?.invalidateSize();
+      if (this.map) {
+        this.map.invalidateSize();
+        // Coordonnées de Maurice (centre de l'île)
+        this.map.setView([-20.25, 57.55], 10); 
+      }
       this.ready.set(true);
-    }, 100);
+    }, 150);
   }
 
   private render(
