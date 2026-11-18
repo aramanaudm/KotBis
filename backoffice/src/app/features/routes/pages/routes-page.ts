@@ -8,6 +8,7 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
+import { apiError } from '../../../core/services/api';
 import { StopsService } from '../../stops/services/stops.service';
 import type { TransitRoute, TransitRouteStatus } from '../models/route';
 import { ROUTE_STATUS_LABELS, ROUTE_STATUS_TONES } from '../models/route';
@@ -24,6 +25,11 @@ export class RoutesPage {
   private readonly stops = inject(StopsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.stops.load();
+    this.routes.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = ROUTE_STATUS_TONES;
@@ -193,8 +199,29 @@ export class RoutesPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const editing = this.editingRoute();
+    const route: Omit<TransitRoute, 'id'> = {
+      code: editing?.code ?? '',
+      name: this.form.controls.name.value,
+      line: this.form.controls.line.value,
+      direction: editing?.direction ?? 'aller',
+      stops: this.routeStops(),
+      status: this.form.controls.status.value,
+    };
+    const stopIds = route.stops
+      .map((name) => this.stops.all().find((stop) => stop.name === name)?.id)
+      .filter((id): id is string => Boolean(id));
+    const operation = editing
+      ? this.routes.update(editing.id, route, stopIds)
+      : this.routes.create(route, stopIds);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Trajet modifié.' : 'Trajet créé.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -210,12 +237,18 @@ export class RoutesPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.routes.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Trajet archivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {
