@@ -1,0 +1,35 @@
+<div class="champ">
+  <label for="depart-select">Départ</label>
+
+  @if (gps.etat() === 'accorde') {
+    <div class="position-ligne">
+      <p class="position" id="depart-position">Ma position</p>
+      <button
+        type="button"
+        class="annuler"
+        (click)="gps.annuler()"
+        aria-label="Annuler l'utilisation de ma position"
+      >
+        Annuler
+      </button>
+    </div>
+  } @else {
+    <select id="depart-select" (change)="choisir($event)">
+      <option value="">— Choisir un arrêt —</option>
+      @for (a of recherche.arrets; track a.id) {
+        <option [value]="a.id" [selected]="a.id === recherche.departManuel()?.id">
+          {{ a.nom }} ({{ a.zone }})
+        </option>
+      }
+    </select>
+  }
+
+  @if (gps.etat() !== 'accorde' && gps.etat() !== 'enCours') {
+    <button type="button" class="gps" (click)="gps.ouvrirDialogue()">
+      Utiliser ma position
+    </button>
+  }
+
+  <!-- Annonce aux lecteurs d'écran : résultat de la localisation -->
+  <p role="status" aria-live="polite" class="etat">{{ gps.message() }}</p>
+</div>

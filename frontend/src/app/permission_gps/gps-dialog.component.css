@@ -1,0 +1,30 @@
+.fond {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgb(22 44 62 / 45%);
+}
+.boite {
+  width: min(90vw, 380px);
+  padding: 20px;
+  border-radius: 18px;
+  background: #fff;
+  color: #203448;
+  box-shadow: 0 8px 28px rgb(22 44 62 / 30%);
+}
+h2 { margin: 0 0 8px; font-size: 1.2rem; }
+p { margin: 0 0 16px; color: #596675; }
+.actions { display: flex; gap: 10px; justify-content: flex-end; }
+button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #c9d3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: #203448;
+  font-weight: 700;
+  cursor: pointer;
+}
+button.principal { border-color: #008060; background: #008060; color: #fff; }

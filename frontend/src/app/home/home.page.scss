@@ -183,7 +183,7 @@ button:focus-visible {
   font-weight: 700;
   text-align: left;
   opacity: 1;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .arrow {
@@ -305,3 +305,15 @@ button:focus-visible {
   overflow-wrap: anywhere;
 }
 
+
+.modifier-recherche {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  border: 1px solid #c9d3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--mobis-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
