@@ -2,8 +2,10 @@ import { Router, type RequestHandler } from "express";
 import { obtenirSessionCourante, obtenirUtilisateurCourant } from "../middlewares/authentification";
 import type { ServiceAuthentification } from "../authentification/service";
 import {
+  validerAvatar,
   validerChangementEmail,
-  validerChangementMotDePasse
+  validerChangementMotDePasse,
+  validerMiseAJourProfil
 } from "../authentification/validation";
 
 export function creerRouteurUtilisateurs(
@@ -13,6 +15,28 @@ export function creerRouteurUtilisateurs(
   const routeur = Router();
 
   routeur.use(middlewareSession);
+
+  routeur.get("/moi", async (requete, reponse) => {
+    const utilisateur = obtenirUtilisateurCourant(requete);
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(200).json({ utilisateur });
+  });
+
+  routeur.patch("/moi", async (requete, reponse) => {
+    const utilisateur = obtenirUtilisateurCourant(requete);
+    const champs = validerMiseAJourProfil(requete.body);
+    const profil = await service.mettreAJourProfil(utilisateur.compteId, champs);
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(200).json({ utilisateur: profil });
+  });
+
+  routeur.patch("/moi/avatar", async (requete, reponse) => {
+    const utilisateur = obtenirUtilisateurCourant(requete);
+    const avatarRef = validerAvatar(requete.body);
+    const profil = await service.mettreAJourProfil(utilisateur.compteId, { avatarRef });
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(200).json({ utilisateur: profil });
+  });
 
   routeur.patch("/moi/email", async (requete, reponse) => {
     const utilisateur = obtenirUtilisateurCourant(requete);

@@ -15,7 +15,13 @@ import {
   lireEntierPositif
 } from "./jetons";
 import { hacherMotDePasse, verifierMotDePasse } from "./motDePasse";
-import type { CompteAvecSecret, DonneesInscription, ProfilUtilisateur, SessionCreee } from "./types";
+import type {
+  ChampsProfilModifiables,
+  CompteAvecSecret,
+  DonneesInscription,
+  ProfilUtilisateur,
+  SessionCreee
+} from "./types";
 
 const HASH_FACTICE = "$argon2id$v=19$m=19456,t=2,p=1$Tzw5I9FgPyhm7gvVwRjTfQ$hviAw6ri6ZJcE0Rjjnq8YUKIWWkTxbELPDaaM2J7akI";
 
@@ -287,6 +293,15 @@ export class ServiceAuthentification {
     }
     return this.depot.avecTransaction((client) =>
       this.depot.mettreAJourEmail(client, compteId, email)
+    );
+  }
+
+  async mettreAJourProfil(
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur> {
+    return this.depot.avecTransaction((client) =>
+      this.depot.mettreAJourProfil(client, compteId, champs)
     );
   }
 

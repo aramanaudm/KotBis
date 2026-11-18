@@ -1,5 +1,6 @@
 import { ErreurValidation } from "../commun/erreurs";
 import type {
+  ChampsProfilModifiables,
   DonneesChangementEmail,
   DonneesChangementMotDePasse,
   DonneesConnexion,
@@ -50,6 +51,10 @@ function lireChamp(corps: Record<string, unknown>, noms: readonly string[]): unk
     }
   }
   return undefined;
+}
+
+function champFourni(corps: Record<string, unknown>, noms: readonly string[]): boolean {
+  return noms.some((nom) => nom in corps);
 }
 
 function texteObligatoire(valeur: unknown, champ: string, longueurMax: number): string {
@@ -218,6 +223,40 @@ export function validerChangementEmail(corps: unknown): DonneesChangementEmail {
 
   const motDePasse = validerMotDePasseActuel(lireChamp(corps, CHAMPS_MOT_DE_PASSE), "motDePasse");
   return { email: validerEmail(corps.email), motDePasse };
+}
+
+export function validerMiseAJourProfil(corps: unknown): ChampsProfilModifiables {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const champs: ChampsProfilModifiables = {};
+  if (champFourni(corps, CHAMPS_PSEUDO)) {
+    champs.pseudo = validerPseudo(lireChamp(corps, CHAMPS_PSEUDO));
+  }
+  if (champFourni(corps, CHAMPS_ZONE)) {
+    champs.zoneLibre = texteOptionnel(lireChamp(corps, CHAMPS_ZONE), "zoneLibre", LONGUEUR_MAX_ZONE);
+  }
+  if ("avatarRef" in corps) {
+    champs.avatarRef = texteOptionnel(corps.avatarRef, "avatarRef", 120);
+  }
+  if (champFourni(corps, CHAMPS_TELEPHONE)) {
+    champs.telephone = validerTelephone(lireChamp(corps, CHAMPS_TELEPHONE));
+  }
+  if (Object.keys(champs).length === 0) {
+    throw new ErreurValidation("Aucun champ modifiable n'a été fourni.");
+  }
+  return champs;
+}
+
+export function validerAvatar(corps: unknown): string | null {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+  if (!("avatarRef" in corps)) {
+    throw new ErreurValidation("Le champ avatarRef est obligatoire.");
+  }
+  return texteOptionnel(corps.avatarRef, "avatarRef", 120);
 }
 
 export function validerConnexion(corps: unknown): DonneesConnexion {
