@@ -135,8 +135,9 @@ Le fichier `.env.example` sert uniquement de modèle.
 ## 6. Authentification et sessions
 
 Le module `src/authentification/` fournit l'inscription, la connexion,
-la déconnexion et le renouvellement de session. Les routes protégées
-attendent l'en-tête `Authorization: Bearer <jeton>`.
+la réinitialisation du mot de passe, la déconnexion et le renouvellement
+de session. Les routes protégées attendent l'en-tête
+`Authorization: Bearer <jeton>`.
 
 ### Endpoints disponibles
 
@@ -144,8 +145,12 @@ attendent l'en-tête `Authorization: Bearer <jeton>`.
 |---|---|---|
 | POST | `/api/inscription` | Public |
 | POST | `/api/connexion` | Public |
+| POST | `/api/mot-de-passe/oublie` | Public |
+| POST | `/api/mot-de-passe/reinitialisation` | Public |
 | POST | `/api/deconnexion` | Session valide |
 | POST | `/api/renouvellement-session` | Session valide |
+| PATCH | `/api/utilisateurs/moi/email` | Session valide |
+| PATCH | `/api/utilisateurs/moi/mot-de-passe` | Session valide |
 
 ### Règles d'inscription
 
@@ -158,11 +163,22 @@ attendent l'en-tête `Authorization: Bearer <jeton>`.
 - Doublons d'e-mail ou de pseudonyme refusés en `409`.
 - Le mot de passe est haché avec Argon2id et n'est jamais renvoyé.
 
+### Réinitialisation et changement d'accès
+
+- La demande de réinitialisation répond `202` même pour un compte inconnu ou inactif.
+- Le code contient six chiffres, expire après `CODE_REINITIALISATION_DUREE_MINUTES`
+  (15 minutes par défaut), est à usage unique et n'est stocké que sous forme hachée.
+- Les tentatives sont limitées par e-mail (`MAX_TENTATIVES_REINITIALISATION`).
+- Une réinitialisation réussie révoque toutes les sessions du compte.
+- Le changement d'e-mail exige le mot de passe actuel et refuse un e-mail déjà pris en `409`.
+- Le changement de mot de passe exige le mot de passe actuel et révoque les autres sessions.
+- `AUTH_EXPOSER_CODE_DEV=true` ne renvoie `devCode` qu'hors production.
+
 ### Dépendance BDD
 
 L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
-`sessions`. Le téléphone optionnel nécessite la colonne
-`voyageurs.telephone` fournie par la migration BDD
+`sessions`. La réinitialisation utilise `codes_reinitialisation`.
+Le téléphone optionnel et ces tables nécessitent la migration BDD
 `database/migrations/001_authentification.sql`, gérée par l'équipe BDD.
 
 ### Vérifications
@@ -171,6 +187,7 @@ L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
 npm run typecheck
 npm run test:inscription
 npm run test:connexion-sessions
+npm run test:mot-de-passe-email
 npm test
 
 # Scénario réel avec une base migrée
