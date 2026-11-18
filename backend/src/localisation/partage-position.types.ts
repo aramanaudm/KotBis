@@ -20,8 +20,7 @@ export interface SessionPartagePosition {
   // Identifiant du compte auquel appartient cette session.
   // Il permettra de vérifier qu'un voyageur ne peut gérer
   // que ses propres sessions de partage.
-  compteId: number;
-
+  compteId: string;
   // Date et heure auxquelles le voyageur a démarré le partage.
   dateDebut: Date;
 

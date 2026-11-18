@@ -84,13 +84,13 @@ async function creerEnvironnementTest(): Promise<EnvironnementTest> {
     const authentifierTest: RequestHandler = (req, res, next) => {
 
         const valeur = req.header("x-test-compte-id");
-        const compteId = Number(valeur);
+        const compteId = valeur;
 
         // Refuse les requêtes sans identifiant de test valide.
         if (
-            !valeur ||
-            !Number.isSafeInteger(compteId) ||
-            compteId <= 0
+            !compteId ||
+            !/^[1-9]\d*$/.test(compteId) ||
+            BigInt(compteId) > 9223372036854775807n
         ) {
             res.status(401).json({
                 success: false,
@@ -101,7 +101,9 @@ async function creerEnvironnementTest(): Promise<EnvironnementTest> {
 
         // Simule l'identité fournie par un middleware authentifié.
         // Cette affectation n'existe que dans le serveur temporaire.
-        (req as typeof req & { compteId: number }).compteId = compteId;
+        (req as typeof req & {
+            utilisateur: { compteId: string }
+        }).utilisateur = { compteId };
 
         next();
     };
@@ -158,7 +160,7 @@ async function envoyerPost(
     urlBase: string,
     chemin: string,
     corps: object,
-    compteId?: number
+    compteId?: string
 ): Promise<ReponseTest> {
 
     // Prépare les en-têtes de la requête.
@@ -196,13 +198,13 @@ test("ROUTE HTTP 201 - Démarrer le partage GPS", async () => {
             env.urlBase,
             "/api/localisation/partage/demarrer",
             { consentement: true },
-            15
+            "15"
         );
 
         // Vérifie le code HTTP et les informations de session.
         assert.equal(reponse.statut, 201);
         assert.equal(reponse.corps.success, true);
-        assert.equal(reponse.corps.data.compteId, 15);
+        assert.equal(reponse.corps.data.compteId, "15");
         assert.equal(reponse.corps.data.statut, "active");
 
         // Vérifie qu'une session a été enregistrée.
@@ -243,7 +245,7 @@ test("ROUTE HTTP 400 - Refuser le démarrage sans consentement", async () => {
             env.urlBase,
             "/api/localisation/partage/demarrer",
             { consentement: false },
-            15
+            "15"
         );
 
         assert.equal(reponse.statut, 400);
@@ -263,7 +265,7 @@ test("ROUTE HTTP 200 - Arrêter sa propre session GPS", async () => {
         // Crée une session active appartenant au compte 15.
         const expiration = new Date(Date.now() + 60 * 60 * 1000);
         const session = await env.service.demarrerPartage(
-            15,
+            "15",
             true,
             expiration
         );
@@ -273,7 +275,7 @@ test("ROUTE HTTP 200 - Arrêter sa propre session GPS", async () => {
             env.urlBase,
             "/api/localisation/partage/arreter",
             { sessionId: session.id },
-            15
+            "15"
         );
 
         // Vérifie que la session est arrêtée.
@@ -300,7 +302,7 @@ test("ROUTE HTTP 401 - Refuser l'arrêt sans authentification", async () => {
     try {
         const expiration = new Date(Date.now() + 60 * 60 * 1000);
         const session = await env.service.demarrerPartage(
-            15,
+            "15",
             true,
             expiration
         );
@@ -334,7 +336,7 @@ test("ROUTE HTTP 403 - Refuser l'arrêt d'un autre voyageur", async () => {
         // Le compte 15 crée une session.
         const expiration = new Date(Date.now() + 60 * 60 * 1000);
         const session = await env.service.demarrerPartage(
-            15,
+            "15",
             true,
             expiration
         );
@@ -344,7 +346,7 @@ test("ROUTE HTTP 403 - Refuser l'arrêt d'un autre voyageur", async () => {
             env.urlBase,
             "/api/localisation/partage/arreter",
             { sessionId: session.id },
-            20
+            "20"
         );
 
         assert.equal(reponse.statut, 403);
@@ -371,7 +373,7 @@ test("ROUTE HTTP 404 - Refuser une session inexistante", async () => {
             env.urlBase,
             "/api/localisation/partage/arreter",
             { sessionId: "session-inexistante" },
-            15
+            "15"
         );
 
         assert.equal(reponse.statut, 404);
@@ -389,20 +391,20 @@ test("ROUTE HTTP 409 - Refuser une session déjà arrêtée", async () => {
     try {
         const expiration = new Date(Date.now() + 60 * 60 * 1000);
         const session = await env.service.demarrerPartage(
-            15,
+            "15",
             true,
             expiration
         );
 
         // Arrête la session une première fois.
-        await env.service.arreterPartage(session.id, 15);
+        await env.service.arreterPartage(session.id, "15");
 
         // Tente de l'arrêter une deuxième fois via HTTP.
         const reponse = await envoyerPost(
             env.urlBase,
             "/api/localisation/partage/arreter",
             { sessionId: session.id },
-            15
+            "15"
         );
 
         assert.equal(reponse.statut, 409);

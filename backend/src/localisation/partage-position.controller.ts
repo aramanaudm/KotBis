@@ -14,9 +14,11 @@ import { PartagePositionService } from "./partage-position.service";
 // Représente une requête HTTP associée à un compte authentifié.
 // Le middleware d'authentification devra renseigner cette propriété.
 interface RequeteAuthentifiee extends Request {
-    compteId?: number;
+    utilisateur?: {
+        compteId: string;
+        [cle: string]: unknown;
+    };
 }
-
 export class PartagePositionController {
 
     // Le service métier est fourni lors de la création du contrôleur.
@@ -37,10 +39,13 @@ export class PartagePositionController {
 
         // Récupère l'identifiant fourni par le middleware d'authentification.
         // Il ne doit jamais provenir directement du corps de la requête.
-        const compteId = req.compteId;
-
+        const compteId = req.utilisateur?.compteId;
         // Refuse la demande si aucun compte authentifié n'est disponible.
-        if (!Number.isSafeInteger(compteId) || !compteId || compteId <= 0) {
+        if (
+            typeof compteId !== "string" ||
+            !/^[1-9]\d*$/.test(compteId) ||
+            BigInt(compteId) > 9223372036854775807n
+        ) {
             res.status(401).json({
                 success: false,
                 message: "Authentification requise."
@@ -103,10 +108,13 @@ export class PartagePositionController {
 
         // Récupère l'identifiant du compte authentifié.
         // Cet identifiant devra être fourni par le middleware KBE-23.
-        const compteId = req.compteId;
-
+        const compteId = req.utilisateur?.compteId;
         // Refuse la demande si aucun compte authentifié n'est disponible.
-        if (!Number.isSafeInteger(compteId) || !compteId || compteId <= 0) {
+        if (
+            typeof compteId !== "string" ||
+            !/^[1-9]\d*$/.test(compteId) ||
+            BigInt(compteId) > 9223372036854775807n
+        ) {
             res.status(401).json({
                 success: false,
                 message: "Authentification requise."

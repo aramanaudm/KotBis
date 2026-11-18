@@ -41,7 +41,7 @@ export class PartagePositionService {
     // explicite du voyageur et la date d'expiration autorisée.
     // Elle crée une session uniquement lorsque les conditions sont respectées.
     async demarrerPartage(
-        compteId: number,
+        compteId: string,
         consentement: boolean,
         dateExpiration: Date
     ): Promise<SessionPartagePosition> {
@@ -49,7 +49,11 @@ export class PartagePositionService {
         // Vérifie que l'identifiant du compte est valide.
         // L'identité réelle devra être fournie par le middleware
         // d'authentification et non par une valeur libre envoyée par le client.
-        if (!Number.isSafeInteger(compteId) || compteId <= 0) {
+        if (
+            typeof compteId !== "string" ||
+            !/^[1-9]\d*$/.test(compteId) ||
+            BigInt(compteId) > 9223372036854775807n
+        ) {
             throw new Error("Identifiant du compte invalide.");
         }
 
@@ -97,7 +101,7 @@ export class PartagePositionService {
     // et qu'elle est encore active avant d'enregistrer son arrêt.
     async arreterPartage(
         sessionId: string,
-        compteId: number
+        compteId: string
     ): Promise<SessionPartagePosition> {
 
         // Vérifie que l'identifiant de la session est renseigné.
@@ -108,7 +112,11 @@ export class PartagePositionService {
 
         // Vérifie que l'identifiant du compte est valide.
         // Cet identifiant devra provenir du système d'authentification.
-        if (!Number.isSafeInteger(compteId) || compteId <= 0) {
+        if (
+            typeof compteId !== "string" ||
+            !/^[1-9]\d*$/.test(compteId) ||
+            BigInt(compteId) > 9223372036854775807n
+        ) {
             throw new Error("Identifiant du compte invalide.");
         }
 

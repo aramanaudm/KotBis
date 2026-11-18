@@ -86,13 +86,13 @@ test("Démarrer le partage GPS avec consentement", async () => {
     // Simule la demande d'un voyageur connecté dont l'ID est 15.
     // La valeur true indique qu'il accepte explicitement le partage.
     const session = await service.demarrerPartage(
-        15,
+        "15",
         true,
         expiration
     );
 
     // Vérifie que la session appartient au compte 15.
-    assert.equal(session.compteId, 15);
+    assert.equal(session.compteId, "15");
 
     // Vérifie que le statut initial de la session est actif.
     assert.equal(session.statut, "active");
@@ -116,7 +116,7 @@ test("Démarrer le partage GPS avec consentement", async () => {
     // Vérifie que la session enregistrée appartient bien au compte 15.
     // Cette vérification est effectuée uniquement après avoir confirmé
     // que la session existe dans le stockage.
-    assert.equal(sessionEnregistree.compteId, 15);
+    assert.equal(sessionEnregistree.compteId, "15");
 });
 
 
@@ -135,7 +135,7 @@ test("Refuser le partage GPS sans consentement", async () => {
     // Vérifie que le service refuse la création de la session
     // lorsque le consentement est false.
     await assert.rejects(
-        service.demarrerPartage(15, false, expiration),
+        service.demarrerPartage("15", false, expiration),
         {
             message: "Le consentement au partage GPS est obligatoire."
         }
@@ -159,10 +159,10 @@ test("Arrêter sa propre session de partage GPS", async () => {
     const expiration = new Date(Date.now() + 60 * 60 * 1000);
 
     // Crée une session active appartenant au compte 15.
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Simule la demande d'arrêt effectuée par le propriétaire.
-    const sessionArretee = await service.arreterPartage(session.id, 15);
+    const sessionArretee = await service.arreterPartage(session.id, "15");
 
     // Vérifie que le statut de la session est devenu "arretee".
     assert.equal(sessionArretee.statut, "arretee");
@@ -199,12 +199,12 @@ test("Refuser l'arrêt de la session d'un autre voyageur", async () => {
     const expiration = new Date(Date.now() + 60 * 60 * 1000);
 
     // Le compte 15 démarre sa session de partage GPS.
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Le compte 20 tente d'arrêter la session du compte 15.
     // Le service doit refuser cette opération.
     await assert.rejects(
-        service.arreterPartage(session.id, 20),
+        service.arreterPartage(session.id, "20"),
         {
             message: "Accès non autorisé à cette session."
         }
@@ -236,14 +236,14 @@ test("Refuser l'arrêt d'une session déjà arrêtée", async () => {
     const expiration = new Date(Date.now() + 60 * 60 * 1000);
 
     // Crée une session appartenant au compte 15.
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Le propriétaire arrête une première fois sa session.
-    await service.arreterPartage(session.id, 15);
+    await service.arreterPartage(session.id, "15");
 
     // Vérifie qu'une deuxième demande d'arrêt est refusée.
     await assert.rejects(
-        service.arreterPartage(session.id, 15),
+        service.arreterPartage(session.id, "15"),
         {
             message: "Cette session est déjà arrêtée."
         }
@@ -267,7 +267,7 @@ test("Refuser une date d'expiration passée", async () => {
 
     // Vérifie que le service refuse cette date.
     await assert.rejects(
-        service.demarrerPartage(15, true, expiration),
+        service.demarrerPartage("15", true, expiration),
         {
             message: "La date d'expiration doit être valide et future."
         }
@@ -288,7 +288,7 @@ test("Enregistrer l'expiration d'une session GPS", async () => {
 
     // Crée une session qui expirera dans 50 millisecondes.
     const expiration = new Date(Date.now() + 50);
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Attend suffisamment pour dépasser la date d'expiration.
     await new Promise<void>((resolve) => {
@@ -328,7 +328,7 @@ test("Conserver une session GPS non expirée", async () => {
     const expiration = new Date(Date.now() + 60 * 60 * 1000);
 
     // Crée une session active.
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Vérifie son expiration avant la date limite.
     const sessionVerifiee = await service.verifierExpiration(session.id);
@@ -353,10 +353,10 @@ test("Conserver le statut d'une session arrêtée", async () => {
     const expiration = new Date(Date.now() + 60 * 60 * 1000);
 
     // Crée une session GPS appartenant au compte 15.
-    const session = await service.demarrerPartage(15, true, expiration);
+    const session = await service.demarrerPartage("15", true, expiration);
 
     // Le propriétaire arrête volontairement son partage.
-    const sessionArretee = await service.arreterPartage(session.id, 15);
+    const sessionArretee = await service.arreterPartage(session.id, "15");
 
     // Vérifie de nouveau la session.
     const sessionVerifiee = await service.verifierExpiration(session.id);
