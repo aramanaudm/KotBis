@@ -260,47 +260,17 @@ button:focus-visible {
     bottom: calc(45px + env(safe-area-inset-bottom, 0px));
   }
 }
-/* SCRUM-28 : fiche d’un arrêt */
-.bottom-panel {
-  max-height: 45dvh;
-  overflow-y: auto;
-}
 
-.stop-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.stop-heading h2 {
-  margin: 0;
-  font-size: 1.15rem;
-  overflow-wrap: anywhere;
-}
-
-.close-stop {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #e3f5ec;
-  color: #203448;
+.account-access {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  color: inherit;
   cursor: pointer;
+  pointer-events: auto;
 }
 
-.stop-details {
-  margin: 12px 0 0;
-}
-
-.stop-details dt {
-  margin-top: 10px;
-  color: #008060;
-  font-weight: 700;
-}
-
-.stop-details dd {
-  margin: 4px 0 0;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
