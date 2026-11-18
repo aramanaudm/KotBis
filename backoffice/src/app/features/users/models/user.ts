@@ -25,6 +25,6 @@ export const USER_STATUS_LABELS: Readonly<Record<UserStatus, string>> = {
 };
 
 export const USER_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  Actif: 'green',
-  Inactif: 'neutral',
+  'status.user.active': 'green',
+  'status.user.inactive': 'neutral',
 };

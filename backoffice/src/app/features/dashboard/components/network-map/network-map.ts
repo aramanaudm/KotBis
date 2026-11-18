@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-network-map',
+  imports: [TranslatePipe],
   template: `
     <div class="map">
       <svg
         viewBox="0 0 600 300"
         preserveAspectRatio="none"
         role="img"
-        aria-label="Carte du réseau"
+        [attr.aria-label]="'map.networkAria' | t"
       >
         <defs>
           <pattern
@@ -29,7 +31,7 @@ import { Component } from '@angular/core';
         <path d="M-20 260 630 70M240 -20 170 320M0 30 650 200" stroke="white" stroke-width="12" />
       </svg>
 
-      <span class="map-note">Aucune donnée cartographique</span>
+      <span class="map-note">{{ 'map.noData' | t }}</span>
     </div>
   `,
   styles: `

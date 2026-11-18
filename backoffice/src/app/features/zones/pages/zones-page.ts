@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -11,7 +13,7 @@ import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import { ZoneMap } from '../components/zone-map/zone-map';
 import type { Zone, ZonePoint, ZoneStatus } from '../models/zone';
-import { ZONE_STATUS_LABELS, ZONE_STATUS_TONES } from '../models/zone';
+import { ZONE_STATUS_TONES } from '../models/zone';
 import { ZonesService } from '../services/zones.service';
 
 @Component({
@@ -24,6 +26,7 @@ import { ZonesService } from '../services/zones.service';
     PageHeader,
     Pagination,
     ReactiveFormsModule,
+    TranslatePipe,
     ZoneMap,
   ],
   templateUrl: './zones-page.html',
@@ -33,6 +36,7 @@ export class ZonesPage {
   private readonly zones = inject(ZonesService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.zones.load();
@@ -41,9 +45,9 @@ export class ZonesPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = ZONE_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'name', label: 'Zone' },
-    { key: 'vertices', label: 'Sommets' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'name', label: 'zones.column.name' },
+    { key: 'vertices', label: 'zones.column.vertices' },
+    { key: 'status', label: 'zones.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -90,14 +94,14 @@ export class ZonesPage {
         id: zone.id,
         values: {
           name: zone.name,
-          vertices: `${zone.vertices.length} sommet(s)`,
-          status: ZONE_STATUS_LABELS[zone.status],
+          vertices: this.i18n.t('zones.vertices.count', { count: zone.vertices.length }),
+          status: `status.common.${zone.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingZone() ? 'Modifier · Zone' : 'Ajouter · Zone',
+    this.editingZone() ? 'zones.form.edit' : 'zones.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -168,12 +172,12 @@ export class ZonesPage {
     const name = this.form.controls.name.value.trim();
 
     if (!name) {
-      this.formError.set('Le nom de la zone est obligatoire.');
+      this.formError.set('zones.error.name');
       return;
     }
 
     if (this.vertices().length < 3) {
-      this.formError.set('Ajoutez au moins 3 sommets pour délimiter la zone.');
+      this.formError.set('zones.error.vertices');
       return;
     }
 
@@ -188,7 +192,7 @@ export class ZonesPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Zone modifiée.' : 'Zone créée.');
+        this.showFeedback(editing ? 'zones.feedback.updated' : 'zones.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -215,7 +219,7 @@ export class ZonesPage {
     this.zones.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Zone archivée.');
+        this.showFeedback('zones.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -224,11 +228,15 @@ export class ZonesPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-zones.csv',
-      ['Zone', 'Sommets', 'État'],
+      [
+        this.i18n.t('zones.column.name'),
+        this.i18n.t('zones.column.vertices'),
+        this.i18n.t('zones.column.status'),
+      ],
       this.filteredZones().map((zone) => [
         zone.name,
         String(zone.vertices.length),
-        ZONE_STATUS_LABELS[zone.status],
+        this.i18n.t(`status.common.${zone.status}`),
       ]),
     );
   }
@@ -236,11 +244,11 @@ export class ZonesPage {
   protected nameError(): string {
     const control = this.form.controls.name;
 
-    return control.touched && control.invalid ? 'Le nom de la zone est obligatoire.' : '';
+    return control.touched && control.invalid ? 'zones.error.name' : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

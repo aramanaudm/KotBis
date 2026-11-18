@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -10,12 +12,21 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { User, UserRole, UserStatus } from '../models/user';
-import { USER_ROLE_LABELS, USER_STATUS_LABELS, USER_STATUS_TONES } from '../models/user';
+import { USER_STATUS_TONES } from '../models/user';
 import { UsersService } from '../services/users.service';
 
 @Component({
   selector: 'app-users-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, ReactiveFormsModule],
+  imports: [
+    DataTable,
+    FormField,
+    Icon,
+    Modal,
+    PageHeader,
+    Pagination,
+    ReactiveFormsModule,
+    TranslatePipe,
+  ],
   templateUrl: './users-page.html',
   styleUrl: './users-page.scss',
 })
@@ -23,6 +34,7 @@ export class UsersPage {
   private readonly users = inject(UsersService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.users.load();
@@ -31,10 +43,10 @@ export class UsersPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = USER_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'pseudo', label: 'Utilisateur' },
-    { key: 'email', label: 'Email' },
-    { key: 'role', label: 'Rôle' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'pseudo', label: 'users.column.pseudo' },
+    { key: 'email', label: 'users.column.email' },
+    { key: 'role', label: 'users.column.role' },
+    { key: 'status', label: 'users.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -61,7 +73,7 @@ export class UsersPage {
     return this.users.all().filter((user) => {
       const matchesSearch =
         !search ||
-        [user.pseudo, user.email, USER_ROLE_LABELS[user.role]].some((value) =>
+        [user.pseudo, user.email, this.i18n.t(this.roleKey(user.role))].some((value) =>
           value.toLowerCase().includes(search),
         );
       const matchesFilter = !filter || user.status === filter;
@@ -85,14 +97,14 @@ export class UsersPage {
         values: {
           pseudo: user.pseudo,
           email: user.email,
-          role: USER_ROLE_LABELS[user.role],
-          status: USER_STATUS_LABELS[user.status],
+          role: this.i18n.t(this.roleKey(user.role)),
+          status: `status.user.${user.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingUser() ? 'Modifier · Utilisateur' : 'Ajouter · Utilisateur',
+    this.editingUser() ? 'users.form.edit' : 'users.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -159,7 +171,7 @@ export class UsersPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Utilisateur modifié.' : 'Utilisateur créé.');
+        this.showFeedback(editing ? 'users.feedback.updated' : 'users.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -186,7 +198,7 @@ export class UsersPage {
     this.users.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Compte désactivé.');
+        this.showFeedback('users.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -195,24 +207,33 @@ export class UsersPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-utilisateurs.csv',
-      ['Utilisateur', 'Email', 'Rôle', 'État'],
+      [
+        this.i18n.t('users.column.pseudo'),
+        this.i18n.t('users.column.email'),
+        this.i18n.t('users.column.role'),
+        this.i18n.t('users.column.status'),
+      ],
       this.filteredUsers().map((user) => [
         user.pseudo,
         user.email,
-        USER_ROLE_LABELS[user.role],
-        USER_STATUS_LABELS[user.status],
+        this.i18n.t(this.roleKey(user.role)),
+        this.i18n.t(`status.user.${user.status}`),
       ]),
     );
   }
 
-  protected errorFor(name: 'pseudo' | 'email', message: string): string {
+  protected errorFor(name: 'pseudo' | 'email', key: string): string {
     const control = this.form.controls[name];
 
-    return control.touched && control.invalid ? message : '';
+    return control.touched && control.invalid ? key : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private roleKey(role: UserRole): string {
+    return `role.${role}`;
+  }
+
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

@@ -5,21 +5,21 @@
     </span>
     <div class="brand-text">
       KotBis
-      <small>BACK-OFFICE</small>
+      <small>{{ 'sidebar.backOffice' | t }}</small>
     </div>
     <button
       class="icon-button mobile-close"
       type="button"
       (click)="closeMenu()"
-      aria-label="Fermer le menu"
+      [attr.aria-label]="'sidebar.closeMenu' | t"
     >
       <app-icon name="close" />
     </button>
   </div>
 
-  <div class="nav-label">GESTION DU RÉSEAU</div>
+  <div class="nav-label">{{ 'sidebar.networkManagement' | t }}</div>
 
-  <nav class="nav" aria-label="Navigation principale">
+  <nav class="nav" [attr.aria-label]="'sidebar.mainNav' | t">
     @for (item of navItems; track item.route) {
       <a
         class="nav-item"
@@ -29,7 +29,7 @@
         (click)="closeMenu()"
       >
         <app-icon [name]="item.icon" />
-        <span>{{ item.label }}</span>
+        <span>{{ item.label | t }}</span>
       </a>
     }
   </nav>
@@ -37,12 +37,20 @@
   <div class="sidebar-footer">
     <a class="traveler-link" href="/">
       <app-icon name="back" />
-      <span>Interface voyageurs</span>
+      <span>{{ 'sidebar.travelerInterface' | t }}</span>
     </a>
-    <p>Espace d’administration<br />Mauritius · Maurice</p>
+    <p>
+      {{ 'sidebar.adminArea' | t }}<br />
+      {{ 'sidebar.location' | t }}
+    </p>
   </div>
 </aside>
 
 @if (open()) {
-  <button class="backdrop" type="button" aria-label="Fermer le menu" (click)="closeMenu()"></button>
+  <button
+    class="backdrop"
+    type="button"
+    [attr.aria-label]="'sidebar.closeMenu' | t"
+    (click)="closeMenu()"
+  ></button>
 }

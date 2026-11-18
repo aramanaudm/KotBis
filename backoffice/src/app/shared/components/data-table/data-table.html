@@ -3,10 +3,10 @@
     <thead>
       <tr>
         @for (column of columns(); track column.key) {
-          <th>{{ column.label }}</th>
+          <th>{{ column.label | t }}</th>
         }
         @if (showActions()) {
-          <th>Actions</th>
+          <th>{{ 'common.actions' | t }}</th>
         }
       </tr>
     </thead>
@@ -14,7 +14,7 @@
       @if (rows().length === 0) {
         <tr>
           <td class="empty" [attr.colspan]="columns().length + (showActions() ? 1 : 0)">
-            {{ emptyMessage() }}
+            {{ emptyMessage() | t }}
           </td>
         </tr>
       }
@@ -25,7 +25,7 @@
             <td>
               @if (column.type === 'status') {
                 <app-status-badge
-                  [label]="row.values[column.key]"
+                  [label]="row.values[column.key] | t"
                   [tone]="statusTone(row.values[column.key])"
                 />
               } @else {
@@ -41,8 +41,8 @@
                   <button
                     class="icon-button"
                     type="button"
-                    [attr.aria-label]="editLabel()"
-                    [attr.title]="editLabel()"
+                    [attr.aria-label]="editLabel() | t"
+                    [attr.title]="editLabel() | t"
                     (click)="edit.emit(row)"
                   >
                     <app-icon [name]="editIcon()" />
@@ -52,8 +52,8 @@
                   <button
                     class="icon-button"
                     type="button"
-                    [attr.aria-label]="removeLabel()"
-                    [attr.title]="removeLabel()"
+                    [attr.aria-label]="removeLabel() | t"
+                    [attr.title]="removeLabel() | t"
                     (click)="remove.emit(row)"
                   >
                     <app-icon [name]="removeIcon()" />

@@ -1,8 +1,10 @@
 import { Component, ElementRef, computed, input, output, viewChild } from '@angular/core';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import type { Zone, ZonePoint } from '../../models/zone';
 
 @Component({
   selector: 'app-zone-map',
+  imports: [TranslatePipe],
   template: `
     <div class="map">
       <svg
@@ -11,7 +13,7 @@ import type { Zone, ZonePoint } from '../../models/zone';
         viewBox="0 0 600 300"
         preserveAspectRatio="none"
         role="img"
-        aria-label="Carte des zones"
+        [attr.aria-label]="'map.aria' | t"
         (pointerdown)="onPointerDown($event)"
         (pointermove)="onPointerMove($event)"
         (pointerup)="onPointerUp($event)"
@@ -53,11 +55,7 @@ import type { Zone, ZonePoint } from '../../models/zone';
       </svg>
 
       <span class="map-note">
-        {{
-          editing()
-            ? 'Cliquez pour ajouter un sommet · glissez pour le déplacer'
-            : 'Carte des zones'
-        }}
+        {{ (editing() ? 'map.zoneNote.edit' : 'map.zoneNote.preview') | t }}
       </span>
     </div>
   `,

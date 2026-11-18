@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -10,12 +12,21 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { Stop, StopStatus } from '../models/stop';
-import { STOP_STATUS_LABELS, STOP_STATUS_TONES } from '../models/stop';
+import { STOP_STATUS_TONES } from '../models/stop';
 import { StopsService } from '../services/stops.service';
 
 @Component({
   selector: 'app-stops-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, ReactiveFormsModule],
+  imports: [
+    DataTable,
+    FormField,
+    Icon,
+    Modal,
+    PageHeader,
+    Pagination,
+    ReactiveFormsModule,
+    TranslatePipe,
+  ],
   templateUrl: './stops-page.html',
   styleUrl: './stops-page.scss',
 })
@@ -23,6 +34,7 @@ export class StopsPage {
   private readonly stops = inject(StopsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.stops.load();
@@ -31,10 +43,10 @@ export class StopsPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = STOP_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'name', label: 'Nom' },
-    { key: 'latitude', label: 'Latitude' },
-    { key: 'longitude', label: 'Longitude' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'name', label: 'stops.column.name' },
+    { key: 'latitude', label: 'stops.column.latitude' },
+    { key: 'longitude', label: 'stops.column.longitude' },
+    { key: 'status', label: 'stops.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -97,13 +109,13 @@ export class StopsPage {
           name: stop.name,
           latitude: stop.latitude.toFixed(4),
           longitude: stop.longitude.toFixed(4),
-          status: STOP_STATUS_LABELS[stop.status],
+          status: `status.common.${stop.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingStop() ? 'Modifier · Arrêt' : 'Ajouter · Arrêt',
+    this.editingStop() ? 'stops.form.edit' : 'stops.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -171,7 +183,7 @@ export class StopsPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Arrêt modifié.' : 'Arrêt créé.');
+        this.showFeedback(editing ? 'stops.feedback.updated' : 'stops.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -198,7 +210,7 @@ export class StopsPage {
     this.stops.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Arrêt archivé.');
+        this.showFeedback('stops.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -207,12 +219,17 @@ export class StopsPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-arrets.csv',
-      ['Nom', 'Latitude', 'Longitude', 'État'],
+      [
+        this.i18n.t('stops.column.name'),
+        this.i18n.t('stops.column.latitude'),
+        this.i18n.t('stops.column.longitude'),
+        this.i18n.t('stops.column.status'),
+      ],
       this.filteredStops().map((stop) => [
         stop.name,
         stop.latitude.toFixed(4),
         stop.longitude.toFixed(4),
-        STOP_STATUS_LABELS[stop.status],
+        this.i18n.t(`status.common.${stop.status}`),
       ]),
     );
   }
@@ -220,27 +237,23 @@ export class StopsPage {
   protected nameError(): string {
     const control = this.form.controls.name;
 
-    return control.touched && control.invalid ? 'Le nom est obligatoire.' : '';
+    return control.touched && control.invalid ? 'stops.error.name' : '';
   }
 
   protected latitudeError(): string {
     const control = this.form.controls.latitude;
 
-    return control.touched && control.invalid
-      ? 'La latitude doit être comprise entre -90 et 90.'
-      : '';
+    return control.touched && control.invalid ? 'stops.error.latitude' : '';
   }
 
   protected longitudeError(): string {
     const control = this.form.controls.longitude;
 
-    return control.touched && control.invalid
-      ? 'La longitude doit être comprise entre -180 et 180.'
-      : '';
+    return control.touched && control.invalid ? 'stops.error.longitude' : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

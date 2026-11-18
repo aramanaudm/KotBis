@@ -24,7 +24,7 @@ export const REPORT_STATUS_LABELS: Readonly<Record<ReportStatus, string>> = {
 };
 
 export const REPORT_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  'À vérifier': 'orange',
-  Confirmé: 'green',
-  'Classé sans suite': 'neutral',
+  'status.report.pending': 'orange',
+  'status.report.confirmed': 'green',
+  'status.report.dismissed': 'neutral',
 };

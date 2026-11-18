@@ -1,15 +1,16 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-not-found-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   template: `
     <section class="not-found">
-      <span class="eyebrow">ERREUR 404</span>
-      <h1>Page introuvable</h1>
-      <p>La page demandée n’existe pas ou a été déplacée.</p>
-      <a class="primary-link" routerLink="/tableau-de-bord">Retour au tableau de bord</a>
+      <span class="eyebrow">{{ 'notFound.eyebrow' | t }}</span>
+      <h1>{{ 'notFound.title' | t }}</h1>
+      <p>{{ 'notFound.description' | t }}</p>
+      <a class="primary-link" routerLink="/tableau-de-bord">{{ 'notFound.back' | t }}</a>
     </section>
   `,
   styles: `

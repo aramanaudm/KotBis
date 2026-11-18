@@ -17,7 +17,7 @@ export const REVIEW_STATUS_LABELS: Readonly<Record<ReviewStatus, string>> = {
 };
 
 export const REVIEW_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  'À vérifier': 'orange',
-  Publié: 'green',
-  Masqué: 'neutral',
+  'status.review.pending': 'orange',
+  'status.review.published': 'green',
+  'status.review.hidden': 'neutral',
 };

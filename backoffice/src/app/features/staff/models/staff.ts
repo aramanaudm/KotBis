@@ -23,6 +23,6 @@ export const STAFF_STATUS_LABELS: Readonly<Record<StaffStatus, string>> = {
 };
 
 export const STAFF_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  Actif: 'green',
-  Inactif: 'neutral',
+  'status.staff.active': 'green',
+  'status.staff.inactive': 'neutral',
 };

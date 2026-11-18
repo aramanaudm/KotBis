@@ -1,13 +1,15 @@
 import { Component, input } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-form-field',
+  imports: [TranslatePipe],
   template: `
     <div class="field">
-      <label [for]="forId()">{{ label() }}</label>
+      <label [for]="forId()">{{ label() | t }}</label>
       <ng-content />
       @if (error()) {
-        <p class="error" role="alert">{{ error() }}</p>
+        <p class="error" role="alert">{{ error() | t }}</p>
       }
     </div>
   `,

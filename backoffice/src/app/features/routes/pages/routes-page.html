@@ -1,7 +1,7 @@
-<app-page-header title="Trajets" description="Composez les trajets et l’ordre des arrêts desservis.">
+<app-page-header title="routes.title" description="routes.description">
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
-    Ajouter
+    {{ 'common.add' | t }}
   </button>
 </app-page-header>
 
@@ -11,8 +11,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher un trajet"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'routes.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -20,18 +20,18 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par état"
+      [attr.aria-label]="'common.filterState' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      <option value="">{{ 'common.allStates' | t }}</option>
+      <option value="active">{{ 'status.common.active' | t }}</option>
+      <option value="inactive">{{ 'status.common.inactive' | t }}</option>
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
       <app-icon name="export" />
-      Exporter CSV
+      {{ 'common.exportCsv' | t }}
     </button>
   </div>
 
@@ -39,7 +39,7 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
-    emptyMessage="Aucun trajet ne correspond à la recherche."
+    emptyMessage="routes.empty"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -57,35 +57,35 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <app-form-field
-          label="Nom du trajet"
+          label="routes.field.name"
           forId="route-name"
-          [error]="errorFor('name', 'Le nom du trajet est obligatoire.')"
+          [error]="errorFor('name', 'routes.error.name')"
         >
           <input id="route-name" type="text" formControlName="name" maxlength="180" />
         </app-form-field>
 
         <app-form-field
-          label="Ligne"
+          label="routes.field.line"
           forId="route-line"
-          [error]="errorFor('line', 'La ligne est obligatoire.')"
+          [error]="errorFor('line', 'routes.error.line')"
         >
           <input id="route-line" type="text" formControlName="line" maxlength="20" />
         </app-form-field>
 
-        <app-form-field label="État" forId="route-status">
+        <app-form-field label="routes.field.status" forId="route-status">
           <select id="route-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'status.common.active' | t }}</option>
+            <option value="inactive">{{ 'status.common.inactive' | t }}</option>
           </select>
         </app-form-field>
       </div>
 
       <div class="stop-builder">
-        <span class="field-label">Arrêts dans l’ordre : départ → terminus</span>
+        <span class="field-label">{{ 'routes.stops.label' | t }}</span>
 
         <div class="stop-add">
           <select
-            aria-label="Choisir un arrêt à ajouter"
+            [attr.aria-label]="'routes.stops.choose' | t"
             [value]="selectedStop()"
             (change)="onStopSelection($event)"
           >
@@ -95,7 +95,7 @@
           </select>
           <button class="secondary" type="button" (click)="addStop()">
             <app-icon name="plus" />
-            Ajouter
+            {{ 'common.add' | t }}
           </button>
         </div>
 
@@ -105,7 +105,7 @@
               {{ $index + 1 }}. {{ stop }}
               <button
                 type="button"
-                aria-label="Monter l’arrêt"
+                [attr.aria-label]="'routes.stops.up' | t"
                 [disabled]="$index === 0"
                 (click)="moveStop($index, -1)"
               >
@@ -113,41 +113,51 @@
               </button>
               <button
                 type="button"
-                aria-label="Descendre l’arrêt"
+                [attr.aria-label]="'routes.stops.down' | t"
                 [disabled]="$index === routeStops().length - 1"
                 (click)="moveStop($index, 1)"
               >
                 ↓
               </button>
-              <button type="button" aria-label="Retirer l’arrêt" (click)="removeStop($index)">
+              <button
+                type="button"
+                [attr.aria-label]="'routes.stops.remove' | t"
+                (click)="removeStop($index)"
+              >
                 ×
               </button>
             </span>
           } @empty {
-            <p class="hint">Aucun arrêt sélectionné pour ce trajet.</p>
+            <p class="hint">{{ 'routes.stops.empty' | t }}</p>
           }
         </div>
       </div>
 
       @if (formError()) {
-        <p class="form-error" role="alert">{{ formError() }}</p>
+        <p class="form-error" role="alert">{{ formError() | t }}</p>
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeForm()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
 }
 
 @if (deleteTarget(); as route) {
-  <app-modal title="Supprimer ce trajet ?" (close)="cancelDelete()">
-    <p>Le trajet {{ route.name }} sera retiré de la liste.</p>
+  <app-modal title="routes.delete.title" (close)="cancelDelete()">
+    <p>{{ 'routes.delete.message' | t: { name: route.name } }}</p>
 
     <div class="form-footer">
-      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
-      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+      <button class="secondary" type="button" (click)="cancelDelete()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button class="danger" type="button" (click)="confirmDelete()">
+        {{ 'common.delete' | t }}
+      </button>
     </div>
   </app-modal>
 }

@@ -1,10 +1,7 @@
-<app-page-header
-  title="Tableau de bord"
-  description="Une vue d’ensemble de votre réseau, au même endroit."
->
+<app-page-header title="dashboard.title" description="dashboard.description">
   <button class="secondary" type="button" (click)="exportFleet()">
     <app-icon name="export" />
-    Exporter
+    {{ 'common.export' | t }}
   </button>
 </app-page-header>
 
@@ -19,7 +16,7 @@
       </div>
       <strong>{{ metric.value }}</strong>
       <small>{{ metric.hint }}</small>
-      <a [routerLink]="metric.link">Consulter →</a>
+      <a [routerLink]="metric.link">{{ 'dashboard.metric.view' | t }}</a>
     </article>
   }
 </section>
@@ -28,25 +25,32 @@
   <section class="card">
     <div class="card-head">
       <div>
-        <h2>Le réseau en un coup d’œil</h2>
-        <p>Visualisation des zones et arrêts du réseau</p>
+        <h2>{{ 'dashboard.network.title' | t }}</h2>
+        <p>{{ 'dashboard.network.description' | t }}</p>
       </div>
-      <span class="network-badge">{{ activeBusCount() }} en service</span>
+      <span class="network-badge">
+        {{ 'dashboard.network.inService' | t: { count: activeBusCount() } }}
+      </span>
     </div>
 
     <app-network-map />
 
     <div class="map-foot">
-      <span>{{ stopCount() }} arrêts · {{ routeCount() }} trajet(s)</span>
-      <a routerLink="/zones">Gérer les zones →</a>
+      <span>
+        {{
+          'dashboard.network.footer'
+            | t: { stops: stopCount(), routes: routeCount() }
+        }}
+      </span>
+      <a routerLink="/zones">{{ 'dashboard.network.manageZones' | t }}</a>
     </div>
   </section>
 
   <section class="card">
     <div class="card-head">
       <div>
-        <h2>À votre attention</h2>
-        <p>Les éléments à vérifier aujourd’hui</p>
+        <h2>{{ 'dashboard.attention.title' | t }}</h2>
+        <p>{{ 'dashboard.attention.description' | t }}</p>
       </div>
       <app-icon name="clock" />
     </div>
@@ -68,7 +72,7 @@
           <app-icon name="arrow" />
         </div>
       } @empty {
-        <p class="feed-empty">Aucun élément à traiter pour le moment.</p>
+        <p class="feed-empty">{{ 'dashboard.attention.empty' | t }}</p>
       }
     </div>
   </section>
@@ -77,10 +81,10 @@
 <section class="card fleet-card">
   <div class="card-head">
     <div>
-      <h2>Flotte de bus</h2>
-      <p>État actuel des véhicules du réseau</p>
+      <h2>{{ 'dashboard.fleet.title' | t }}</h2>
+      <p>{{ 'dashboard.fleet.description' | t }}</p>
     </div>
-    <a class="secondary" routerLink="/bus">Voir tous les bus →</a>
+    <a class="secondary" routerLink="/bus">{{ 'dashboard.fleet.viewAll' | t }}</a>
   </div>
 
   <app-data-table
@@ -88,6 +92,6 @@
     [rows]="fleetRows()"
     [statusTones]="statusTones"
     [showActions]="false"
-    emptyMessage="Aucun bus dans la flotte."
+    emptyMessage="dashboard.fleet.empty"
   />
 </section>

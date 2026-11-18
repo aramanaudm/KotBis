@@ -4,24 +4,22 @@
       class="icon-button menu-button"
       type="button"
       (click)="menuToggle.emit()"
-      aria-label="Ouvrir le menu"
+      [attr.aria-label]="'header.openMenu' | t"
     >
       <app-icon name="menu" />
     </button>
     <span class="breadcrumb">
-      Administration
+      {{ 'header.administration' | t }}
       <span class="separator">/</span>
-      <b>{{ pageTitle() }}</b>
+      <b>{{ pageTitle() | t }}</b>
     </span>
   </div>
 
   <div class="header-actions">
-   
-
     <select
       class="language-select"
-      aria-label="Langue"
-      [value]="language()"
+      [attr.aria-label]="'header.language' | t"
+      [value]="i18n.lang()"
       (change)="setLanguage($event)"
     >
       <option value="fr">FR</option>
@@ -32,7 +30,7 @@
       class="icon-button"
       type="button"
       (click)="theme.toggle()"
-      [attr.aria-label]="theme.isDark() ? 'Activer le thème clair' : 'Activer le thème sombre'"
+      [attr.aria-label]="(theme.isDark() ? 'header.lightTheme' : 'header.darkTheme') | t"
     >
       <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
     </button>

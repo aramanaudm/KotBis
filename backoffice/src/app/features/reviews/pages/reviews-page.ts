@@ -1,4 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -9,18 +11,19 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { Review, ReviewStatus } from '../models/review';
-import { REVIEW_STATUS_LABELS, REVIEW_STATUS_TONES } from '../models/review';
+import { REVIEW_STATUS_TONES } from '../models/review';
 import { ReviewsService } from '../services/reviews.service';
 
 @Component({
   selector: 'app-reviews-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination],
+  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, TranslatePipe],
   templateUrl: './reviews-page.html',
   styleUrl: './reviews-page.scss',
 })
 export class ReviewsPage {
   private readonly reviews = inject(ReviewsService);
   private readonly csv = inject(CsvExportService);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.reviews.load();
@@ -29,10 +32,10 @@ export class ReviewsPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = REVIEW_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'author', label: 'Auteur' },
-    { key: 'route', label: 'Trajet' },
-    { key: 'comment', label: 'Avis' },
-    { key: 'status', label: 'Statut', type: 'status' },
+    { key: 'author', label: 'reviews.column.author' },
+    { key: 'route', label: 'reviews.column.route' },
+    { key: 'comment', label: 'reviews.column.comment' },
+    { key: 'status', label: 'reviews.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -75,7 +78,7 @@ export class ReviewsPage {
           author: review.author,
           route: review.route,
           comment: review.comment,
-          status: REVIEW_STATUS_LABELS[review.status],
+          status: `status.review.${review.status}`,
         },
       }));
   });
@@ -126,7 +129,7 @@ export class ReviewsPage {
     this.reviews.update(review.id, statut).subscribe({
       next: () => {
         this.closeReview();
-        this.showFeedback('Avis mis à jour.');
+        this.showFeedback('reviews.feedback.updated');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -135,18 +138,23 @@ export class ReviewsPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-avis.csv',
-      ['Auteur', 'Trajet', 'Avis', 'Statut'],
+      [
+        this.i18n.t('reviews.column.author'),
+        this.i18n.t('reviews.column.route'),
+        this.i18n.t('reviews.column.comment'),
+        this.i18n.t('reviews.column.status'),
+      ],
       this.filteredReviews().map((review) => [
         review.author,
         review.route,
         review.comment,
-        REVIEW_STATUS_LABELS[review.status],
+        this.i18n.t(`status.review.${review.status}`),
       ]),
     );
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

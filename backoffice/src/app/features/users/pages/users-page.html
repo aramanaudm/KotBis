@@ -1,13 +1,11 @@
-<app-page-header title="Utilisateurs" description="Consultez les comptes voyageurs et les rôles associés.">
+<app-page-header title="users.title" description="users.description">
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
-    Ajouter
+    {{ 'common.add' | t }}
   </button>
 </app-page-header>
 
-<p class="notice">
-  Les rôles et permissions seront appliqués lors du branchement à l’authentification.
-</p>
+<p class="notice">{{ 'users.notice' | t }}</p>
 
 <section class="card">
   <div class="toolbar">
@@ -15,8 +13,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher un utilisateur"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'users.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -24,18 +22,18 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par état"
+      [attr.aria-label]="'common.filterState' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      <option value="">{{ 'common.allStates' | t }}</option>
+      <option value="active">{{ 'status.user.active' | t }}</option>
+      <option value="inactive">{{ 'status.user.inactive' | t }}</option>
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
       <app-icon name="export" />
-      Exporter CSV
+      {{ 'common.exportCsv' | t }}
     </button>
   </div>
 
@@ -43,7 +41,7 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
-    emptyMessage="Aucun utilisateur ne correspond à la recherche."
+    emptyMessage="users.empty"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -61,34 +59,34 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <app-form-field
-          label="Pseudo"
+          label="users.field.pseudo"
           forId="user-pseudo"
-          [error]="errorFor('pseudo', 'Le pseudo est obligatoire.')"
+          [error]="errorFor('pseudo', 'users.error.pseudo')"
         >
           <input id="user-pseudo" type="text" formControlName="pseudo" maxlength="60" />
         </app-form-field>
 
         <app-form-field
-          label="Email"
+          label="users.field.email"
           forId="user-email"
-          [error]="errorFor('email', 'Saisissez une adresse email valide.')"
+          [error]="errorFor('email', 'users.error.email')"
         >
           <input id="user-email" type="email" formControlName="email" maxlength="254" />
         </app-form-field>
 
-        <app-form-field label="Rôle" forId="user-role">
+        <app-form-field label="users.field.role" forId="user-role">
           <select id="user-role" formControlName="role">
-            <option value="traveller">Voyageur</option>
-            <option value="operator">Opérateur</option>
-            <option value="moderator">Modérateur</option>
-            <option value="admin">Administrateur</option>
+            <option value="traveller">{{ 'role.traveller' | t }}</option>
+            <option value="operator">{{ 'role.operator' | t }}</option>
+            <option value="moderator">{{ 'role.moderator' | t }}</option>
+            <option value="admin">{{ 'role.admin' | t }}</option>
           </select>
         </app-form-field>
 
-        <app-form-field label="État" forId="user-status">
+        <app-form-field label="users.field.status" forId="user-status">
           <select id="user-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'status.user.active' | t }}</option>
+            <option value="inactive">{{ 'status.user.inactive' | t }}</option>
           </select>
         </app-form-field>
       </div>
@@ -98,20 +96,26 @@
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeForm()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
 }
 
 @if (deleteTarget(); as user) {
-  <app-modal title="Supprimer cet utilisateur ?" (close)="cancelDelete()">
-    <p>Le compte {{ user.pseudo }} sera retiré de la liste.</p>
+  <app-modal title="users.delete.title" (close)="cancelDelete()">
+    <p>{{ 'users.delete.message' | t: { pseudo: user.pseudo } }}</p>
 
     <div class="form-footer">
-      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
-      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+      <button class="secondary" type="button" (click)="cancelDelete()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button class="danger" type="button" (click)="confirmDelete()">
+        {{ 'common.delete' | t }}
+      </button>
     </div>
   </app-modal>
 }

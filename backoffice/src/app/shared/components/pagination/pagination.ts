@@ -1,10 +1,12 @@
 import { Component, computed, input, output } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-pagination',
+  imports: [TranslatePipe],
   template: `
     <div class="pagination">
-      <span>{{ total() }} élément(s)</span>
+      <span>{{ 'common.elements' | t: { count: total() } }}</span>
       <div class="controls">
         <button type="button" [disabled]="page() === 1" (click)="previous()">←</button>
         <span>{{ page() }} / {{ pageCount() }}</span>

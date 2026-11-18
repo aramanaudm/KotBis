@@ -18,6 +18,6 @@ export const ROUTE_STATUS_LABELS: Readonly<Record<TransitRouteStatus, string>> =
 };
 
 export const ROUTE_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  Actif: 'green',
-  Inactif: 'neutral',
+  'status.common.active': 'green',
+  'status.common.inactive': 'neutral',
 };
