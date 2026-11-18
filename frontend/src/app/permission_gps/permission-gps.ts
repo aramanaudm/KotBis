@@ -24,7 +24,7 @@ function dire(texte: string): void {
 function demanderPosition(): void {
   // Cas : l'appareil n'a pas de GPS.
   if (!('geolocation' in navigator)) {
-    dire('La localisation n\'est pas disponible sur cet appareil. Choisissez votre départ manuellement.');
+    dire("La localisation n'est pas disponible sur cet appareil. Choisissez votre départ manuellement.");
     return;
   }
   dire('Localisation en cours…');
@@ -32,10 +32,13 @@ function demanderPosition(): void {
     // Succès : l'utilisateur a accepté.
     (pos) => dire(`Position obtenue (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}).`),
     // Échec : refus (code 1) ou autre cause (panne, délai dépassé…).
-    (erreur) => dire(erreur.code === erreur.PERMISSION_DENIED
-      ? 'Localisation refusée. Vous pouvez choisir votre départ manuellement.'
-      : 'Position indisponible. Vous pouvez choisir votre départ manuellement.'),
-    { timeout: 10000 } // on n'attend pas plus de 10 secondes
+    (erreur) =>
+      dire(
+        erreur.code === erreur.PERMISSION_DENIED
+          ? 'Localisation refusée. Vous pouvez choisir votre départ manuellement.'
+          : 'Position indisponible. Vous pouvez choisir votre départ manuellement.',
+      ),
+    { timeout: 10000 }, // on n'attend pas plus de 10 secondes
   );
 }
 

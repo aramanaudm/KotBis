@@ -1,5 +1,6 @@
 import { FormControl, FormGroup } from '@angular/forms';
 import { describe, expect, it } from 'vitest';
+
 import {
   emailValidator,
   identifierValidator,
@@ -8,8 +9,7 @@ import {
   pseudoValidator,
 } from './auth.validators';
 
-const run = (validator: (c: FormControl) => unknown, value: string) =>
-  validator(new FormControl(value));
+const run = (validator: (c: FormControl) => unknown, value: string) => validator(new FormControl(value));
 
 describe('emailValidator', () => {
   it.each(['nom@exemple.com', 'a.b-c@sub.domaine.mu'])('accepte %s', (value) => {

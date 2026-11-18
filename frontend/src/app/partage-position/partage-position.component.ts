@@ -1,4 +1,5 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import type { OnDestroy } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 @Component({
   selector: 'app-partage-position',
@@ -26,9 +27,7 @@ export class PartagePositionComponent implements OnDestroy {
       this.simulationActive.set(false);
       this.message.set('Partage désactivé. Consentement retiré.');
     } else {
-      this.message.set(
-        'Consentement donné. La simulation reste arrêtée tant que vous ne la démarrez pas.',
-      );
+      this.message.set('Consentement donné. La simulation reste arrêtée tant que vous ne la démarrez pas.');
     }
   }
 
@@ -39,17 +38,13 @@ export class PartagePositionComponent implements OnDestroy {
     }
 
     this.simulationActive.set(true);
-    this.message.set(
-      'Simulation active. Aucune position réelle collectée ou transmise.',
-    );
+    this.message.set('Simulation active. Aucune position réelle collectée ou transmise.');
   }
 
   arreterSimulation(): void {
     this.simulationActive.set(false);
     this.consentement.set(false);
-    this.message.set(
-      'Simulation arrêtée. Un nouveau consentement sera nécessaire pour recommencer.',
-    );
+    this.message.set('Simulation arrêtée. Un nouveau consentement sera nécessaire pour recommencer.');
   }
 
   reinitialiser(): void {

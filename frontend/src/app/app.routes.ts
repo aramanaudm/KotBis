@@ -1,7 +1,10 @@
 ﻿import type { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: 'mon-espace', loadComponent: () => import('./pages/mon-espace/mon-espace.page').then(m => m.MonEspacePage) },
+  {
+    path: 'mon-espace',
+    loadComponent: () => import('./pages/mon-espace/mon-espace.page').then((m) => m.MonEspacePage),
+  },
   {
     path: 'favoris',
     loadComponent: () => import('./favoris/favoris.page').then((m) => m.FavorisPage),
@@ -32,11 +35,11 @@ export const routes: Routes = [
   { path: 'signaler', redirectTo: 'home/signaler', pathMatch: 'full' },
   {
     path: 'login',
-    loadComponent: () => import('./pages/auth/login/login.page').then(m => m.LoginPage),
+    loadComponent: () => import('./pages/auth/login/login.page').then((m) => m.LoginPage),
   },
   {
     path: 'register',
-    loadComponent: () => import('./pages/auth/register/register.page').then(m => m.RegisterPage),
+    loadComponent: () => import('./pages/auth/register/register.page').then((m) => m.RegisterPage),
   },
   {
     path: '',

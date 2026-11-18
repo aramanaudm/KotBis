@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonIcon, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { closeOutline } from 'ionicons/icons';
+
 import { AuthError } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -126,7 +127,11 @@ import {
             placeholder="8 caractères minimum"
             aria-describedby="reg-password-error"
           />
-          <app-field-error errorId="reg-password-error" [control]="form.controls.password" [messages]="passwordMessages" />
+          <app-field-error
+            errorId="reg-password-error"
+            [control]="form.controls.password"
+            [messages]="passwordMessages"
+          />
         </div>
 
         <div class="bm-field">
@@ -141,7 +146,11 @@ import {
             placeholder="Répétez le mot de passe"
             aria-describedby="reg-confirm-error"
           />
-          <app-field-error errorId="reg-confirm-error" [control]="form.controls.confirmPassword" [messages]="confirmMessages" />
+          <app-field-error
+            errorId="reg-confirm-error"
+            [control]="form.controls.confirmPassword"
+            [messages]="confirmMessages"
+          />
         </div>
 
         <label class="bm-check">
@@ -211,9 +220,7 @@ export class RegisterModalComponent {
       await this.auth.register({ pseudo, email, city, phone, password });
       await this.modals.dismiss(null, 'done');
     } catch (error) {
-      this.serverError.set(
-        error instanceof AuthError ? error.message : "L'inscription a échoué. Réessayez plus tard.",
-      );
+      this.serverError.set(error instanceof AuthError ? error.message : "L'inscription a échoué. Réessayez plus tard.");
     } finally {
       this.submitting.set(false);
     }

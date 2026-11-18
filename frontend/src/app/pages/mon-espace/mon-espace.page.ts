@@ -14,8 +14,9 @@ import {
   starOutline,
   timeOutline,
 } from 'ionicons/icons';
-import { AccountCounters, PublicAccount } from '../../core/auth/auth.models';
+
 import { AuthModalService } from '../../core/auth/auth-modal.service';
+import type { AccountCounters, PublicAccount } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { countLabel } from '../../core/format';
 import { SectionNavigator } from '../../core/navigation/section-navigator.service';
@@ -32,13 +33,38 @@ interface MenuRow {
 /** Une ligne par rubrique du compte, avec son compteur (BUS-FE-035). */
 const ACCOUNT_ROWS: MenuRow[] = [
   { icon: 'star-outline', title: 'Favoris', path: 'favoris', subtitle: (c) => countLabel(c.favoris, 'enregistré') },
-  { icon: 'notifications-outline', title: 'Alertes', path: 'alertes', subtitle: (c) => countLabel(c.alertes, 'programmée') },
-  { icon: 'flag-outline', title: 'Signalements', path: 'signalements', subtitle: (c) => countLabel(c.signalements, 'envoyé') },
-  { icon: 'chatbubble-ellipses-outline', title: 'Mes avis', path: 'avis', subtitle: (c) => countLabel(c.avis, 'publié') },
-  { icon: 'time-outline', title: 'Historique des points', path: 'points', subtitle: (c) => countLabel(c.points, 'point') },
+  {
+    icon: 'notifications-outline',
+    title: 'Alertes',
+    path: 'alertes',
+    subtitle: (c) => countLabel(c.alertes, 'programmée'),
+  },
+  {
+    icon: 'flag-outline',
+    title: 'Signalements',
+    path: 'signalements',
+    subtitle: (c) => countLabel(c.signalements, 'envoyé'),
+  },
+  {
+    icon: 'chatbubble-ellipses-outline',
+    title: 'Mes avis',
+    path: 'avis',
+    subtitle: (c) => countLabel(c.avis, 'publié'),
+  },
+  {
+    icon: 'time-outline',
+    title: 'Historique des points',
+    path: 'points',
+    subtitle: (c) => countLabel(c.points, 'point'),
+  },
 ];
 
-const SETTINGS_ROW = { icon: 'options-outline', title: 'Paramètres', subtitle: 'Langue et apparence', path: 'parametres' };
+const SETTINGS_ROW = {
+  icon: 'options-outline',
+  title: 'Paramètres',
+  subtitle: 'Langue et apparence',
+  path: 'parametres',
+};
 
 /**
  * « Mon espace » : BUS-FE-034 (profil), 035 (informations et compteurs), 036 (déconnexion).

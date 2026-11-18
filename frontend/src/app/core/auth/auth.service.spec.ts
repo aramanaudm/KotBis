@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
+
 import { AuthError } from './auth.models';
 import { AuthService } from './auth.service';
 
@@ -131,14 +132,14 @@ describe('AuthService', () => {
 
     it('refuse un mauvais code, puis ne permet pas de réutiliser un code consommé', async () => {
       const { devCode } = await auth.requestPasswordReset('alice@exemple.com');
-      await expect(
-        auth.confirmPasswordReset('alice@exemple.com', '000000', 'nouveaupass9'),
-      ).rejects.toMatchObject({ code: 'INVALID_RESET_CODE' });
+      await expect(auth.confirmPasswordReset('alice@exemple.com', '000000', 'nouveaupass9')).rejects.toMatchObject({
+        code: 'INVALID_RESET_CODE',
+      });
 
       await auth.confirmPasswordReset('alice@exemple.com', devCode!, 'nouveaupass9');
-      await expect(
-        auth.confirmPasswordReset('alice@exemple.com', devCode!, 'encoreautre3'),
-      ).rejects.toMatchObject({ code: 'INVALID_RESET_CODE' });
+      await expect(auth.confirmPasswordReset('alice@exemple.com', devCode!, 'encoreautre3')).rejects.toMatchObject({
+        code: 'INVALID_RESET_CODE',
+      });
     });
   });
 });

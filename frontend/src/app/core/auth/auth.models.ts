@@ -41,12 +41,7 @@ export interface RegisterPayload {
   phone?: string;
 }
 
-export type AuthErrorCode =
-  | 'PSEUDO_TAKEN'
-  | 'EMAIL_TAKEN'
-  | 'INVALID_CREDENTIALS'
-  | 'INVALID_RESET_CODE'
-  | 'UNKNOWN';
+export type AuthErrorCode = 'PSEUDO_TAKEN' | 'EMAIL_TAKEN' | 'INVALID_CREDENTIALS' | 'INVALID_RESET_CODE' | 'UNKNOWN';
 
 export class AuthError extends Error {
   constructor(

@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonIcon, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { closeOutline } from 'ionicons/icons';
+
 import { AuthError } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { emailValidator, matchFields, passwordValidator } from '../../core/auth/auth.validators';
@@ -118,7 +119,11 @@ const STEPS: { id: Step; label: string }[] = [
                 placeholder="votre@email.com"
                 aria-describedby="reset-email-error"
               />
-              <app-field-error errorId="reset-email-error" [control]="requestForm.controls.email" [messages]="emailMessages" />
+              <app-field-error
+                errorId="reset-email-error"
+                [control]="requestForm.controls.email"
+                [messages]="emailMessages"
+              />
             </div>
 
             @if (serverError(); as message) {
@@ -130,7 +135,9 @@ const STEPS: { id: Step; label: string }[] = [
             </button>
           </form>
           <div class="secondary">
-            <button class="bm-btn bm-btn--link is-green" type="button" (click)="dismiss('login')">← Retour à la connexion</button>
+            <button class="bm-btn bm-btn--link is-green" type="button" (click)="dismiss('login')">
+              ← Retour à la connexion
+            </button>
           </div>
         }
 
@@ -161,7 +168,11 @@ const STEPS: { id: Step; label: string }[] = [
                 placeholder="6 chiffres"
                 aria-describedby="reset-code-error"
               />
-              <app-field-error errorId="reset-code-error" [control]="confirmForm.controls.code" [messages]="codeMessages" />
+              <app-field-error
+                errorId="reset-code-error"
+                [control]="confirmForm.controls.code"
+                [messages]="codeMessages"
+              />
             </div>
 
             <div class="bm-field">
@@ -176,7 +187,11 @@ const STEPS: { id: Step; label: string }[] = [
                 placeholder="8 caractères minimum"
                 aria-describedby="reset-password-error"
               />
-              <app-field-error errorId="reset-password-error" [control]="confirmForm.controls.password" [messages]="passwordMessages" />
+              <app-field-error
+                errorId="reset-password-error"
+                [control]="confirmForm.controls.password"
+                [messages]="passwordMessages"
+              />
             </div>
 
             <div class="bm-field">
@@ -191,7 +206,11 @@ const STEPS: { id: Step; label: string }[] = [
                 placeholder="Répétez le mot de passe"
                 aria-describedby="reset-confirm-error"
               />
-              <app-field-error errorId="reset-confirm-error" [control]="confirmForm.controls.confirmPassword" [messages]="confirmMessages" />
+              <app-field-error
+                errorId="reset-confirm-error"
+                [control]="confirmForm.controls.confirmPassword"
+                [messages]="confirmMessages"
+              />
             </div>
 
             @if (serverError(); as message) {
@@ -203,7 +222,9 @@ const STEPS: { id: Step; label: string }[] = [
             </button>
           </form>
           <div class="secondary">
-            <button class="bm-btn bm-btn--link is-green" type="button" (click)="restart()">Changer d’adresse e-mail</button>
+            <button class="bm-btn bm-btn--link is-green" type="button" (click)="restart()">
+              Changer d’adresse e-mail
+            </button>
           </div>
         }
 

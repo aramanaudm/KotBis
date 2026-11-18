@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { ModalController } from '@ionic/angular';
+
 import { AuthGateModalComponent } from '../../shared/auth-modals/auth-gate-modal.component';
 import { ForgotPasswordModalComponent } from '../../shared/auth-modals/forgot-password-modal.component';
 import { LoginModalComponent } from '../../shared/auth-modals/login-modal.component';
 import { RegisterModalComponent } from '../../shared/auth-modals/register-modal.component';
+
 import { AuthService } from './auth.service';
 
 export type AuthView = 'login' | 'register' | 'forgot' | 'gate';

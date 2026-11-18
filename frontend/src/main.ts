@@ -1,5 +1,5 @@
-import { bootstrapApplication } from '@angular/platform-browser';
 import { inject, provideAppInitializer } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
 import {
   RouteReuseStrategy,
   provideRouter,

@@ -1,15 +1,10 @@
-﻿import { NavController } from '@ionic/angular';
-import { AuthService } from '../core/auth/auth.service';
-import {
-  Component,
-  ElementRef,
-  OnDestroy,
-  ViewChild,
-  signal,
-  inject,
-} from '@angular/core';
-import * as L from 'leaflet';
+﻿import type { ElementRef, OnDestroy } from '@angular/core';
+import { Component, ViewChild, signal, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { NavController } from '@ionic/angular';
+import * as L from 'leaflet';
+
+import { AuthService } from '../core/auth/auth.service';
 import { PartagePositionComponent } from '../partage-position/partage-position.component';
 
 interface ArretDemo {
@@ -159,14 +154,10 @@ export class HomePage implements OnDestroy {
       zoomControl: false,
     });
 
-    this.tiles = L.tileLayer(
-      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom: 19,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    );
+    this.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    });
 
     this.tiles.on('tileerror', () => {
       this.carteIndisponible.set(true);

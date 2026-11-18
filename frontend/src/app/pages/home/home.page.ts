@@ -18,8 +18,8 @@ import { UiButtonComponent } from '../../shared/components/ui-button/ui-button.c
     IonIcon,
     UiButtonComponent,
     DestinationItemComponent,
-    AlertCardComponent
-  ]
+    AlertCardComponent,
+  ],
 })
 export class HomePage {
   constructor() {}

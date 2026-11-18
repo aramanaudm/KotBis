@@ -1,4 +1,4 @@
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 /** E-mail avec domaine et extension obligatoires (Validators.email accepte « a@b »). */
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -63,8 +63,7 @@ export function matchFields(source: string, confirmation: string): ValidatorFn {
     const confirmationControl = group.get(confirmation);
     if (!sourceControl || !confirmationControl) return null;
 
-    const mismatch =
-      !isBlank(confirmationControl.value) && sourceControl.value !== confirmationControl.value;
+    const mismatch = !isBlank(confirmationControl.value) && sourceControl.value !== confirmationControl.value;
 
     const current = confirmationControl.errors ?? {};
     if (mismatch) {

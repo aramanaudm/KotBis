@@ -22,33 +22,15 @@
 </div>
 
 @if (simulationActive()) {
-  <button
-    class="arret-rapide"
-    type="button"
-    (click)="arreterSimulation()"
-  >
-    Arrêter la simulation
-  </button>
+  <button class="arret-rapide" type="button" (click)="arreterSimulation()">Arrêter la simulation</button>
 }
 
-<section
-  id="panneau-partage"
-  class="panneau"
-  aria-labelledby="titre-partage"
-  [hidden]="!panneauOuvert()"
->
+<section id="panneau-partage" class="panneau" aria-labelledby="titre-partage" [hidden]="!panneauOuvert()">
   <h2 id="titre-partage">Partage de position</h2>
 
-  <p class="demo">
-    Démonstration uniquement : aucun accès au GPS et aucune position
-    collectée ou transmise.
-  </p>
+  <p class="demo">Démonstration uniquement : aucun accès au GPS et aucune position collectée ou transmise.</p>
 
-  <p
-    class="etat"
-    role="status"
-    [class.actif]="simulationActive()"
-  >
+  <p class="etat" role="status" [class.actif]="simulationActive()">
     {{ message() }}
   </p>
 
@@ -60,37 +42,20 @@
       aria-describedby="explication-partage"
     />
 
-    <span>
-      J’accepte de démarrer une simulation du partage de position.
-    </span>
+    <span> J’accepte de démarrer une simulation du partage de position. </span>
   </label>
 
   <p id="explication-partage" class="aide">
-    Cocher cette case ne démarre pas la simulation.
-    Vous pouvez retirer votre consentement ou arrêter à tout moment.
+    Cocher cette case ne démarre pas la simulation. Vous pouvez retirer votre consentement ou arrêter à tout moment.
   </p>
 
   @if (simulationActive()) {
-    <button
-      class="arreter"
-      type="button"
-      (click)="arreterSimulation()"
-    >
-      Arrêter la simulation
-    </button>
+    <button class="arreter" type="button" (click)="arreterSimulation()">Arrêter la simulation</button>
   } @else {
-    <button
-      class="demarrer"
-      type="button"
-      [disabled]="!consentement()"
-      (click)="demarrerSimulation()"
-    >
+    <button class="demarrer" type="button" [disabled]="!consentement()" (click)="demarrerSimulation()">
       Démarrer la simulation
     </button>
   }
 
-  <p class="aide">
-    La simulation est désactivée lorsque vous quittez la page.
-    Elle ne reprend pas automatiquement.
-  </p>
+  <p class="aide">La simulation est désactivée lorsque vous quittez la page. Elle ne reprend pas automatiquement.</p>
 </section>

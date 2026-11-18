@@ -1,13 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { ModalController } from '@ionic/angular';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AuthError } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
+
 import { RegisterModalComponent } from './register-modal.component';
 
 /** Accès aux membres protégés pour tester la logique sans rendre les web components Ionic. */
 interface Internals {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: any;
   submit(): Promise<void>;
   dismiss(role: 'cancel' | 'login'): Promise<boolean>;
@@ -45,7 +46,13 @@ describe('RegisterModalComponent (BUS-FE-028/029/030)', () => {
 
   it('expose les champs de la maquette', () => {
     expect(Object.keys(modal.form.controls)).toEqual([
-      'pseudo', 'email', 'city', 'phone', 'password', 'confirmPassword', 'terms',
+      'pseudo',
+      'email',
+      'city',
+      'phone',
+      'password',
+      'confirmPassword',
+      'terms',
     ]);
   });
 
@@ -54,7 +61,11 @@ describe('RegisterModalComponent (BUS-FE-028/029/030)', () => {
     expect(modal.form.valid).toBe(true);
 
     const blanks: Record<string, unknown> = {
-      pseudo: '', email: '', password: '', confirmPassword: '', terms: false,
+      pseudo: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      terms: false,
     };
     for (const [name, empty] of Object.entries(blanks)) {
       fill({ [name]: empty, ...(name === 'password' ? { confirmPassword: '' } : {}) });

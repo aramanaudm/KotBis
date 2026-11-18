@@ -1,12 +1,9 @@
 import { Injectable, computed, inject, isDevMode, signal } from '@angular/core';
+
 import { StorageService } from '../storage/storage.service';
-import {
-  AuthError,
-  EMPTY_COUNTERS,
-  PublicAccount,
-  RegisterPayload,
-  StoredAccount,
-} from './auth.models';
+
+import type { PublicAccount, RegisterPayload, StoredAccount } from './auth.models';
+import { AuthError, EMPTY_COUNTERS } from './auth.models';
 import { isEmail } from './auth.validators';
 
 const ACCOUNTS_KEY = 'pmh.accounts';
@@ -82,9 +79,7 @@ export class AuthService {
   async login(identifier: string, password: string): Promise<PublicAccount> {
     const value = identifier.trim().toLowerCase();
     const accounts = await this.loadAccounts();
-    const account = accounts.find((a) =>
-      isEmail(value) ? a.email === value : a.pseudo.toLowerCase() === value,
-    );
+    const account = accounts.find((a) => (isEmail(value) ? a.email === value : a.pseudo.toLowerCase() === value));
 
     // Même message que le compte existe ou non, pour ne pas révéler quels comptes existent.
     const invalid = new AuthError('INVALID_CREDENTIALS', 'Identifiant ou mot de passe incorrect.');

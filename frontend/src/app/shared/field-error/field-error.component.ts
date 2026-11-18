@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
-import { AbstractControl } from '@angular/forms';
+import type { AbstractControl } from '@angular/forms';
 
 /**
  * Affiche, sous un champ, le message d'erreur explicatif du premier validateur en échec.
