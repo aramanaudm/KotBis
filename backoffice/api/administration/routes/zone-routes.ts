@@ -94,6 +94,37 @@ export function zoneRoutes(pool: Pool): Router {
     }
   });
 
+  router.get('/zones/:id/buses', async (req, res) => {
+    try {
+      const zone = await pool.query(
+        'SELECT id FROM zones WHERE id = $1 AND archive_le IS NULL',
+        [req.params.id],
+      );
+      if (zone.rowCount === 0) return res.status(404).json({ error: 'Zone non trouvée' });
+
+      const resultat = await pool.query(`
+        SELECT DISTINCT b.id, b.plaque, b.etat, b.actif,
+               t.code AS trajet_code, t.direction,
+               l.code AS ligne_code, l.libelle AS ligne_libelle
+        FROM bus b
+        JOIN affectations_bus ab ON ab.bus_id = b.id
+          AND ab.debut_le <= now()
+          AND (ab.fin_le IS NULL OR ab.fin_le > now())
+        JOIN trajets t ON t.id = ab.trajet_id
+        JOIN trajet_arrets ta ON ta.trajet_id = t.id
+        JOIN arrets a ON a.id = ta.arret_id
+        JOIN zones z ON ST_Covers(z.contour, a.position)
+        LEFT JOIN lignes l ON l.id = t.ligne_id
+        WHERE z.id = $1
+          AND b.archive_le IS NULL
+        ORDER BY b.plaque
+      `, [req.params.id]);
+      res.json({ success: true, data: resultat.rows });
+    } catch (error) {
+      repondreErreur(res, error);
+    }
+  });
+
   router.post('/zones', async (req, res) => {
     try {
       const { code, nom, contour, actif } = req.body;

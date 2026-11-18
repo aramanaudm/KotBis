@@ -44,8 +44,9 @@ import type { Zone, ZonePoint } from '../../models/zone';
 
     .map {
       width: 100%;
-      height: 360px;
-      background: #e8eef5;
+      height: clamp(300px, 42vh, 420px);
+      min-height: 300px;
+      background: #eef1f4;
       z-index: 0;
     }
 
@@ -78,6 +79,8 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
 
   private readonly ready = signal(false);
 
+  private readonly mauriceBounds = L.latLngBounds([-20.6, 57.2], [-19.9, 57.9]);
+
   private map?: L.Map;
   private layers?: L.LayerGroup;
   private observer?: ResizeObserver;
@@ -99,17 +102,20 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-        const mauriceBounds = L.latLngBounds([-20.6, 57.2], [-19.9, 57.9]);
-
     this.map = L.map(this.canvas().nativeElement, {
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      minZoom: 9,                 
-      maxBounds: mauriceBounds,   
-    }).setView([-20.25, 57.55], 10);
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      minZoom: 8,
+      maxZoom: 18,
+      maxBounds: this.mauriceBounds,
+      maxBoundsViscosity: 1,
+      worldCopyJump: true,
+    }).fitBounds(this.mauriceBounds, { padding: [10, 10], animate: false });
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      subdomains: 'abc',
       maxZoom: 19,
+      detectRetina: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.map);
@@ -134,15 +140,12 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       this.map?.invalidateSize();
     });
 
-       this.observer.observe(this.canvas().nativeElement);
+    this.observer.observe(this.canvas().nativeElement);
     setTimeout(() => {
-      if (this.map) {
-        this.map.invalidateSize();
-        // Coordonnées de Maurice (centre de l'île)
-        this.map.setView([-20.25, 57.55], 10); 
-      }
+      this.map?.invalidateSize();
+      this.map?.fitBounds(this.mauriceBounds, { padding: [10, 10], animate: false });
       this.ready.set(true);
-    }, 150);
+    }, 50);
   }
 
   private render(
@@ -236,11 +239,11 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
         const points = this.toLatLngs(zone.vertices);
 
         const polygon = L.polygon(points, {
-          color: '#2069e7',      // Contour bleu
-          weight: 2,             // Bordure fine
-          dashArray: '5, 5',     // Pointillés
-          fillColor: '#3b82f6',  // Bleu plus clair
-          fillOpacity: 0.08,     // Quasi transparent (8%)
+          color: '#2069e7',
+          weight: 2,
+          dashArray: '5, 5',
+          fillColor: '#60a5fa',
+          fillOpacity: 0.04,
         }).addTo(this.layers);
 
         const label = document.createElement('span');
@@ -310,11 +313,11 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       }
     }
 
-    // Centrer la carte
-    if (bounds.isValid() && (mode === 'preview' || !this.framed)) {
+    if (bounds.isValid() && mode === 'edit' && !this.framed) {
       this.map.fitBounds(bounds, {
         padding: [25, 25],
         maxZoom: 14,
+        animate: false,
       });
 
       this.framed = true;

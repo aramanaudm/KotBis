@@ -3,7 +3,7 @@ import { apiError } from '../../../../core/services/api';
 import type { Stop } from '../../../stops/models/stop';
 import { StopsService } from '../../../stops/services/stops.service';
 import { ZoneMap } from '../../../zones/components/zone-map/zone-map';
-import { ZonesService } from '../../../zones/services/zones.service';
+import { ZonesService, type ZoneBus } from '../../../zones/services/zones.service';
 
 @Component({
   selector: 'app-network-map',
@@ -25,12 +25,16 @@ import { ZonesService } from '../../../zones/services/zones.service';
         <span class="map-note">{{ zones.active().length }} zone(s) active(s)</span>
       }
 
+      @if (bus().length > 0) {
+        <span class="bus-count">{{ bus().length }} bus</span>
+      }
+
       @if (erreur()) {
         <span class="map-error">{{ erreur() }}</span>
       }
     </div>
 
-    <app-zone-map [zones]="zonesAffichees()" [stops]="arrets()" />
+    <app-zone-map [zones]="zonesAffichees()" [stops]="arrets()" [bus]="bus()" />
   `,
   styles: `
     :host {
@@ -73,6 +77,11 @@ import { ZonesService } from '../../../zones/services/zones.service';
       font-weight: 600;
     }
 
+    .bus-count {
+      color: var(--blue);
+      font-weight: 600;
+    }
+
     .map-note {
       margin-left: auto;
     }
@@ -88,6 +97,7 @@ export class NetworkMap {
 
   protected readonly zoneSelectionnee = signal('');
   protected readonly arrets = signal<readonly Stop[]>([]);
+  protected readonly bus = signal<readonly ZoneBus[]>([]);
   protected readonly erreur = signal('');
 
   protected readonly zonesAffichees = computed(() => {
@@ -107,9 +117,11 @@ export class NetworkMap {
 
     if (!id) {
       this.arrets.set([]);
+      this.bus.set([]);
       return;
     }
 
+    // Charger les arrêts
     this.stops.stopsForZone(id).subscribe({
       next: (stops) => {
         if (this.zoneSelectionnee() === id) {
@@ -118,6 +130,19 @@ export class NetworkMap {
       },
       error: (err) => {
         this.arrets.set([]);
+        this.erreur.set(apiError(err));
+      },
+    });
+
+    // Charger les bus
+    this.zones.busesForZone(id).subscribe({
+      next: (bus) => {
+        if (this.zoneSelectionnee() === id) {
+          this.bus.set(bus);
+        }
+      },
+      error: (err) => {
+        this.bus.set([]);
         this.erreur.set(apiError(err));
       },
     });
