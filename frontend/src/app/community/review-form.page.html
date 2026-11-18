@@ -28,16 +28,28 @@
     </div>
     <div class="community-field">
       <label for="review-text">Votre avis *</label>
+      <p id="review-text-help" class="community-note">600 caractères maximum, espaces compris.</p>
       <textarea
         id="review-text"
         formControlName="text"
         rows="6"
-        aria-describedby="review-text-error"
+        aria-describedby="review-text-help review-text-count review-text-error"
+        [maxlength]="maxLength"
         [attr.aria-invalid]="form.controls.text.touched && form.controls.text.invalid"
         placeholder="Partagez votre expérience (retard, propreté, chauffeur...)"
       ></textarea>
+      <p
+        id="review-text-count"
+        class="community-character-count"
+        [class.community-error]="characterCount() > maxLength"
+      >
+        {{ characterCount() }} / {{ maxLength }} caractères @if (characterCount() === maxLength) {
+        <span role="status"> — Limite atteinte</span> }
+      </p>
       <p id="review-text-error" class="community-error">
-        @if (form.controls.text.touched && form.controls.text.invalid) { Saisissez un avis contenant du texte. }
+        @if (form.controls.text.hasError('maxlength')) { Votre avis dépasse 600 caractères. Raccourcissez-le avant de
+        continuer. } @else if (form.controls.text.touched && form.controls.text.invalid) { Saisissez un avis contenant
+        du texte. }
       </p>
     </div>
     @if (error()) {
@@ -45,7 +57,12 @@
     }
     <div class="community-actions">
       <a class="community-button community-button-outline" routerLink="/home/avis">Annuler</a>
-      <button class="community-button" type="submit" [disabled]="!user() || busy()" [attr.aria-busy]="busy()">
+      <button
+        class="community-button"
+        type="submit"
+        [disabled]="!user() || busy() || form.invalid"
+        [attr.aria-busy]="busy()"
+      >
         {{ busy() ? 'Enregistrement…' : editId ? 'Enregistrer' : "Publier l'avis" }}
       </button>
     </div>
