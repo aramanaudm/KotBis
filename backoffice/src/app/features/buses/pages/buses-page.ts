@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -10,6 +11,7 @@ import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { Bus, BusStatus } from '../models/bus';
 import { BUS_STATUS_LABELS, BUS_STATUS_TONES } from '../models/bus';
+import { RoutesService } from '../../routes/services/routes.service';
 import { BusesService } from '../services/buses.service';
 
 @Component({
@@ -20,8 +22,14 @@ import { BusesService } from '../services/buses.service';
 })
 export class BusesPage {
   private readonly buses = inject(BusesService);
+  private readonly routes = inject(RoutesService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.buses.load();
+    this.routes.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = BUS_STATUS_TONES;
@@ -44,10 +52,14 @@ export class BusesPage {
 
   protected readonly form = this.formBuilder.nonNullable.group({
     plate: ['', [Validators.required, Validators.maxLength(25)]],
-    line: ['', Validators.required],
-    direction: ['', Validators.required],
+    trajetCode: [''],
     status: this.formBuilder.nonNullable.control<BusStatus>('active'),
   });
+
+  protected readonly availableRoutes = this.routes.all;
+  protected readonly selectedRoute = computed(() =>
+    this.availableRoutes().find((route) => route.code === this.form.controls.trajetCode.value),
+  );
 
   protected readonly filteredBuses = computed(() => {
     const search = this.search().trim().toLowerCase();
@@ -105,7 +117,7 @@ export class BusesPage {
   protected openCreate(): void {
     this.editingBus.set(null);
     this.formError.set('');
-    this.form.reset({ plate: '', line: '', direction: '', status: 'active' });
+    this.form.reset({ plate: '', trajetCode: '', status: 'active' });
     this.formOpen.set(true);
   }
 
@@ -120,8 +132,7 @@ export class BusesPage {
     this.formError.set('');
     this.form.setValue({
       plate: bus.plate,
-      line: bus.line,
-      direction: bus.direction,
+      trajetCode: bus.trajetCode ?? '',
       status: bus.status,
     });
     this.formOpen.set(true);
@@ -139,8 +150,28 @@ export class BusesPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const value = this.form.getRawValue();
+    const route = this.selectedRoute();
+    const bus: Omit<Bus, 'id'> = {
+      plate: value.plate,
+      line: route?.line ?? '—',
+      direction: route?.direction ?? '—',
+      status: value.status,
+      trajetCode: value.trajetCode,
+    };
+
+    const editing = this.editingBus();
+    const operation = editing
+      ? this.buses.update(editing.id, bus)
+      : this.buses.create(bus);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Bus modifié.' : 'Bus créé.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -156,12 +187,19 @@ export class BusesPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.buses.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Bus archivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {
@@ -177,7 +215,7 @@ export class BusesPage {
     );
   }
 
-  protected errorFor(name: 'plate' | 'line' | 'direction', message: string): string {
+  protected errorFor(name: 'plate' | 'trajetCode', message: string): string {
     const control = this.form.controls[name];
 
     return control.touched && control.invalid ? message : '';
