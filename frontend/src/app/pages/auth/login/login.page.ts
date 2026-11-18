@@ -1,42 +1,38 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButtons,
   IonBackButton,
-  IonList,
-  IonItem,
-  IonInput,
   IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
   IonIcon,
+  IonInput,
+  IonTitle,
+  IonToolbar,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { busOutline } from 'ionicons/icons';
+import { arrowForwardOutline, busOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   imports: [
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButtons,
     IonBackButton,
-    IonList,
-    IonItem,
-    IonInput,
     IonButton,
+    IonButtons,
+    IonContent,
+    IonHeader,
     IonIcon,
+    IonInput,
+    IonTitle,
+    IonToolbar,
     RouterLink,
   ],
 })
 export class LoginPage {
   constructor() {
-    addIcons({ busOutline });
+    addIcons({ arrowForwardOutline, busOutline });
   }
 }

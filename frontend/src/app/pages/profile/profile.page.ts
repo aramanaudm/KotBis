@@ -1,52 +1,17 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButton,
-  IonList,
-  IonListHeader,
-  IonItem,
-  IonIcon,
-  IonLabel,
-} from '@ionic/angular';
+import { IonButton, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import {
-  personCircleOutline,
-  heartOutline,
-  calendarOutline,
-  starOutline,
-  warningOutline,
-} from 'ionicons/icons';
+import { calendarOutline, heartOutline, personCircleOutline, starOutline, warningOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
-  imports: [
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButton,
-    IonList,
-    IonListHeader,
-    IonItem,
-    IonIcon,
-    IonLabel,
-    RouterLink,
-  ],
+  imports: [IonButton, IonContent, IonHeader, IonIcon, IonTitle, IonToolbar, RouterLink],
 })
 export class ProfilePage {
   constructor() {
-    addIcons({
-      personCircleOutline,
-      heartOutline,
-      calendarOutline,
-      starOutline,
-      warningOutline,
-    });
+    addIcons({ calendarOutline, heartOutline, personCircleOutline, starOutline, warningOutline });
   }
 }

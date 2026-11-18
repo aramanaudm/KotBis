@@ -1,13 +1,33 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>register</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login" text="Retour"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="brand-title">Bus Maurice</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">register</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="auth-content">
+  <p class="eyebrow">INSCRIPTION GRATUITE</p>
+  <h1>Créer mon compte</h1>
+  <p class="subtitle">Quelques informations pour personnaliser vos trajets.</p>
+
+  <div class="form">
+    <ion-input fill="outline" label="Pseudo" labelPlacement="stacked" placeholder="Maya 974"></ion-input>
+    <ion-input fill="outline" label="Email" labelPlacement="stacked" placeholder="maya@email.com" type="email"></ion-input>
+    <ion-input fill="outline" label="Ville ou zone" labelPlacement="stacked" placeholder="Quatre Bornes"></ion-input>
+    <ion-input fill="outline" label="Téléphone" labelPlacement="stacked" placeholder="(+230) 5xxx xxxx" type="tel"></ion-input>
+    <ion-input fill="outline" label="Mot de passe" labelPlacement="stacked" placeholder="8 caractères minimum" type="password"></ion-input>
+    <ion-input fill="outline" label="Confirmation" labelPlacement="stacked" placeholder="Répétez le mot de passe" type="password"></ion-input>
+  </div>
+
+  <label class="terms">
+    <input type="checkbox" />
+    <span>J'accepte les conditions d'utilisation</span>
+  </label>
+
+  <div class="actions">
+    <ion-button fill="outline" routerLink="/login">Annuler</ion-button>
+    <ion-button class="primary">Créer mon compte</ion-button>
+  </div>
 </ion-content>
