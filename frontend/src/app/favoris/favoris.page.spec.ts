@@ -1,6 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { ModalController, ToastController } from '@ionic/angular';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { EMPTY_COUNTERS } from '../core/auth/auth.models';
+import { AuthService } from '../core/auth/auth.service';
+import { MonEspacePage } from '../pages/mon-espace/mon-espace.page';
 
 import { FavorisPage } from './favoris.page';
 
@@ -11,6 +16,36 @@ describe('FavorisPage', () => {
   });
 
   afterEach(() => localStorage.removeItem('kotbis.favoris'));
+
+  it('affiche dans Mon espace le nombre de favoris déjà enregistrés et le met à jour', () => {
+    localStorage.setItem('kotbis.favoris', '[1]');
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ModalController, useValue: {} },
+        { provide: ToastController, useValue: {} },
+      ],
+    });
+    TestBed.overrideProvider(AuthService, {
+      useValue: { user: () => ({ pseudo: 'Compte test', email: 'test@example.com', counters: EMPTY_COUNTERS }) },
+    });
+    const profil = TestBed.createComponent(MonEspacePage);
+    const espace: HTMLElement = profil.nativeElement;
+    profil.detectChanges();
+    const compteur = espace.querySelector('.is-account li small');
+    expect(compteur?.textContent?.trim()).toBe('1 enregistré');
+
+    const favoris = TestBed.createComponent(FavorisPage);
+    const page: HTMLElement = favoris.nativeElement;
+    favoris.detectChanges();
+    page.querySelector<HTMLButtonElement>('.remove')!.click();
+    profil.detectChanges();
+    expect(compteur?.textContent?.trim()).toBe('0 enregistré');
+
+    favoris.detectChanges();
+    page.querySelector<HTMLButtonElement>('button.action')!.click();
+    profil.detectChanges();
+    expect(compteur?.textContent?.trim()).toBe('1 enregistré');
+  });
 
   it('affiche l’état vide et un lien direct vers l’accueil', () => {
     const fixture = TestBed.createComponent(FavorisPage);
