@@ -4,8 +4,10 @@ export type TransitRouteStatus = 'active' | 'inactive';
 
 export interface TransitRoute {
   readonly id: string;
+  readonly code: string;
   readonly name: string;
   readonly line: string;
+  readonly direction: string;
   readonly stops: readonly string[];
   readonly status: TransitRouteStatus;
 }

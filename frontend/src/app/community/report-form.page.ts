@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { COMMUNITY_BUSES } from './community-buses';
 import { CommunityDialogComponent } from './community-dialog.component';
 import { COMMUNITY_SESSION } from './community-session';
+import { REPORT_CATEGORIES } from './report-categories';
 import type { BusReport } from './report.model';
 import { ReportService } from './report.service';
 
@@ -16,11 +17,15 @@ import { ReportService } from './report.service';
 export class ReportFormPage {
   readonly user = inject(COMMUNITY_SESSION);
   readonly buses = COMMUNITY_BUSES;
+  readonly categories = REPORT_CATEGORIES;
   readonly busy = signal(false);
   readonly error = signal('');
   readonly receipt = signal<BusReport | null>(null);
   private readonly reports = inject(ReportService);
-  readonly form = inject(FormBuilder).nonNullable.group({ busId: ['', Validators.required] });
+  readonly form = inject(FormBuilder).nonNullable.group({
+    busId: ['', Validators.required],
+    categoryId: ['', Validators.required],
+  });
 
   async submit(): Promise<void> {
     if (this.busy() || this.receipt()) return;

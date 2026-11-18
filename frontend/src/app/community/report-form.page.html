@@ -3,6 +3,7 @@
   @if (receipt(); as report) {
   <div role="status" class="community-notice">
     Votre signalement pour le bus {{ report.busLine }} a été enregistré dans cette session. Statut : À vérifier.
+    Catégorie : {{ report.categoryLabel }}.
   </div>
   <div class="community-actions">
     <a class="community-button community-button-outline" routerLink="/home">Retour à la carte</a>
@@ -31,6 +32,25 @@
         @if (form.controls.busId.touched && form.controls.busId.invalid) { Sélectionnez un bus. }
       </p>
     </div>
+    <fieldset
+      class="community-categories"
+      aria-describedby="report-category-help report-category-error"
+      [attr.aria-invalid]="form.controls.categoryId.touched && form.controls.categoryId.invalid"
+    >
+      <legend>Catégorie *</legend>
+      <p id="report-category-help" class="community-note">Choisissez une seule catégorie.</p>
+      <div class="community-category-grid">
+        @for (category of categories; track category.id) {
+        <label class="community-category">
+          <input type="radio" name="categoryId" formControlName="categoryId" [value]="category.id" />
+          <span>{{ category.label }}</span>
+        </label>
+        }
+      </div>
+      <p id="report-category-error" class="community-error">
+        @if (form.controls.categoryId.touched && form.controls.categoryId.invalid) { Choisissez une catégorie. }
+      </p>
+    </fieldset>
     @if (error()) {
     <p role="alert" class="community-error">{{ error() }}</p>
     }

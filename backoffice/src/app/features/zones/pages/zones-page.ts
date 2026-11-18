@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -32,6 +33,10 @@ export class ZonesPage {
   private readonly zones = inject(ZonesService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.zones.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = ZONE_STATUS_TONES;
@@ -172,8 +177,21 @@ export class ZonesPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const editing = this.editingZone();
+    const zone: Omit<Zone, 'id'> = {
+      name,
+      vertices: this.vertices(),
+      status: this.form.controls.status.value,
+    };
+    const operation = editing ? this.zones.update(editing.id, zone) : this.zones.create(zone);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Zone modifiée.' : 'Zone créée.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -189,12 +207,18 @@ export class ZonesPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.zones.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Zone archivée.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {

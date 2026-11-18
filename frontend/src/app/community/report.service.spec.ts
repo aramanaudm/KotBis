@@ -14,7 +14,7 @@ describe('SCRUM-64 — enregistrement des signalements', () => {
 
   it('enregistre le bus sélectionné, la session et le statut initial', async () => {
     const service = TestBed.inject(ReportService);
-    const report = await service.createReport({ busId: 'b2' });
+    const report = await service.createReport({ busId: 'b2', categoryId: 'c1' });
     expect(report).toMatchObject({
       busId: 'b2',
       busLine: '12',
@@ -27,9 +27,9 @@ describe('SCRUM-64 — enregistrement des signalements', () => {
 
   it('refuse un visiteur et un bus inconnu', async () => {
     const service = TestBed.inject(ReportService);
-    await expect(service.createReport({ busId: 'absent' })).rejects.toThrow('bus');
+    await expect(service.createReport({ busId: 'absent', categoryId: 'c1' })).rejects.toThrow('bus');
     session.set(null);
-    await expect(service.createReport({ busId: 'b1' })).rejects.toThrow('connecté');
+    await expect(service.createReport({ busId: 'b1', categoryId: 'c1' })).rejects.toThrow('connecté');
     expect(service.reports()).toHaveLength(0);
   });
 });
