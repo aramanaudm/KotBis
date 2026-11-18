@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
+import { ErreurConflit } from "../../src/commun/erreurs";
 import type { CompteAvecSecret, ProfilUtilisateur } from "../../src/authentification/types";
-import type { DepotAuthentification, SessionActive } from "../../src/authentification/depot";
+import type {
+  DepotAuthentification,
+  DonneesCreationCompte,
+  SessionActive
+} from "../../src/authentification/depot";
 
 interface SessionSimulee {
   id: string;
@@ -68,6 +73,39 @@ export class FauxDepot implements DepotAuthentification {
       }
     }
     return null;
+  }
+
+  async creerCompteVoyageur(
+    _client: PoolClient,
+    donnees: DonneesCreationCompte
+  ): Promise<ProfilUtilisateur> {
+    const email = donnees.email.toLowerCase();
+    const pseudo = donnees.pseudo.toLowerCase();
+    for (const compte of this.comptes.values()) {
+      if (compte.email === email) {
+        throw new ErreurConflit("EMAIL_DEJA_UTILISE", "Cette adresse e-mail est déjà utilisée.");
+      }
+      if (compte.pseudo?.toLowerCase() === pseudo) {
+        throw new ErreurConflit("PSEUDO_DEJA_UTILISE", "Ce pseudonyme est déjà utilisé.");
+      }
+    }
+
+    const compteId = String(this.prochainId++);
+    const compte: CompteAvecSecret = {
+      compteId,
+      identifiantPublic: donnees.identifiantPublic,
+      email,
+      role: "voyageur",
+      pseudo: donnees.pseudo,
+      avatarRef: null,
+      zoneLibre: donnees.zoneLibre,
+      telephone: donnees.telephone,
+      creeLe: new Date().toISOString(),
+      motDePasseHash: donnees.motDePasseHash,
+      etat: "actif"
+    };
+    this.comptes.set(compteId, compte);
+    return versProfil(compte);
   }
 
   async creerSession(

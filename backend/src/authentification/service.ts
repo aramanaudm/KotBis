@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { ErreurAuthentification, ErreurTropDeRequetes } from "../commun/erreurs";
 import { LimiteurTentatives } from "../middlewares/limiteurTentatives";
 import type { DepotAuthentification } from "./depot";
 import { dateDansMinutes, genererJetonSession, hacherJeton, lireEntierPositif } from "./jetons";
-import { verifierMotDePasse } from "./motDePasse";
-import type { CompteAvecSecret, ProfilUtilisateur, SessionCreee } from "./types";
+import { hacherMotDePasse, verifierMotDePasse } from "./motDePasse";
+import type { CompteAvecSecret, DonneesInscription, ProfilUtilisateur, SessionCreee } from "./types";
 
 const HASH_FACTICE = "$argon2id$v=19$m=19456,t=2,p=1$Tzw5I9FgPyhm7gvVwRjTfQ$hviAw6ri6ZJcE0Rjjnq8YUKIWWkTxbELPDaaM2J7akI";
 
@@ -39,6 +40,20 @@ export class ServiceAuthentification {
     this.limiteurConnexion =
       options.limiteurConnexion ?? new LimiteurTentatives(maximumConnexion, fenetreMinutes * 60_000);
     this.maintenant = options.maintenant ?? (() => new Date());
+  }
+
+  async inscrire(donnees: DonneesInscription): Promise<ProfilUtilisateur> {
+    const motDePasseHash = await hacherMotDePasse(donnees.motDePasse);
+    return this.depot.avecTransaction((client) =>
+      this.depot.creerCompteVoyageur(client, {
+        pseudo: donnees.pseudo,
+        email: donnees.email,
+        motDePasseHash,
+        identifiantPublic: randomUUID(),
+        zoneLibre: donnees.zoneLibre,
+        telephone: donnees.telephone
+      })
+    );
   }
 
   async connecter(

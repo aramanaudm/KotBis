@@ -1,7 +1,7 @@
 import { Router, type RequestHandler } from "express";
 import { obtenirSessionCourante, obtenirUtilisateurCourant } from "../middlewares/authentification";
 import type { ServiceAuthentification } from "./service";
-import { validerConnexion } from "./validation";
+import { validerConnexion, validerInscription } from "./validation";
 
 function adresseIp(requete: Parameters<RequestHandler>[0]): string {
   return requete.ip ?? requete.socket.remoteAddress ?? "inconnu";
@@ -12,6 +12,12 @@ export function creerRouteurAuthentification(
   middlewareSession: RequestHandler
 ): Router {
   const routeur = Router();
+
+  routeur.post("/inscription", async (requete, reponse) => {
+    const donnees = validerInscription(requete.body);
+    const utilisateur = await service.inscrire(donnees);
+    reponse.status(201).json({ utilisateur });
+  });
 
   routeur.post("/connexion", async (requete, reponse) => {
     const donnees = validerConnexion(requete.body);
