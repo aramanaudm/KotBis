@@ -1,5 +1,10 @@
 <main class="map-page" aria-label="Carte des bus à Maurice">
-  <div #mapContainer class="map" aria-label="Carte interactive : utilisez les flèches pour vous déplacer"></div>
+  <div
+    #mapContainer
+    class="map"
+    aria-label="Carte interactive : utilisez les flèches pour vous déplacer"
+  ></div>
+
   <header class="floating-header">
     <div class="brand" aria-label="KotBis">
       <span class="brand-icon" aria-hidden="true">
@@ -40,28 +45,176 @@
 
       <strong>KotBis</strong>
     </div>
+
     <button class="status account-access" type="button" (click)="mySpace()" aria-label="Ouvrir mon espace">
       <span class="visitor">{{ user()?.pseudo ?? 'Visiteur' }}</span>
-      <span class="demo">Mon espace</span>
+      <span class="demo">Démonstration</span>
     </button>
   </header>
+
+  <app-partage-position></app-partage-position>
+
   @if (carteIndisponible()) {
     <div class="map-warning" role="alert">
-      <span>Le fond de carte ne se charge pas complètement. Vérifiez votre connexion.</span>
-      <button type="button" (click)="reessayer()">Réessayer</button>
+      <span>
+        Le fond de carte ne se charge pas complètement.
+        Vérifiez votre connexion.
+      </span>
+
+      <button type="button" (click)="reessayer()">
+        Réessayer
+      </button>
     </div>
   }
+
   <nav class="map-controls" aria-label="Commandes de la carte">
-    <button type="button" (click)="zoomer()" aria-label="Zoomer">+</button>
-    <button type="button" (click)="dezoomer()" aria-label="Dézoomer">−</button>
-    <button type="button" (click)="recentrer()" aria-label="Revenir à la vue de départ" title="Revenir à la vue de départ">◎</button>
-  </nav>
-  <section class="bottom-panel" aria-label="Informations de la carte">
-    <div class="panel-handle" aria-hidden="true"></div>
-    <button class="search-preview" type="button" disabled>
-      <span aria-hidden="true">⌕</span><span>Où allez-vous ?</span><span class="arrow" aria-hidden="true">›</span>
+    <button type="button" (click)="zoomer()" aria-label="Zoomer">
+      +
     </button>
-    <p class="preview-note">Recherche non disponible dans cette première étape.</p>
-    <div class="panel-footer"><span>Bus à proximité</span><span>Marqueurs à ajouter</span></div>
+
+    <button type="button" (click)="dezoomer()" aria-label="Dézoomer">
+      −
+    </button>
+
+    <button
+      type="button"
+      (click)="recentrer()"
+      aria-label="Revenir à la vue de départ"
+      title="Revenir à la vue de départ"
+    >
+      ◎
+    </button>
+  </nav>
+
+  <section
+    class="bottom-panel"
+    aria-label="Informations de la carte"
+    (keydown.escape)="fermerFiche()"
+  >
+    <div class="panel-handle" aria-hidden="true"></div>
+
+    @if (arretSelectionne(); as arret) {
+      <div class="stop-heading">
+        <h2 #ficheTitre tabindex="-1">{{ arret.nom }}</h2>
+
+        <button
+          class="close-stop"
+          type="button"
+          (click)="fermerFiche()"
+          aria-label="Fermer la fiche de l’arrêt"
+        >
+          ✕
+        </button>
+      </div>
+
+      <p class="preview-note">
+        Démonstration — arrêt, position, informations et horodatage fictifs.
+        Aucun suivi en temps réel.
+      </p>
+
+      <p
+        class="freshness"
+        [attr.data-state]="etatFraicheur(arret.miseAJour)"
+        role="status"
+      >
+        {{ libelleFraicheur(arret.miseAJour) }}
+      </p>
+
+      <dl class="stop-details">
+        <dt>Direction</dt>
+        <dd>
+          {{ arret.direction || 'Direction non disponible.' }}
+        </dd>
+
+        <dt>Informations</dt>
+        <dd>
+          {{
+            arret.informations ||
+            'Aucune information complémentaire disponible.'
+          }}
+        </dd>
+
+        <dt>Mise à jour — heure de Maurice</dt>
+        <dd>{{ formaterDate(arret.miseAJour) }}</dd>
+
+        <dt>Source</dt>
+        <dd>{{ arret.source?.trim() || 'Non disponible' }}</dd>
+      </dl>
+    } @else if (busSelectionne(); as bus) {
+      <div class="stop-heading">
+        <h2 #ficheTitre tabindex="-1">{{ bus.nom }}</h2>
+
+        <button
+          class="close-stop"
+          type="button"
+          (click)="fermerFiche()"
+          aria-label="Fermer la fiche du bus"
+        >
+          ✕
+        </button>
+      </div>
+
+      <p class="preview-note">
+        Démonstration — bus, position, informations et horodatage fictifs,
+        sans suivi en temps réel.
+      </p>
+
+      <p
+        class="freshness"
+        [attr.data-state]="etatFraicheur(bus.miseAJour)"
+        role="status"
+      >
+        {{ libelleFraicheur(bus.miseAJour) }}
+      </p>
+
+      <dl class="stop-details">
+        <dt>Numéro du bus</dt>
+        <dd>{{ bus.numero?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Ligne</dt>
+        <dd>{{ bus.ligne?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Direction</dt>
+        <dd>{{ bus.direction?.trim() || 'Non disponible' }}</dd>
+
+        <dt>État</dt>
+        <dd>{{ bus.etat?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Mise à jour — heure de Maurice</dt>
+        <dd>{{ formaterDate(bus.miseAJour) }}</dd>
+
+        <dt>Source</dt>
+        <dd>{{ bus.source?.trim() || 'Non disponible' }}</dd>
+
+        <dt>Identifiant de démonstration</dt>
+        <dd>BUS-DEMO-{{ bus.id }}</dd>
+
+        <dt>Position de démonstration</dt>
+        <dd>
+          Latitude : {{ bus.position[0] }}<br />
+          Longitude : {{ bus.position[1] }}
+        </dd>
+      </dl>
+    } @else {
+      <button class="search-preview" type="button" disabled>
+        <span aria-hidden="true">⌕</span>
+        <span>Où allez-vous ?</span>
+        <span class="arrow" aria-hidden="true">›</span>
+      </button>
+
+      <p class="preview-note">
+        Recherche non disponible dans cette première étape.
+      </p>
+
+      <div class="panel-footer">
+        <span>Bus de démonstration</span>
+        <span>3 bus — positions fictives</span>
+      </div>
+      <nav class="community-actions" aria-label="Avis et signalements">
+        <a class="community-button" routerLink="/home/avis">Les avis</a>
+        <a class="community-button" routerLink="/home/signaler">Signaler un bus</a>
+      </nav>
+    }
   </section>
 </main>
+<router-outlet />
