@@ -35,6 +35,18 @@ export class GpsService {
   /** Message lisible, annoncé aux lecteurs d'écran (role="status"). */
   readonly message = signal('');
 
+  /**
+   * Annule l'utilisation de la position : on oublie la position et on revient à
+   * l'état de départ (choix manuel proposé, bouton « Utiliser ma position » de nouveau visible).
+   */
+  annuler(): void {
+    this.position.set(null);
+    this.etat.set('inconnu');
+    this.message.set(
+      'Utilisation de la position annulée. Choisissez votre départ manuellement.',
+    );
+  }
+
   /** Étape 1 : on explique d'abord POURQUOI on veut la position. */
   ouvrirDialogue(): void {
     this.dialogueOuvert.set(true);

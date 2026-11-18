@@ -183,7 +183,7 @@ button:focus-visible {
   font-weight: 700;
   text-align: left;
   opacity: 1;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .arrow {
@@ -305,3 +305,31 @@ button:focus-visible {
   overflow-wrap: anywhere;
 }
 
+
+.valider-trajet {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  border-radius: 14px;
+  background: var(--mobis-primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.valider-trajet:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.erreur-trajet {
+  margin: 4px 0 0;
+  color: #b3261e;
+  font-weight: 600;
+}
+
+.trajet-valide {
+  margin: 4px 0 0;
+  color: var(--mobis-primary);
+  font-weight: 700;
+}

@@ -15,6 +15,8 @@ import { PartagePositionComponent } from '../partage-position/partage-position.c
 import { GpsService } from '../core/gps/gps.service';
 import { GpsDialogComponent } from '../permission_gps/gps-dialog.component';
 import { ChampDepartComponent } from '../champ_depart/champ-depart.component';
+import { ChampDestinationComponent } from '../champ_destination/champ-destination.component';
+import { RechercheService } from '../core/recherche/recherche.service';
 
 interface ArretDemo {
   id: number;
@@ -43,7 +45,7 @@ type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [PartagePositionComponent, GpsDialogComponent, ChampDepartComponent, RouterLink, RouterOutlet],
+  imports: [PartagePositionComponent, GpsDialogComponent, ChampDepartComponent, ChampDestinationComponent, RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
@@ -51,6 +53,9 @@ export class HomePage implements OnDestroy {
   readonly user = inject(AuthService).user;
   private readonly nav = inject(NavController);
   private readonly gps = inject(GpsService);
+
+  /** État de la recherche (public : lu dans le template). */
+  readonly recherche = inject(RechercheService);
 
   /** Marqueur « Vous êtes ici » (position GPS de l'usager). */
   private marqueurPosition?: L.CircleMarker;
@@ -61,6 +66,10 @@ export class HomePage implements OnDestroy {
       const pos = this.gps.position();
       if (pos) {
         this.afficherPosition([pos.latitude, pos.longitude]);
+      } else {
+        // Position annulée : on retire le point « Vous êtes ici » de la carte.
+        this.marqueurPosition?.remove();
+        this.marqueurPosition = undefined;
       }
     });
   }

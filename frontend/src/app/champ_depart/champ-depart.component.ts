@@ -1,23 +1,18 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { GpsService } from '../core/gps/gps.service';
-
-/** Arrêt proposé dans le choix manuel (données de DÉMONSTRATION). */
-interface ArretChoix {
-  id: string;
-  nom: string;
-  zone: string;
-}
+import { RechercheService } from '../core/recherche/recherche.service';
 
 /**
  * BUS-FE-018 + BUS-FE-020 – Champ « Départ » avec repli sans GPS.
  *
- *  - GPS accordé  → affiche « Ma position » ;
- *  - GPS refusé / indisponible → affiche la liste d'arrêts à choisir à la main ;
+ *  - GPS accordé  → affiche « Ma position » + un bouton pour ANNULER son utilisation ;
+ *  - sinon        → affiche la liste d'arrêts à choisir à la main
+ *                   (+ bouton « Utiliser ma position »).
  *  - dans les deux cas un départ est connu, donc « la recherche reste possible
  *    sans GPS » (critère du ticket FE-020).
  *
- * Le bouton de test « Simuler : GPS refusé » de la page isolée est supprimé :
- * le vrai refus du GpsService le remplace.
+ * Le départ choisi à la main est stocké dans RechercheService (partagé avec
+ * le bouton « Valider »).
  */
 @Component({
   selector: 'app-champ-depart',
@@ -27,12 +22,22 @@ interface ArretChoix {
       <label for="depart-select">Départ</label>
 
       @if (gps.etat() === 'accorde') {
-        <p class="position" id="depart-position">Ma position</p>
-      } @else if (gps.etat() === 'refuse' || gps.etat() === 'indisponible') {
+        <div class="position-ligne">
+          <p class="position" id="depart-position">Ma position</p>
+          <button
+            type="button"
+            class="annuler"
+            (click)="gps.annuler()"
+            aria-label="Annuler l'utilisation de ma position"
+          >
+            Annuler
+          </button>
+        </div>
+      } @else {
         <select id="depart-select" (change)="choisir($event)">
           <option value="">— Choisir un arrêt —</option>
-          @for (a of arrets; track a.id) {
-            <option [value]="a.id" [selected]="a.id === departManuel()">
+          @for (a of recherche.arrets; track a.id) {
+            <option [value]="a.id" [selected]="a.id === recherche.departManuel()?.id">
               {{ a.nom }} ({{ a.zone }})
             </option>
           }
@@ -45,10 +50,8 @@ interface ArretChoix {
         </button>
       }
 
-      <!-- Annonce aux lecteurs d'écran : résultat de la localisation + état de la recherche -->
-      <p role="status" aria-live="polite" class="etat">
-        {{ gps.message() }} {{ etatRecherche() }}
-      </p>
+      <!-- Annonce aux lecteurs d'écran : résultat de la localisation -->
+      <p role="status" aria-live="polite" class="etat">{{ gps.message() }}</p>
     </div>
   `,
   styles: [
@@ -60,6 +63,13 @@ interface ArretChoix {
         border: 1px solid #c9d3dd; border-radius: 12px;
         display: flex; align-items: center; background: #fff; color: #203448;
       }
+      .position-ligne { display: flex; gap: 8px; }
+      .position-ligne .position { flex: 1; }
+      .annuler {
+        min-height: 44px; padding: 0 14px; border: 1px solid #c9d3dd;
+        border-radius: 12px; background: #fff; color: #b3261e;
+        font-weight: 700; cursor: pointer;
+      }
       .gps {
         min-height: 44px; border: 1px solid #008060; border-radius: 12px;
         background: #fff; color: #008060; font-weight: 700; cursor: pointer;
@@ -70,30 +80,11 @@ interface ArretChoix {
 })
 export class ChampDepartComponent {
   readonly gps = inject(GpsService);
+  readonly recherche = inject(RechercheService);
 
-  // Arrêts de DÉMONSTRATION. L'identifiant distingue les homonymes (« Bel Air »).
-  readonly arrets: ArretChoix[] = [
-    { id: 'A01', nom: 'Rose Hill', zone: 'Plaines Wilhems' },
-    { id: 'A02', nom: 'Roches Brunes', zone: 'Plaines Wilhems' },
-    { id: 'A05', nom: 'Quatre Bornes', zone: 'Plaines Wilhems' },
-    { id: 'A06', nom: 'Bel Air', zone: 'Rivière du Rempart' },
-    { id: 'A07', nom: 'Bel Air', zone: 'Flacq' },
-  ];
-
-  /** Identifiant de l'arrêt choisi à la main ('' = aucun). */
-  readonly departManuel = signal('');
-
-  /** La recherche est possible dès qu'un départ est connu (GPS ou choix manuel). */
-  readonly etatRecherche = computed(() => {
-    if (this.gps.etat() === 'accorde' || this.departManuel()) {
-      return 'Recherche : possible.';
-    }
-    return this.gps.etat() === 'refuse' || this.gps.etat() === 'indisponible'
-      ? 'Recherche : impossible (aucun départ).'
-      : '';
-  });
-
+  /** Mémorise l'arrêt choisi à la main (null si « Choisir un arrêt »). */
   choisir(event: Event): void {
-    this.departManuel.set((event.target as HTMLSelectElement).value);
+    const id = (event.target as HTMLSelectElement).value;
+    this.recherche.departManuel.set(this.recherche.arrets.find((a) => a.id === id) ?? null);
   }
 }

@@ -196,18 +196,47 @@
           Longitude : {{ bus.position[1] }}
         </dd>
       </dl>
-    } @else {
-      <app-champ-depart></app-champ-depart>
+    } @else if (recherche.ouvert()) {
+      <div class="stop-heading">
+        <h2>Votre trajet</h2>
 
-      <button class="search-preview" type="button" disabled>
+        <button
+          class="close-stop"
+          type="button"
+          (click)="recherche.fermer()"
+          aria-label="Fermer la recherche"
+        >
+          ✕
+        </button>
+      </div>
+
+      <app-champ-depart></app-champ-depart>
+      <app-champ-destination></app-champ-destination>
+
+      @if (recherche.erreur(); as erreur) {
+        <p class="erreur-trajet" role="alert">{{ erreur }}</p>
+      }
+
+      @if (recherche.valide()) {
+        <p class="trajet-valide" role="status">
+          ✓ Trajet validé : {{ recherche.libelleDepart() }} → {{ recherche.destination()?.nom }}
+        </p>
+      }
+
+      <button
+        class="valider-trajet"
+        type="button"
+        [disabled]="!recherche.peutValider() || recherche.valide()"
+        (click)="recherche.valider()"
+      >
+        Valider le choix
+      </button>
+    } @else {
+      <button class="search-preview" type="button" (click)="recherche.ouvrir()">
         <span aria-hidden="true">⌕</span>
         <span>Où allez-vous ?</span>
         <span class="arrow" aria-hidden="true">›</span>
       </button>
-
-      <p class="preview-note">
-        Recherche non disponible dans cette première étape.
-      </p>
 
       <div class="panel-footer">
         <span>Bus de démonstration</span>
