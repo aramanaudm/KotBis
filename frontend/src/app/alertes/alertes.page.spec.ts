@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { describe, expect, it } from 'vitest';
 
 import { AlertesPage } from './alertes.page';
 
@@ -12,13 +13,6 @@ describe('AlertesPage', () => {
 
     const formulaire = page.querySelector<HTMLFormElement>('form')!;
     const dialogue = page.querySelector<HTMLDialogElement>('dialog')!;
-    // jsdom ne fournit pas les méthodes natives de la boîte de dialogue.
-    dialogue.showModal = () => {
-      dialogue.open = true;
-    };
-    dialogue.close = () => {
-      dialogue.open = false;
-    };
     const destination = page.querySelector<HTMLSelectElement>('#destination-alerte')!;
     const heure = page.querySelector<HTMLInputElement>('#heure-alerte')!;
     const repetition = page.querySelector<HTMLSelectElement>('#repetition-alerte')!;

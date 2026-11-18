@@ -14,3 +14,29 @@ if (!window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+const dialogue = window.HTMLDialogElement?.prototype;
+
+if (dialogue) {
+  if (!('open' in dialogue)) {
+    Object.defineProperty(dialogue, 'open', {
+      configurable: true,
+      get(this: HTMLDialogElement) {
+        return this.hasAttribute('open');
+      },
+      set(this: HTMLDialogElement, ouvert: boolean) {
+        this.toggleAttribute('open', ouvert);
+      },
+    });
+  }
+
+  dialogue.showModal ??= function (this: HTMLDialogElement) {
+    this.open = true;
+  };
+
+  dialogue.close ??= function (this: HTMLDialogElement) {
+    if (!this.open) return;
+    this.open = false;
+    this.dispatchEvent(new window.Event('close'));
+  };
+}
