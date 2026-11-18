@@ -6,6 +6,9 @@ import routeurSante from "./commun/routes/sante.routes";
 import { verifierConnexionBdd, verifierPostgis, ErreurBaseDeDonnees } from "./configuration/baseDeDonnees";
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
+// KBE-27 : routes publiques des lignes et des arrêts.
+import routeurTransport from "./transport/transport.routes";
+
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -15,7 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/sante", routeurSante);
-
+// KBE-27 : enregistrement des routes publiques
+// pour consulter les lignes et les arrêts.
+app.use("/api", routeurTransport);
 // Route de vérification du serveur
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
