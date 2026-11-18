@@ -1,0 +1,8 @@
+section { text-align: center; padding: 8px 0; color: #203448; }
+.icone { margin: 0; font-size: 2rem; }
+h3 { margin: 4px 0; }
+p { margin: 4px 0; }
+.principal {
+  margin-top: 10px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 12px;
+  background: #008060; color: #fff; font-weight: 700; cursor: pointer;
+}
