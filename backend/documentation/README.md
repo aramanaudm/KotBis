@@ -131,3 +131,48 @@ ne doivent jamais être publiés sur GitHub.
 Chaque développeur doit utiliser son propre fichier `.env`.
 
 Le fichier `.env.example` sert uniquement de modèle.
+
+## 6. Authentification et sessions
+
+Le module `src/authentification/` fournit l'inscription, la connexion,
+la déconnexion et le renouvellement de session. Les routes protégées
+attendent l'en-tête `Authorization: Bearer <jeton>`.
+
+### Endpoints disponibles
+
+| Méthode | Endpoint | Accès |
+|---|---|---|
+| POST | `/api/inscription` | Public |
+| POST | `/api/connexion` | Public |
+| POST | `/api/deconnexion` | Session valide |
+| POST | `/api/renouvellement-session` | Session valide |
+
+### Règles d'inscription
+
+- Champs obligatoires : pseudonyme, e-mail, mot de passe, acceptation des conditions.
+- Champs facultatifs : ville (`zoneLibre`) et téléphone.
+- Pseudonyme : 3 à 20 caractères (lettres, chiffres, `.`, `-`, `_`).
+- Mot de passe : 8 à 128 caractères, au moins une lettre et un chiffre.
+- Adresse e-mail valide, comparée sans tenir compte de la casse.
+- Rôle `voyageur` imposé par le serveur, jamais choisi par le client.
+- Doublons d'e-mail ou de pseudonyme refusés en `409`.
+- Le mot de passe est haché avec Argon2id et n'est jamais renvoyé.
+
+### Dépendance BDD
+
+L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
+`sessions`. Le téléphone optionnel nécessite la colonne
+`voyageurs.telephone` fournie par la migration BDD
+`database/migrations/001_authentification.sql`, gérée par l'équipe BDD.
+
+### Vérifications
+
+```bash
+npm run typecheck
+npm run test:inscription
+npm run test:connexion-sessions
+npm test
+
+# Scénario réel avec une base migrée
+KOTBIS_TEST_DB=1 npm run test:integration
+```

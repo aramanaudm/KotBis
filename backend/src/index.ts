@@ -1,14 +1,19 @@
 import express from "express";
-import { Pool } from 'pg';
 import cors from "cors";
 import "dotenv/config";
 import routeurSante from "./commun/routes/sante.routes";
-import { verifierConnexionBdd, verifierPostgis, ErreurBaseDeDonnees } from "./configuration/baseDeDonnees";
-import argon2 from 'argon2';
-import jwt from 'jsonwebtoken';
-// KBE-27 : routes publiques des lignes et des arrêts.
+import {
+  verifierConnexionBdd,
+  verifierPostgis,
+  ErreurBaseDeDonnees,
+  obtenirPool
+} from "./configuration/baseDeDonnees";
+import { DepotAuthentificationPostgres } from "./authentification/depot";
+import { ServiceAuthentification } from "./authentification/service";
+import { creerRouteurAuthentification } from "./authentification/routes";
+import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
+import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
 import routeurTransport from "./transport/transport.routes";
-
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -18,120 +23,20 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/sante", routeurSante);
-// KBE-27 : enregistrement des routes publiques
-// pour consulter les lignes et les arrêts.
 app.use("/api", routeurTransport);
-// Route de vérification du serveur
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
-const verifierToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ erreur: "Token manquant ou invalide." });
-  }
+// KBE-23 : authentification par sessions stockées en base (jeton opaque)
+const serviceAuthentification = new ServiceAuthentification(
+  new DepotAuthentificationPostgres(obtenirPool)
+);
+const middlewareSession = creerMiddlewareSession(serviceAuthentification);
+app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
 
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    req.utilisateur = decoded;
-    next(); 
-  } catch (error) {
-    return res.status(401).json({ erreur: "Token expiré ou invalide." });
-  }
-};
-
-app.post('/api/inscription', async (req, res) => {
-  const client = await pool.connect(); 
-  try {
-    const { pseudo, email, motDePasse } = req.body;
-
-    if (!motDePasse || motDePasse.length < 8) {
-      return res.status(400).json({ error: "Le mot de passe doit faire au moins 8 caractères." });
-    }
-    
-    const hash = await argon2.hash(motDePasse, {
-      type: argon2.argon2id,
-    });
-    await client.query('BEGIN');
-
-    const identifiantPublic = `user_${Date.now()}`;
-    const requeteCompte = `
-      INSERT INTO comptes (email, mot_de_passe_hash, identifiant_public, role_id, etat) 
-      VALUES ($1, $2, $3, (SELECT id FROM roles WHERE code = 'voyageur'), 'actif') 
-      RETURNING id
-    `;
-    const resultatCompte = await client.query(requeteCompte, [email, hash, identifiantPublic]);
-    const compteId = resultatCompte.rows[0].id;
-    const requeteVoyageur = `
-      INSERT INTO voyageurs (compte_id, pseudo) 
-      VALUES ($1, $2) 
-      RETURNING compte_id, pseudo
-    `;
-    const resultatVoyageur = await client.query(requeteVoyageur, [compteId, pseudo]);
-
-    await client.query('COMMIT');
-
-    res.status(201).json({ 
-      success: true, 
-      message: "Compte créé !", 
-      data: {
-        id: compteId,
-        email: email,
-        pseudo: resultatVoyageur.rows[0].pseudo
-      } 
-    });
-  } catch (error: any) {
-    await client.query('ROLLBACK');
-
-    if (error.code === '23505') {
-      return res.status(409).json({ error: "Cet email ou ce pseudo est déjà utilisé." });
-    }
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de la création du compte." });
-  } finally {
-    client.release();
-  }
-});
-
-app.post('/api/connexion', async (req, res) => {
-  try {
-    const { identifiant, motDePasse } = req.body;
-    const requete = `
-      SELECT c.id, c.email, c.mot_de_passe_hash, c.etat, v.pseudo
-      FROM comptes c LEFT JOIN voyageurs v ON v.compte_id = c.id
-      WHERE c.email = $1 OR v.pseudo = $1
-    `;
-    const resultat = await pool.query(requete, [identifiant]);
-    if (resultat.rows.length === 0) return res.status(401).json({ erreur: "Identifiants invalides." });
-
-    const compte = resultat.rows[0];
-    if (compte.etat !== 'actif') return res.status(403).json({ erreur: "Compte inactif." });
-
-    const motDePasseValide = await argon2.verify(compte.mot_de_passe_hash, motDePasse);
-    if (!motDePasseValide) return res.status(401).json({ erreur: "Identifiants invalides." });
-
-    const token = jwt.sign(
-      { id: compte.id, role_id: compte.role_id, pseudo: compte.pseudo },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '24h' }
-    );
-
-    res.status(200).json({ message: "Connexion réussie.", token: token, utilisateur: { id: compte.id, pseudo: compte.pseudo } });
-  } catch (error: any) {
-    console.error("ERREUR DE CONNEXION :", error.message);
-    res.status(500).json({ erreur: "Erreur serveur." });
-  }
-});
-
-app.put('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) => {
-  const client = await pool.connect();
+app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
+  const client = await obtenirPool().connect();
   try {
     const { pseudo, email } = req.body;
-    const compteId = req.utilisateur.id; 
+    const compteId = obtenirUtilisateurCourant(req).compteId;
 
     await client.query('BEGIN');
 
@@ -157,14 +62,15 @@ app.put('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) => {
   }
 });
 
-app.delete('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) => {
-  const client = await pool.connect();
+app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
+  const client = await obtenirPool().connect();
   try {
-    const compteId = req.utilisateur.id;
+    const compteId = obtenirUtilisateurCourant(req).compteId;
 
     await client.query('BEGIN');
     
     await client.query('DELETE FROM voyageurs WHERE compte_id = $1', [compteId]);
+    await client.query('DELETE FROM sessions WHERE compte_id = $1', [compteId]);
     await client.query('DELETE FROM comptes WHERE id = $1', [compteId]);
 
     await client.query('COMMIT');
@@ -184,6 +90,9 @@ app.get("/", (req, res) => {
     status: "OK"
   });
 });
+
+app.use(routeInconnue);
+app.use(gestionnaireErreurs);
 
 // Démarrage du serveur
 app.listen(PORT, async () => {
