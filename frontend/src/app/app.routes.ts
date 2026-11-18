@@ -1,6 +1,11 @@
 import type { Routes } from '@angular/router';
 
+import { adminAccessGuard } from './core/auth/admin-access.guard';
+
 export const routes: Routes = [
+  // BUS-FE-053 : l'administration des signalements vit dans le back-office web.
+  // Toute adresse /admin/... est refusée dans l'application voyageur.
+  { path: 'admin', canMatch: [adminAccessGuard], children: [] },
   { path: 'mon-espace', loadComponent: () => import('./pages/mon-espace/mon-espace.page').then(m => m.MonEspacePage) },
   {
     path: 'favoris',
