@@ -229,3 +229,21 @@ button:focus-visible {
     bottom: 45px;
   }
 }
+
+.account-access {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Leave room for the contribution buttons on narrow screens. */
+@media (max-width: 720px) and (min-height: 501px) {
+  .map-controls { bottom: calc(285px + env(safe-area-inset-bottom, 0px)); }
+}
