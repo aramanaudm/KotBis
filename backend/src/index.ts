@@ -14,6 +14,12 @@ import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
 
+import { StockagePartagePostgres } from "./localisation/partage-position.postgres";
+import { PartagePositionService } from "./localisation/partage-position.service";
+import { PartagePositionController } from "./localisation/partage-position.controller";
+import { creerRoutesPartagePosition } from "./localisation/partage-position.routes";
+
+
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -29,6 +35,18 @@ const serviceAuthentification = new ServiceAuthentification(
 );
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
+
+
+// KBE-32 : démarrage et arrêt du partage de position
+const stockagePartage = new StockagePartagePostgres(obtenirPool());
+const servicePartage = new PartagePositionService(stockagePartage);
+const controllerPartage = new PartagePositionController(servicePartage);
+
+app.use(
+  "/api/localisation/partage",
+  creerRoutesPartagePosition(controllerPartage, middlewareSession)
+);
+
 
 app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();

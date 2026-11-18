@@ -1,4 +1,6 @@
 import { Injectable, computed, inject, isDevMode, signal } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { StorageService } from '../storage/storage.service';
 import {
   AuthError,
@@ -31,6 +33,13 @@ interface ResetRequest {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly storage = inject(StorageService);
+  private readonly http = inject(HttpClient);
+  private readonly backendUrl = 'http://localhost:3000/api';
+  private readonly tokenKey = 'kotbis.backend.jeton';
+
+  readonly backendToken = signal<string | null>(
+    sessionStorage.getItem(this.tokenKey)
+  );
   private readonly currentUser = signal<PublicAccount | null>(null);
 
   /** Compte connecté, sans secret ; `null` = visiteur (BUS-FE-036). */
@@ -80,6 +89,40 @@ export class AuthService {
 
   /** BUS-FE-032 : `identifier` peut être un e-mail ou un pseudo. */
   async login(identifier: string, password: string): Promise<PublicAccount> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{
+          jeton: string;
+          utilisateur: {
+            compteId: string;
+            pseudo?: string;
+            email?: string;
+          };
+        }>(`${this.backendUrl}/connexion`, {
+          identifiant: identifier,
+          motDePasse: password,
+        })
+      );
+
+      sessionStorage.setItem(this.tokenKey, response.jeton);
+      this.backendToken.set(response.jeton);
+
+      const backendUser = response.utilisateur;
+
+      const user: PublicAccount = {
+        id: backendUser.compteId,
+        pseudo: backendUser.pseudo || identifier,
+        email: backendUser.email || '',
+        createdAt: new Date().toISOString(),
+        counters: { ...EMPTY_COUNTERS },
+      };
+
+      this.currentUser.set(user);
+      return user;
+    } catch {
+      // Repli sur les comptes locaux existants.
+    }
+
     const value = identifier.trim().toLowerCase();
     const accounts = await this.loadAccounts();
     const account = accounts.find((a) =>
@@ -95,6 +138,28 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    const token = this.backendToken();
+
+    if (token) {
+      try {
+        await firstValueFrom(
+          this.http.post(
+            `${this.backendUrl}/deconnexion`,
+            {},
+            {
+              headers: new HttpHeaders({
+                Authorization: `Bearer ${token}`,
+              }),
+            }
+          )
+        );
+      } catch {
+        // La session locale est supprimée même si le serveur est inaccessible.
+      }
+    }
+
+    sessionStorage.removeItem(this.tokenKey);
+    this.backendToken.set(null);
     await this.storage.remove(SESSION_KEY);
     this.currentUser.set(null);
   }
