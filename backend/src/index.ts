@@ -5,7 +5,7 @@ import "dotenv/config";
 import routeurSante from "./commun/routes/sante.routes";
 import { verifierConnexionBdd, verifierPostgis, ErreurBaseDeDonnees } from "./configuration/baseDeDonnees";
 import argon2 from 'argon2';
-import { insert, update, remove, Requete } from './commun/crud-reflect'; 
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -21,25 +21,23 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-function adapterRequete(requete: Requete) {
-  let index = 1;
-  const sqlPostgres = requete.sql.replace(/\?/g, () => `$${index++}`);
-  return { sql: sqlPostgres, params: requete.params };
-}
+const verifierToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ erreur: "Token manquant ou invalide." });
+  }
 
-class Utilisateur {
-  static table = 'comptes';
-  static primaryKey = 'id';
-  static transient = ['motDePasseClair']; 
+  const token = authHeader.split(' ')[1];
 
-  constructor(
-    public id: number | null, 
-    public pseudo: string,
-    public email: string,
-    public motDePasse: string,
-    public motDePasseClair?: string 
-  ) {}
-}
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    req.utilisateur = decoded;
+    next(); 
+  } catch (error) {
+    return res.status(401).json({ erreur: "Token expiré ou invalide." });
+  }
+};
 
 app.post('/api/inscription', async (req, res) => {
   const client = await pool.connect(); 
@@ -94,51 +92,84 @@ app.post('/api/inscription', async (req, res) => {
   }
 });
 
-// 2. UPDATE (Modification du profil)
-app.put('/api/test/comptes/:id', async (req, res) => {
+app.post('/api/connexion', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { pseudo, email } = req.body;
-    
-    const userExistant = await pool.query('SELECT mot_de_passe FROM utilisateurs WHERE id = $1', [id]);
-    if (userExistant.rowCount === 0) return res.status(404).json({ error: "Utilisateur non trouvé" });
-    
-    const hashActuel = userExistant.rows[0].mot_de_passe;
+    const { identifiant, motDePasse } = req.body;
+    const requete = `
+      SELECT c.id, c.email, c.mot_de_passe_hash, c.etat, v.pseudo
+      FROM comptes c LEFT JOIN voyageurs v ON v.compte_id = c.id
+      WHERE c.email = $1 OR v.pseudo = $1
+    `;
+    const resultat = await pool.query(requete, [identifiant]);
+    if (resultat.rows.length === 0) return res.status(401).json({ erreur: "Identifiants invalides." });
 
-    const utilisateurAModifier = new Utilisateur(Number(id), pseudo, email, hashActuel);
-    
-    const requeteGeneree = update(utilisateurAModifier);
-    const { sql, params } = adapterRequete(requeteGeneree);
+    const compte = resultat.rows[0];
+    if (compte.etat !== 'actif') return res.status(403).json({ erreur: "Compte inactif." });
 
-    const resultat = await pool.query(sql, params);
-    
-    const userModifie = resultat.rows[0];
-    delete userModifie.mot_de_passe;
+    const motDePasseValide = await argon2.verify(compte.mot_de_passe_hash, motDePasse);
+    if (!motDePasseValide) return res.status(401).json({ erreur: "Identifiants invalides." });
 
-    res.json({ success: true, message: "Profil mis à jour !", data: userModifie });
+    const token = jwt.sign(
+      { id: compte.id, role_id: compte.role_id, pseudo: compte.pseudo },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '24h' }
+    );
+
+    res.status(200).json({ message: "Connexion réussie.", token: token, utilisateur: { id: compte.id, pseudo: compte.pseudo } });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("ERREUR DE CONNEXION :", error.message);
+    res.status(500).json({ erreur: "Erreur serveur." });
   }
 });
 
-// 3. DELETE (Suppression de compte)
-app.delete('/api/test/comptes/:id', async (req, res) => {
+app.put('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) => {
+  const client = await pool.connect();
   try {
-    const { id } = req.params;
-    const utilisateurASupprimer = new Utilisateur(Number(id), "", "", "");
-    
-    const requeteGeneree = remove(utilisateurASupprimer);
-    const { sql, params } = adapterRequete(requeteGeneree);
+    const { pseudo, email } = req.body;
+    const compteId = req.utilisateur.id; 
 
-    const resultat = await pool.query(sql, params);
-    if (resultat.rowCount === 0) return res.status(404).json({ error: "Utilisateur non trouvé" });
+    await client.query('BEGIN');
 
-    res.json({ success: true, message: `Compte ${id} supprimé` });
-  } catch (error: any) {
-    if (error.code === '23503') {
-      return res.status(409).json({ error: "Impossible de supprimer : ce compte possède des données liées." });
+    // 1. Mise à jour de l'email dans 'comptes'
+    if (email) {
+      await client.query('UPDATE comptes SET email = $1, modifie_le = now() WHERE id = $2', [email, compteId]);
     }
-    res.status(500).json({ error: error.message });
+
+    // 2. Mise à jour du pseudo dans 'voyageurs'
+    if (pseudo) {
+      await client.query('UPDATE voyageurs SET pseudo = $1, modifie_le = now() WHERE compte_id = $2', [pseudo, compteId]);
+    }
+
+    await client.query('COMMIT');
+    res.json({ message: "Profil mis à jour avec succès." });
+
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') return res.status(409).json({ erreur: "Cet email ou pseudo est déjà pris." });
+    res.status(500).json({ erreur: "Erreur lors de la mise à jour." });
+  } finally {
+    client.release();
+  }
+});
+
+app.delete('/api/utilisateurs/moi', verifierToken, async (req: any, res: any) => {
+  const client = await pool.connect();
+  try {
+    const compteId = req.utilisateur.id;
+
+    await client.query('BEGIN');
+    
+    await client.query('DELETE FROM voyageurs WHERE compte_id = $1', [compteId]);
+    await client.query('DELETE FROM comptes WHERE id = $1', [compteId]);
+
+    await client.query('COMMIT');
+    res.json({ message: "Compte supprimé avec succès." });
+
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ erreur: "Erreur lors de la suppression du compte." });
+  } finally {
+    client.release();
   }
 });
 

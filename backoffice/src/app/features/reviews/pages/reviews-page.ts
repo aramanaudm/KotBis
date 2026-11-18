@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -20,6 +21,10 @@ import { ReviewsService } from '../services/reviews.service';
 export class ReviewsPage {
   private readonly reviews = inject(ReviewsService);
   private readonly csv = inject(CsvExportService);
+
+  constructor() {
+    this.reviews.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = REVIEW_STATUS_TONES;
@@ -117,8 +122,14 @@ export class ReviewsPage {
       return;
     }
 
-    this.closeReview();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const statut = this.reviewStatus();
+    this.reviews.update(review.id, statut).subscribe({
+      next: () => {
+        this.closeReview();
+        this.showFeedback('Avis mis à jour.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {

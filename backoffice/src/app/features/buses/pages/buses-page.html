@@ -65,20 +65,23 @@
           <input id="bus-plate" type="text" formControlName="plate" maxlength="25" />
         </app-form-field>
 
-        <app-form-field
-          label="Ligne"
-          forId="bus-line"
-          [error]="errorFor('line', 'La ligne est obligatoire.')"
-        >
-          <input id="bus-line" type="text" formControlName="line" maxlength="20" />
+        <app-form-field label="Trajet affecté" forId="bus-trajet">
+          <select id="bus-trajet" formControlName="trajetCode">
+            <option value="">Aucun trajet</option>
+            @for (route of availableRoutes(); track route.id) {
+              <option [value]="route.code">
+                {{ route.code }} · {{ route.line }} · {{ route.direction }}
+              </option>
+            }
+          </select>
         </app-form-field>
 
-        <app-form-field
-          label="Direction"
-          forId="bus-direction"
-          [error]="errorFor('direction', 'La direction est obligatoire.')"
-        >
-          <input id="bus-direction" type="text" formControlName="direction" maxlength="150" />
+        <app-form-field label="Ligne" forId="bus-line">
+          <input id="bus-line" type="text" [value]="selectedRoute()?.line ?? '—'" readonly />
+        </app-form-field>
+
+        <app-form-field label="Direction" forId="bus-direction">
+          <input id="bus-direction" type="text" [value]="selectedRoute()?.direction ?? '—'" readonly />
         </app-form-field>
 
         <app-form-field label="État" forId="bus-status">

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -29,6 +30,10 @@ export class PointsPage {
   private readonly points = inject(PointsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.points.load();
+  }
 
   protected readonly balances = this.points.balances;
   protected readonly history = this.points.history;
@@ -117,8 +122,15 @@ export class PointsPage {
       return;
     }
 
-    this.closeAdjust();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.points
+      .adjust(balance.id, this.form.controls.variation.value, reason)
+      .subscribe({
+        next: () => {
+          this.closeAdjust();
+          this.showFeedback('Solde mis à jour.');
+        },
+        error: (err) => this.formError.set(apiError(err)),
+      });
   }
 
   protected amountError(): string {
