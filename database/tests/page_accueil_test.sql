@@ -9,16 +9,16 @@ BEGIN
         RAISE EXCEPTION 'La vue v_destinations_populaires doit contenir 3 lignes.';
     END IF;
 
-    IF (SELECT count(*) FROM v_arrets_publics) <> 5 THEN
-        RAISE EXCEPTION 'La vue v_arrets_publics doit contenir 5 arrêts de démonstration.';
+    IF (SELECT count(*) FROM v_arrets_publics) <> 1429 THEN
+        RAISE EXCEPTION 'La vue v_arrets_publics doit contenir 1429 arrêts actifs.';
     END IF;
 
-    IF (SELECT count(*) FROM v_trajets_publics) <> 2 THEN
-        RAISE EXCEPTION 'La vue v_trajets_publics doit contenir 2 trajets de démonstration.';
+    IF (SELECT count(*) FROM v_trajets_publics) <> 528 THEN
+        RAISE EXCEPTION 'La vue v_trajets_publics doit contenir 528 trajets.';
     END IF;
 
-    IF (SELECT count(*) FROM v_trajet_arrets_publics) <> 5 THEN
-        RAISE EXCEPTION 'La vue v_trajet_arrets_publics doit contenir 5 étapes.';
+    IF (SELECT count(*) FROM v_trajet_arrets_publics) <> 14342 THEN
+        RAISE EXCEPTION 'La vue v_trajet_arrets_publics doit contenir 14342 étapes.';
     END IF;
 
     IF EXISTS (

@@ -22,10 +22,10 @@ Branche créée depuis `develop`.
 
 ```text
 database/migrations/002_page_accueil.sql
-database/seeds/page_accueil.sql
-database/tests/page_accueil.sql
+database/seeds/bus_mauritius.sql
+database/tests/page_accueil_test.sql
 database/README.md
-docs/README.md
+docs/README_page_Acceuil.md
 ```
 
 Aucun fichier `backend/` ou `frontend/` n’a été modifié.
@@ -110,47 +110,48 @@ Aucune nouvelle table n’est nécessaire pour la v1.
 
 ### Aucune table créée
 
-Les destinations populaires sont des arrêts existants (`A001`, `A002`,
-`A003`). Leur ordre et leur localité sont définis dans la vue.
+Les destinations populaires sont des arrêts existants (`BM:0`, `BM:758`,
+`BM:24`). Leur ordre et leur localité sont définis dans la vue.
 
-## Jeu de données de test
+## Jeu de données réel
 
-Le seed `database/seeds/page_accueil.sql` ajoute :
+Le seed `database/seeds/bus_mauritius.sql` importe le réseau réel « Bus
+Mauritius » issu d'OpenStreetMap :
 
-- 5 arrêts : Gare Victoria, Grand Baie, Moka, Rose-Hill, Curepipe ;
-- 2 lignes : L001, L002 ;
-- 2 trajets : T001, T002 ;
-- 5 étapes ordonnées de trajet.
+- 264 lignes ;
+- 1430 arrêts, dont 1429 actifs ;
+- 528 trajets ;
+- 14 350 passages ordonnés (14 342 visibles).
 
-Coordonnées utilisées :
+Destinations populaires :
 
 | Code | Nom | Latitude | Longitude |
 |---|---|---|---|
-| A001 | Gare Victoria | -20.1619 | 57.4989 |
-| A002 | Grand Baie | -20.0133 | 57.5806 |
-| A003 | Moka | -20.2181 | 57.4963 |
-| A004 | Rose-Hill | -20.2420 | 57.4717 |
-| A005 | Curepipe | -20.3167 | 57.5167 |
+| BM:0 | Port Louis (Victoria Square) | -20.162907 | 57.498048 |
+| BM:758 | Grand Baie (Police Station) | -20.01509 | 57.581617 |
+| BM:24 | Curepipe (Jan Palach North) | -20.311856 | 57.520889 |
 
-Les coordonnées sont fictives et servent uniquement aux tests locaux.
+Les coordonnées proviennent d'OpenStreetMap ; elles ne sont plus fictives.
+Le seed retire aussi l'ancien jeu de démonstration (`L001`/`L002`,
+`A001`–`A005`, `T001`/`T002`) s'il est encore présent.
 
 ## Tests SQL
 
-Le fichier `database/tests/page_accueil.sql` vérifie :
+Le fichier `database/tests/page_accueil_test.sql` vérifie :
 
 - 3 destinations populaires ;
-- 5 arrêts publics ;
-- 2 trajets publics ;
-- 5 étapes de trajet ;
+- 1429 arrêts publics ;
+- 528 trajets publics ;
+- 14 342 étapes de trajet ;
 - aucun arrêt inactif ou archivé dans `v_arrets_publics`.
 
 Résultat obtenu :
 
 ```text
 destinations | 3
-arrets       | 5
-trajets      | 2
-etapes       | 5
+arrets       | 1429
+trajets      | 528
+etapes       | 14342
 ```
 
 ## Contrat API pour le Backend
@@ -184,36 +185,36 @@ Réponse :
   "destinationsPopulaires": [
     {
       "ordre": 1,
-      "code": "A001",
-      "libelle": "Gare Victoria",
+      "code": "BM:0",
+      "libelle": "Port Louis (Victoria Square)",
       "localite": "Port-Louis",
-      "latitude": -20.1619,
-      "longitude": 57.4989
+      "latitude": -20.162907,
+      "longitude": 57.498048
     },
     {
       "ordre": 2,
-      "code": "A002",
-      "libelle": "Grand Baie",
+      "code": "BM:758",
+      "libelle": "Grand Baie (Police Station)",
       "localite": "Rivière du Rempart",
-      "latitude": -20.0133,
-      "longitude": 57.5806
+      "latitude": -20.01509,
+      "longitude": 57.581617
     },
     {
       "ordre": 3,
-      "code": "A003",
-      "libelle": "Moka",
-      "localite": "Moka",
-      "latitude": -20.2181,
-      "longitude": 57.4963
+      "code": "BM:24",
+      "libelle": "Curepipe (Jan Palach North)",
+      "localite": "Curepipe",
+      "latitude": -20.311856,
+      "longitude": 57.520889
     }
   ],
   "arretsProches": [
     {
-      "code": "A001",
-      "nom": "Gare Victoria",
-      "latitude": -20.1619,
-      "longitude": 57.4989,
-      "distanceMetres": 420
+      "code": "BM:7",
+      "nom": "Rose Hill (Place Cardinal Margeot)",
+      "latitude": -20.24187,
+      "longitude": 57.475875,
+      "distanceMetres": 436
     }
   ]
 }
@@ -233,10 +234,10 @@ Réponse :
 ```json
 [
   {
-    "code": "A001",
-    "nom": "Gare Victoria",
-    "latitude": -20.1619,
-    "longitude": 57.4989
+    "code": "BM:0",
+    "nom": "Port Louis (Victoria Square)",
+    "latitude": -20.162907,
+    "longitude": 57.498048
   }
 ]
 ```
@@ -252,11 +253,11 @@ Réponse :
 ```json
 [
   {
-    "code": "A004",
-    "nom": "Rose-Hill",
-    "latitude": -20.242,
-    "longitude": 57.4717,
-    "distanceMetres": 0
+    "code": "BM:7",
+    "nom": "Rose Hill (Place Cardinal Margeot)",
+    "latitude": -20.24187,
+    "longitude": 57.475875,
+    "distanceMetres": 436
   }
 ]
 ```
@@ -321,8 +322,8 @@ Depuis la racine du dépôt :
 ```bash
 psql -U postgres -d kotbis -f database/kotbis_schema.sql
 psql -U postgres -d kotbis -f database/migrations/002_page_accueil.sql
-psql -U postgres -d kotbis -f database/seeds/page_accueil.sql
-psql -U postgres -d kotbis -f database/tests/page_accueil.sql
+psql -U postgres -d kotbis -f database/seeds/bus_mauritius.sql
+psql -U postgres -d kotbis -f database/tests/page_accueil_test.sql
 ```
 
 > `kotbis_schema.sql` ne doit être exécuté qu’une seule fois sur une base
@@ -336,7 +337,7 @@ psql -U postgres -d kotbis -f database/tests/page_accueil.sql
 | Liste des données nécessaires à l’accueil | ✅ Documentée |
 | Validation avec le Frontend | ⚠️ Checklist à faire valider |
 | Tables et champs documentés | ✅ |
-| Jeu de données de test | ✅ Testé |
+| Jeu de données réel | ✅ Testé |
 | Exemple de données pour le Backend | ✅ Contrat API + JSON |
 
 ## Points restants

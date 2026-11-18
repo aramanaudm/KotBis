@@ -77,9 +77,9 @@ SELECT
     ST_X(a.position) AS longitude
 FROM (
     VALUES
-        ('A001', 'Port-Louis', 1),
-        ('A002', 'Rivière du Rempart', 2),
-        ('A003', 'Moka', 3)
+        ('BM:0', 'Port-Louis', 1),
+        ('BM:758', 'Rivière du Rempart', 2),
+        ('BM:24', 'Curepipe', 3)
 ) AS d(code, localite, ordre)
 JOIN arrets a ON a.code = d.code
 WHERE a.actif = TRUE

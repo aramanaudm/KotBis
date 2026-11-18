@@ -134,10 +134,11 @@ la page d’accueil, sans créer de nouvelle table :
 * `v_trajet_arrets_publics` — arrêts ordonnés des trajets ;
 * `v_destinations_populaires` — les trois raccourcis de la page d’accueil.
 
-Les destinations populaires sont des **arrêts existants** (`A001`, `A002`,
-`A003`). Leur ordre et leur localité sont définis dans la vue. Si le produit
-souhaite ensuite gérer ces destinations depuis le back-office, on pourra
-ajouter une table dédiée ou des colonnes de mise en avant sur `arrets`.
+Les destinations populaires sont des **arrêts existants** (`BM:0`, `BM:758`,
+`BM:24`, soit Port-Louis, Grand Baie et Curepipe). Leur ordre et leur localité
+sont définis dans la vue. Si le produit souhaite ensuite gérer ces destinations
+depuis le back-office, on pourra ajouter une table dédiée ou des colonnes de
+mise en avant sur `arrets`.
 
 ### Application
 
@@ -146,30 +147,36 @@ Depuis la racine du dépôt :
 ```bash
 psql -U postgres -d kotbis -f database/kotbis_schema.sql
 psql -U postgres -d kotbis -f database/migrations/002_page_accueil.sql
-psql -U postgres -d kotbis -f database/seeds/page_accueil.sql
-psql -U postgres -d kotbis -f database/tests/page_accueil.sql
+psql -U postgres -d kotbis -f database/seeds/bus_mauritius.sql
+psql -U postgres -d kotbis -f database/tests/page_accueil_test.sql
 ```
 
 > `kotbis_schema.sql` ne doit être exécuté qu’une seule fois sur une base
 > vierge. Sur une base existante, exécuter uniquement la migration et le seed.
 
-### Données de démonstration
+### Jeu de données réel
 
-Le seed ajoute :
+Le seed `bus_mauritius.sql` importe le réseau réel « Bus Mauritius » issu
+d'OpenStreetMap :
 
-* 5 arrêts : Gare Victoria, Grand Baie, Moka, Rose-Hill, Curepipe ;
-* 2 lignes : `L001`, `L002` ;
-* 2 trajets : `T001`, `T002` ;
-* les étapes ordonnées des trajets.
+* 264 lignes (`BM-1`, `BM-2`, …) ;
+* 1430 arrêts (`BM:<id_osm>`), dont 1429 actifs ;
+* 528 trajets (`BM-T-<hash>`) ;
+* 14 350 passages ordonnés (14 342 visibles, l'arrêt `BM:623` étant inactif).
 
-Les coordonnées sont fictives et servent uniquement aux tests locaux.
+Les coordonnées proviennent d'OpenStreetMap. Les trois destinations populaires
+de l'accueil sont `BM:0` (Port-Louis), `BM:758` (Grand Baie) et `BM:24`
+(Curepipe).
+
+Le seed retire aussi l'ancien jeu de démonstration (`L001`/`L002`,
+`A001`–`A005`, `T001`/`T002`) s'il est encore présent.
 
 ### Documentation et contrat API
 
 Toute la documentation du ticket est consolidée dans :
 
 ```text
-docs/README.md
+docs/README_page_Acceuil.md
 ```
 
 Elle contient la liste des données de la page d’accueil, la décision sur les
