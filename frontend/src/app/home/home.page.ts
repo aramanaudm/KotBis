@@ -1,3 +1,4 @@
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import * as L from 'leaflet';
@@ -6,6 +7,7 @@ import { AuthService } from '../core/auth/auth.service';
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })

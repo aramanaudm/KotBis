@@ -243,3 +243,7 @@ button:focus-visible {
   pointer-events: auto;
 }
 
+/* Leave room for the contribution buttons on narrow screens. */
+@media (max-width: 720px) and (min-height: 501px) {
+  .map-controls { bottom: calc(285px + env(safe-area-inset-bottom, 0px)); }
+}
