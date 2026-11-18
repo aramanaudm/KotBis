@@ -1,15 +1,10 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
-import { COMMUNITY_BUSES } from './community-buses';
-import { COMMUNITY_SESSION } from './community-session';
-import { REVIEW_MAX_LENGTH } from './review.constants';
 import type { Review } from './review.model';
 
 /** Source de démonstration en mémoire. À remplacer par le dépôt HTTP de l'équipe. */
 @Injectable({ providedIn: 'root' })
 export class ReviewService {
-  private readonly session = inject(COMMUNITY_SESSION);
-  readonly notice = signal('');
   private readonly items = signal<readonly Review[]>([
     {
       id: '1',
@@ -31,56 +26,4 @@ export class ReviewService {
     },
   ]);
   readonly reviews = this.items.asReadonly();
-
-  async createReview(draft: { busId: string; text: string }): Promise<void> {
-    const user = this.session();
-    if (!user) throw new Error('Vous devez être connecté pour publier un avis.');
-    const bus = COMMUNITY_BUSES.find((item) => item.id === draft.busId);
-    if (!bus) throw new Error('Sélectionnez un bus valide.');
-    const text = this.validateText(draft.text);
-    this.items.update((items) => [
-      {
-        id: crypto.randomUUID(),
-        busId: bus.id,
-        busLine: bus.line,
-        userId: user.id,
-        userName: user.pseudo,
-        text,
-        createdAt: new Date().toISOString(),
-      },
-      ...items,
-    ]);
-    this.notice.set('Votre avis a été publié dans cette session de démonstration.');
-  }
-
-  async updateReview(id: string, value: string): Promise<void> {
-    this.requireOwner(id);
-    const text = this.validateText(value);
-    this.items.update((items) =>
-      items.map((item) => (item.id === id ? { ...item, text, updatedAt: new Date().toISOString() } : item)),
-    );
-    this.notice.set('Votre avis a été modifié.');
-  }
-
-  async deleteReview(id: string): Promise<void> {
-    this.requireOwner(id);
-    this.items.update((items) => items.filter((item) => item.id !== id));
-    this.notice.set('Votre avis a été supprimé.');
-  }
-
-  private requireOwner(id: string): void {
-    const user = this.session();
-    if (!user || !this.reviews().some((item) => item.id === id && item.userId === user.id)) {
-      throw new Error('Vous pouvez modifier ou supprimer uniquement vos propres avis.');
-    }
-  }
-
-  private validateText(value: string): string {
-    if (value.length > REVIEW_MAX_LENGTH) {
-      throw new Error('Un avis est limité à 600 caractères, espaces compris.');
-    }
-    const text = value.trim();
-    if (!text) throw new Error('Votre avis doit contenir du texte.');
-    return text;
-  }
 }

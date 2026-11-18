@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUS-FE-018 – Champ de sélection du départ</title>
+  <link rel="stylesheet" href="champ-depart.css">
+</head>
+<body>
+<main class="carte">
+  <!-- Champ de saisie du départ + liste de suggestions -->
+  <label for="depart">Départ</label>
+  <input id="depart" type="text" autocomplete="off" placeholder="Ex. Roches Brunes"
+         role="combobox" aria-controls="suggestions-depart" aria-expanded="false">
+  <ul id="suggestions-depart" role="listbox" hidden></ul>
+
+  <!-- Confirme à l'utilisateur (et aux lecteurs d'écran) quel arrêt est choisi -->
+  <p id="selection-depart" aria-live="polite"></p>
+</main>
+
+  <script src="champ-depart.js"></script>
+</body>
+</html>
