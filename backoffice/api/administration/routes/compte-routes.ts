@@ -47,7 +47,7 @@ export function compteRoutes(pool: Pool): Router {
 
   router.get('/accounts', async (_req, res) => {
     try {
-      const resultat = await pool.query(`${SELECT_COMPTES} ORDER BY c.id`);
+      const resultat = await pool.query(`${SELECT_COMPTES} WHERE r.code = 'voyageur' ORDER BY c.id`);
       res.json({ success: true, data: resultat.rows });
     } catch (error) {
       repondreErreur(res, error);

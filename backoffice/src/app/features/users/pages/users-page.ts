@@ -51,7 +51,7 @@ export class UsersPage {
     pseudo: ['', [Validators.required, Validators.maxLength(60)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
     role: this.formBuilder.nonNullable.control<UserRole>('traveller'),
-    status: this.formBuilder.nonNullable.control<UserStatus>('active'),
+    status: this.formBuilder.nonNullable.control<UserStatus>('invited'),
   });
 
   protected readonly filteredUsers = computed(() => {
@@ -112,7 +112,7 @@ export class UsersPage {
   protected openCreate(): void {
     this.editingUser.set(null);
     this.formError.set('');
-    this.form.reset({ pseudo: '', email: '', role: 'traveller', status: 'active' });
+    this.form.reset({ pseudo: '', email: '', role: 'traveller', status: 'invited' });
     this.formOpen.set(true);
   }
 

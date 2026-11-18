@@ -46,7 +46,7 @@ export class BusesService {
             plate: bus.plaque,
             line: bus.ligne_code ?? '—',
             direction: bus.direction ?? '—',
-            status: ETAT_TO_STATUS[bus.etat] ?? 'inactive',
+            status: !bus.actif ? 'inactive' : (ETAT_TO_STATUS[bus.etat] ?? 'inactive'),
             trajetCode: bus.trajet_code ?? undefined,
           })),
         );

@@ -29,6 +29,7 @@
       (change)="onFilter($event)"
     >
       <option value="">Tous les états</option>
+      <option value="invited">Invité</option>
       <option value="active">Actif</option>
       <option value="inactive">Inactif</option>
     </select>
@@ -86,6 +87,7 @@
 
         <app-form-field label="État" forId="staff-status">
           <select id="staff-status" formControlName="status">
+            <option value="invited">Invité</option>
             <option value="active">Actif</option>
             <option value="inactive">Inactif</option>
           </select>

@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
+import type { Stop } from '../../../stops/models/stop';
 import type { Zone, ZonePoint } from '../../models/zone';
 
 @Component({
@@ -67,6 +68,7 @@ import type { Zone, ZonePoint } from '../../models/zone';
 export class ZoneMap implements AfterViewInit, OnDestroy {
   readonly mode = input<'preview' | 'edit'>('preview');
   readonly zones = input<readonly Zone[]>([]);
+  readonly stops = input<readonly Stop[]>([]);
   readonly vertices = input<readonly ZonePoint[]>([]);
   readonly verticesChange = output<readonly ZonePoint[]>();
 
@@ -85,10 +87,11 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       const ready = this.ready();
       const mode = this.mode();
       const zones = this.zones();
+      const stops = this.stops();
       const vertices = this.vertices();
 
       if (ready) {
-        this.render(mode, zones, vertices);
+        this.render(mode, zones, stops, vertices);
       }
     });
   }
@@ -132,6 +135,7 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
   private render(
     mode: 'preview' | 'edit',
     zones: readonly Zone[],
+    stops: readonly Stop[],
     vertices: readonly ZonePoint[],
   ): void {
     if (!this.map || !this.layers) {
@@ -229,10 +233,30 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
 
         points.forEach((point) => bounds.extend(point));
       }
+
+      for (const stop of stops) {
+        if (!Number.isFinite(stop.latitude) || !Number.isFinite(stop.longitude)) {
+          continue;
+        }
+
+        const position: L.LatLngTuple = [stop.latitude, stop.longitude];
+        const marker = L.circleMarker(position, {
+          radius: 4,
+          color: '#ffffff',
+          weight: 1,
+          fillColor: stop.status === 'active' ? '#1c9b71' : '#8390a2',
+          fillOpacity: 1,
+        }).addTo(this.layers);
+
+        const label = document.createElement('span');
+        label.textContent = stop.name;
+        marker.bindPopup(label);
+        bounds.extend(position);
+      }
     }
 
     // Centrer la carte sur les contours valides.
-    if (!this.framed && bounds.isValid()) {
+    if (bounds.isValid() && (mode === 'preview' || !this.framed)) {
       this.map.fitBounds(bounds, {
         padding: [25, 25],
         maxZoom: 14,

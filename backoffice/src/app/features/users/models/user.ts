@@ -1,7 +1,7 @@
 import type { StatusTone } from '../../../shared/models/status';
 
 export type UserRole = 'traveller' | 'operator' | 'moderator' | 'admin';
-export type UserStatus = 'active' | 'inactive';
+export type UserStatus = 'invited' | 'active' | 'inactive';
 
 export interface User {
   readonly id: string;
@@ -20,11 +20,13 @@ export const USER_ROLE_LABELS: Readonly<Record<UserRole, string>> = {
 };
 
 export const USER_STATUS_LABELS: Readonly<Record<UserStatus, string>> = {
+  invited: 'Invité',
   active: 'Actif',
   inactive: 'Inactif',
 };
 
 export const USER_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
+  Invité: 'orange',
   Actif: 'green',
   Inactif: 'neutral',
 };

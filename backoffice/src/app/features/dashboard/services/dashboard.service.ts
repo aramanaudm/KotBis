@@ -15,6 +15,7 @@ interface ApiBusFlotte {
   id: string;
   plaque: string;
   etat: string;
+  actif: boolean;
   ligne_code: string | null;
   direction: string | null;
 }
@@ -110,7 +111,9 @@ export class DashboardService {
       plate: bus.plaque,
       line: bus.ligne_code ?? '—',
       direction: bus.direction ?? '—',
-      status: (ETAT_TO_LABEL[bus.etat] ? bus.etat : 'inactif') as BusStatus,
+      status: (!bus.actif
+        ? 'inactive'
+        : (ETAT_TO_LABEL[bus.etat] ? bus.etat : 'inactive')) as BusStatus,
     })),
   );
 

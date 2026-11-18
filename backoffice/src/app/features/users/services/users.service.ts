@@ -2,16 +2,30 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, tap, type Observable } from 'rxjs';
 import { apiError, apiUrl } from '../../../core/services/api';
-import type { User, UserRole } from '../models/user';
+import type { User, UserRole, UserStatus } from '../models/user';
 
 interface ApiAccount {
   id: string;
   email: string;
   pseudo: string | null;
   role_code: string;
-  etat: 'invite' | 'actif' | 'inactif';
+  etat: AccountEtat;
   points: string | number;
 }
+
+type AccountEtat = 'invite' | 'actif' | 'inactif';
+
+const ETAT_TO_STATUS: Record<AccountEtat, UserStatus> = {
+  invite: 'invited',
+  actif: 'active',
+  inactif: 'inactive',
+};
+
+const STATUS_TO_ETAT: Record<UserStatus, AccountEtat> = {
+  invited: 'invite',
+  active: 'actif',
+  inactive: 'inactif',
+};
 
 const ROLE_TO_API: Record<UserRole, string> = {
   traveller: 'voyageur',
@@ -47,7 +61,7 @@ export class UsersService {
             pseudo: account.pseudo ?? account.email.split('@')[0],
             email: account.email,
             role: API_TO_ROLE[account.role_code] ?? 'traveller',
-            status: account.etat === 'inactif' ? 'inactive' : 'active',
+            status: ETAT_TO_STATUS[account.etat] ?? 'invited',
             points: Number(account.points ?? 0),
           })),
         );
@@ -61,7 +75,7 @@ export class UsersService {
       email: user.email,
       pseudo: user.pseudo,
       role_code: ROLE_TO_API[user.role],
-      etat: user.status === 'inactive' ? 'inactif' : 'invite',
+      etat: STATUS_TO_ETAT[user.status],
     };
     return this.http
       .post<{ success: boolean }>(`${apiUrl}/api/admin/accounts`, body)
@@ -73,7 +87,7 @@ export class UsersService {
       email: user.email,
       pseudo: user.pseudo,
       role_code: ROLE_TO_API[user.role],
-      etat: user.status === 'inactive' ? 'inactif' : 'invite',
+      etat: STATUS_TO_ETAT[user.status],
     };
     return this.http
       .put<{ success: boolean }>(`${apiUrl}/api/admin/accounts/${id}`, body)

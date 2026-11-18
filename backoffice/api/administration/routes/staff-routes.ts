@@ -8,6 +8,12 @@ const ROLES: Record<string, string> = {
   admin: 'administrateur',
 };
 
+const STATUTS: Record<string, string> = {
+  invited: 'invite',
+  active: 'actif',
+  inactive: 'inactif',
+};
+
 const SELECT_STAFF = `
   SELECT p.compte_id AS id, p.nom_affiche AS name, p.fonction,
          c.email, c.etat, c.identifiant_public, r.code AS role_code
@@ -58,7 +64,7 @@ export function staffRoutes(pool: Pool): Router {
       if (!name || !email || !role) {
         return res.status(400).json({ error: 'name, email et role sont obligatoires' });
       }
-      const etat = status === 'inactive' ? 'inactif' : password_hash ? 'actif' : 'invite';
+      const etat = status ? (STATUTS[String(status)] ?? 'invite') : password_hash ? 'actif' : 'invite';
       await client.query('BEGIN');
       const compte = await client.query(`
         INSERT INTO comptes (email, mot_de_passe_hash, role_id, etat, identifiant_public)
@@ -75,6 +81,7 @@ export function staffRoutes(pool: Pool): Router {
       await client.query('ROLLBACK');
       repondreErreur(res, error, {
         23505: 'Cet email existe déjà',
+        23514: 'État invalide ou mot de passe manquant pour un compte actif',
         ROLE_INCONNU: "Le rôle spécifié n'existe pas",
       });
     } finally {
@@ -88,6 +95,7 @@ export function staffRoutes(pool: Pool): Router {
       const existant = await client.query('SELECT compte_id FROM personnel WHERE compte_id = $1', [req.params.id]);
       if (existant.rowCount === 0) return res.status(404).json({ error: 'Membre non trouvé' });
       const { name, email, role, status, password_hash } = req.body;
+      const nouvelEtat = status ? (STATUTS[String(status)] ?? null) : null;
       await client.query('BEGIN');
       await client.query(`
         UPDATE comptes
@@ -97,7 +105,7 @@ export function staffRoutes(pool: Pool): Router {
             mot_de_passe_hash = COALESCE($5, mot_de_passe_hash),
             modifie_le = now()
         WHERE id = $1
-      `, [req.params.id, email ?? null, status ? (status === 'inactive' ? 'inactif' : 'invite') : null,
+      `, [req.params.id, email ?? null, nouvelEtat,
           role ? await roleId(client, role) : null, password_hash ?? null]);
       await client.query(`
         UPDATE personnel
@@ -112,6 +120,7 @@ export function staffRoutes(pool: Pool): Router {
       await client.query('ROLLBACK');
       repondreErreur(res, error, {
         23505: 'Cet email existe déjà',
+        23514: 'État invalide ou mot de passe manquant pour un compte actif',
         ROLE_INCONNU: "Le rôle spécifié n'existe pas",
       });
     } finally {

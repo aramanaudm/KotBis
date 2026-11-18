@@ -2,15 +2,23 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, tap, type Observable } from 'rxjs';
 import { apiError, apiUrl } from '../../../core/services/api';
-import type { StaffMember, StaffRole } from '../models/staff';
+import type { StaffMember, StaffRole, StaffStatus } from '../models/staff';
 
 interface ApiStaff {
   id: string;
   name: string;
   email: string;
   role_code: string;
-  etat: string;
+  etat: StaffEtat;
 }
+
+type StaffEtat = 'invite' | 'actif' | 'inactif';
+
+const ETAT_TO_STATUS: Record<StaffEtat, StaffStatus> = {
+  invite: 'invited',
+  actif: 'active',
+  inactif: 'inactive',
+};
 
 const API_TO_ROLE: Record<string, StaffRole> = {
   operateur: 'operator',
@@ -38,7 +46,7 @@ export class StaffService {
             name: member.name,
             email: member.email,
             role: API_TO_ROLE[member.role_code] ?? 'operator',
-            status: member.etat === 'inactif' ? 'inactive' : 'active',
+            status: ETAT_TO_STATUS[member.etat] ?? 'invited',
           })),
         );
       },
@@ -69,7 +77,7 @@ export class StaffService {
       name: member.name,
       email: member.email,
       role: member.role,
-      status: member.status === 'inactive' ? 'inactive' : 'active',
+      status: member.status,
     };
   }
 }

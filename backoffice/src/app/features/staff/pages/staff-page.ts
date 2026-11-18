@@ -51,7 +51,7 @@ export class StaffPage {
     name: ['', [Validators.required, Validators.maxLength(120)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
     role: this.formBuilder.nonNullable.control<StaffRole>('operator'),
-    status: this.formBuilder.nonNullable.control<StaffStatus>('active'),
+    status: this.formBuilder.nonNullable.control<StaffStatus>('invited'),
   });
 
   protected readonly filteredStaff = computed(() => {
@@ -112,7 +112,7 @@ export class StaffPage {
   protected openCreate(): void {
     this.editingMember.set(null);
     this.formError.set('');
-    this.form.reset({ name: '', email: '', role: 'operator', status: 'active' });
+    this.form.reset({ name: '', email: '', role: 'operator', status: 'invited' });
     this.formOpen.set(true);
   }
 
