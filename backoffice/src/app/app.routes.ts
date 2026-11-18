@@ -1,10 +1,12 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin.guard';
 import { Shell } from './layout/shell/shell';
 
 export const routes: Routes = [
   {
     path: '',
     component: Shell,
+    canActivate: [adminGuard],
     children: [
       {
         path: '',

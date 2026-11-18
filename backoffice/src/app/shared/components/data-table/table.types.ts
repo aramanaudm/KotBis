@@ -1,7 +1,7 @@
 export interface TableColumn {
   readonly key: string;
   readonly label: string;
-  readonly type?: 'text' | 'status';
+  readonly type?: 'text' | 'status' | 'avatar';
 }
 
 export interface TableRow {

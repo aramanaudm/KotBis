@@ -16,18 +16,35 @@ export class DataTable {
   readonly rows = input.required<readonly TableRow[]>();
   readonly statusTones = input<Readonly<Record<string, StatusTone>>>({});
   readonly showActions = input(true);
+  readonly showView = input(false);
+  readonly showToggle = input(false);
   readonly showEdit = input(true);
   readonly showRemove = input(true);
+  readonly viewLabel = input('Voir détail');
+  readonly toggleLabel = input('Activer / Désactiver');
   readonly editLabel = input('Modifier');
   readonly removeLabel = input('Supprimer');
+  readonly viewIcon = input<IconName>('arrow');
+  readonly toggleIcon = input<IconName>('check');
   readonly editIcon = input<IconName>('edit');
   readonly removeIcon = input<IconName>('trash');
   readonly emptyMessage = input('Aucun résultat.');
 
+  readonly view = output<TableRow>();
+  readonly toggle = output<TableRow>();
   readonly edit = output<TableRow>();
   readonly remove = output<TableRow>();
 
   protected statusTone(value: string): StatusTone {
     return this.statusTones()[value] ?? 'neutral';
+  }
+
+  protected initials(value: string): string {
+    return value
+      .split(/[\s._@-]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
   }
 }

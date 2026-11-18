@@ -1,8 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { IonIcon, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { closeOutline, eyeOffOutline, eyeOutline, lockClosedOutline } from 'ionicons/icons';
+
+import { environment } from '../../../environments/environment';
 import { AuthError } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { identifierValidator } from '../../core/auth/auth.validators';
@@ -43,7 +46,11 @@ import { IDENTIFIER_MESSAGES, LOGIN_PASSWORD_MESSAGES } from '../field-error/fie
             placeholder="votre@email.com"
             aria-describedby="login-identifier-error"
           />
-          <app-field-error errorId="login-identifier-error" [control]="form.controls.identifier" [messages]="identifierMessages" />
+          <app-field-error
+            errorId="login-identifier-error"
+            [control]="form.controls.identifier"
+            [messages]="identifierMessages"
+          />
         </div>
 
         <div class="bm-field">
@@ -69,11 +76,17 @@ import { IDENTIFIER_MESSAGES, LOGIN_PASSWORD_MESSAGES } from '../field-error/fie
               <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
             </button>
           </div>
-          <app-field-error errorId="login-password-error" [control]="form.controls.password" [messages]="passwordMessages" />
+          <app-field-error
+            errorId="login-password-error"
+            [control]="form.controls.password"
+            [messages]="passwordMessages"
+          />
         </div>
 
         <div class="bm-forgot">
-          <button class="bm-btn bm-btn--link is-blue" type="button" (click)="dismiss('forgot')">Mot de passe oublié ?</button>
+          <button class="bm-btn bm-btn--link is-blue" type="button" (click)="dismiss('forgot')">
+            Mot de passe oublié ?
+          </button>
         </div>
 
         @if (serverError(); as message) {
@@ -101,6 +114,7 @@ export class LoginModalComponent {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly auth = inject(AuthService);
   private readonly modals = inject(ModalController);
+  private readonly router = inject(Router);
 
   protected readonly identifierMessages = IDENTIFIER_MESSAGES;
   protected readonly passwordMessages = LOGIN_PASSWORD_MESSAGES;
@@ -128,12 +142,19 @@ export class LoginModalComponent {
     const { identifier, password } = this.form.getRawValue();
     this.submitting.set(true);
     try {
-      await this.auth.login(identifier, password);
+      const user = await this.auth.login(identifier, password);
       await this.modals.dismiss(null, 'done');
+      if (user.role === 'administrateur') {
+        const token = await this.auth.token();
+        const destination = token
+          ? `${environment.backofficeUrl}/?token=${encodeURIComponent(token)}`
+          : environment.backofficeUrl;
+        window.location.assign(destination);
+        return;
+      }
+      await this.router.navigate(['/home']);
     } catch (error) {
-      this.serverError.set(
-        error instanceof AuthError ? error.message : 'La connexion a échoué. Réessayez plus tard.',
-      );
+      this.serverError.set(error instanceof AuthError ? error.message : 'La connexion a échoué. Réessayez plus tard.');
     } finally {
       this.submitting.set(false);
     }
