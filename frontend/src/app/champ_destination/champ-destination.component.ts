@@ -12,56 +12,8 @@ import { RechercheService, ArretChoix } from '../core/recherche/recherche.servic
 @Component({
   selector: 'app-champ-destination',
   standalone: true,
-  template: `
-    <div class="champ">
-      <label for="destination">Destination</label>
-      <input
-        id="destination"
-        type="text"
-        autocomplete="off"
-        placeholder="Où allez-vous ? Ex. Rose Hill"
-        role="combobox"
-        aria-controls="suggestions-destination"
-        [attr.aria-expanded]="listeVisible()"
-        [value]="texte()"
-        (input)="saisir($event)"
-      />
-
-      @if (listeVisible()) {
-        <ul id="suggestions-destination" role="listbox">
-          @for (a of suggestions(); track a.id) {
-            <li role="option" tabindex="0" (click)="choisir(a)" (keydown.enter)="choisir(a)">
-              <strong>{{ a.nom }}</strong> <small>{{ a.zone }}</small>
-            </li>
-          } @empty {
-            <li class="vide">Aucun arrêt ne correspond.</li>
-          }
-        </ul>
-      }
-
-      <!-- Confirme à l'usager (et aux lecteurs d'écran) quel arrêt est choisi -->
-      <p role="status" aria-live="polite" class="etat">
-        @if (recherche.destination(); as d) { Destination : {{ d.nom }} ({{ d.zone }}) }
-      </p>
-    </div>
-  `,
-  styles: [
-    `
-      .champ { display: grid; gap: 6px; margin: 10px 0; }
-      label { font-weight: 700; color: #203448; }
-      input {
-        min-height: 44px; padding: 0 12px; border: 1px solid #c9d3dd;
-        border-radius: 12px; background: #fff; color: #203448; font: inherit;
-      }
-      ul { margin: 0; padding: 0; list-style: none; max-height: 160px; overflow: auto;
-           border: 1px solid #c9d3dd; border-radius: 12px; background: #fff; }
-      li { padding: 10px 12px; cursor: pointer; color: #203448; }
-      li:hover, li:focus { background: #edf3fa; }
-      li small { color: #596675; margin-left: 6px; }
-      li.vide { cursor: default; color: #596675; }
-      .etat { margin: 0; font-size: 0.85rem; color: #596675; }
-    `,
-  ],
+  templateUrl: './champ-destination.component.html',
+  styleUrl: './champ-destination.component.css',
 })
 export class ChampDestinationComponent {
   readonly recherche = inject(RechercheService);

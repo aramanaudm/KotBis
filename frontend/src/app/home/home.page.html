@@ -210,27 +210,31 @@
         </button>
       </div>
 
-      <app-champ-depart></app-champ-depart>
-      <app-champ-destination></app-champ-destination>
-
-      @if (recherche.erreur(); as erreur) {
-        <p class="erreur-trajet" role="alert">{{ erreur }}</p>
+      @switch (recherche.etat()) {
+        @case ('repos') {
+          <app-champ-depart></app-champ-depart>
+          <app-champ-destination></app-champ-destination>
+          <app-bouton-recherche></app-bouton-recherche>
+        }
+        @case ('resultats') {
+          @if (recherche.resultatChoisi()) {
+            <app-detail-trajet></app-detail-trajet>
+          } @else {
+            <app-resultats></app-resultats>
+            <button type="button" class="modifier-recherche" (click)="recherche.modifier()">
+              Modifier la recherche
+            </button>
+          }
+        }
+        @default {
+          <app-etats-recherche [etat]="recherche.etat()"></app-etats-recherche>
+          @if (recherche.etat() !== 'chargement') {
+            <button type="button" class="modifier-recherche" (click)="recherche.modifier()">
+              Modifier la recherche
+            </button>
+          }
+        }
       }
-
-      @if (recherche.valide()) {
-        <p class="trajet-valide" role="status">
-          ✓ Trajet validé : {{ recherche.libelleDepart() }} → {{ recherche.destination()?.nom }}
-        </p>
-      }
-
-      <button
-        class="valider-trajet"
-        type="button"
-        [disabled]="!recherche.peutValider() || recherche.valide()"
-        (click)="recherche.valider()"
-      >
-        Valider le choix
-      </button>
     } @else {
       <button class="search-preview" type="button" (click)="recherche.ouvrir()">
         <span aria-hidden="true">⌕</span>

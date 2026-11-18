@@ -1,0 +1,15 @@
+<h3>Étapes du trajet</h3>
+<!-- Liste NUMÉROTÉE : l'ordre des étapes est ainsi évident -->
+<ol>
+  @for (e of etapes(); track $index) {
+    <li>
+      <strong>{{ e.type }} :</strong> {{ e.texte }}
+      <!-- La descente n'a pas de durée : on n'affiche rien plutôt qu'une valeur inventée. -->
+      @if (!e.sansDuree) {
+        <span class="duree">
+          {{ e.dureeMin === null ? 'Estimation indisponible' : e.dureeMin + ' min' }}
+        </span>
+      }
+    </li>
+  }
+</ol>

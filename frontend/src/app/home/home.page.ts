@@ -17,6 +17,10 @@ import { GpsDialogComponent } from '../permission_gps/gps-dialog.component';
 import { ChampDepartComponent } from '../champ_depart/champ-depart.component';
 import { ChampDestinationComponent } from '../champ_destination/champ-destination.component';
 import { RechercheService } from '../core/recherche/recherche.service';
+import { BoutonRechercheComponent } from '../bouton_recherche/bouton-recherche.component';
+import { ResultatsComponent } from '../resultats_recherche/resultats.component';
+import { DetailTrajetComponent } from '../detail_trajet/detail-trajet.component';
+import { EtatsRechercheComponent } from '../etats_recherche/etats-recherche.component';
 
 interface ArretDemo {
   id: number;
@@ -45,7 +49,7 @@ type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [PartagePositionComponent, GpsDialogComponent, ChampDepartComponent, ChampDestinationComponent, RouterLink, RouterOutlet],
+  imports: [PartagePositionComponent, GpsDialogComponent, ChampDepartComponent, ChampDestinationComponent, BoutonRechercheComponent, ResultatsComponent, DetailTrajetComponent, EtatsRechercheComponent, RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })

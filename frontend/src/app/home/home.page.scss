@@ -306,30 +306,14 @@ button:focus-visible {
 }
 
 
-.valider-trajet {
+.modifier-recherche {
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   margin-top: 8px;
-  border-radius: 14px;
-  background: var(--mobis-primary);
-  color: #fff;
+  border: 1px solid #c9d3dd;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--mobis-ink);
   font-weight: 700;
   cursor: pointer;
-}
-
-.valider-trajet:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.erreur-trajet {
-  margin: 4px 0 0;
-  color: #b3261e;
-  font-weight: 600;
-}
-
-.trajet-valide {
-  margin: 4px 0 0;
-  color: var(--mobis-primary);
-  font-weight: 700;
 }
