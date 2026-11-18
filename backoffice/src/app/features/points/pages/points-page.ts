@@ -1,6 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -22,7 +24,7 @@ const INTEGER_AMOUNT: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-points-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, ReactiveFormsModule],
+  imports: [DataTable, FormField, Icon, Modal, PageHeader, ReactiveFormsModule, TranslatePipe],
   templateUrl: './points-page.html',
   styleUrl: './points-page.scss',
 })
@@ -30,6 +32,7 @@ export class PointsPage {
   private readonly points = inject(PointsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.points.load();
@@ -39,16 +42,16 @@ export class PointsPage {
   protected readonly history = this.points.history;
 
   protected readonly balanceColumns: readonly TableColumn[] = [
-    { key: 'pseudo', label: 'Utilisateur' },
-    { key: 'email', label: 'Email' },
-    { key: 'points', label: 'Points' },
+    { key: 'pseudo', label: 'points.column.user' },
+    { key: 'email', label: 'points.column.email' },
+    { key: 'points', label: 'points.column.points' },
   ];
 
   protected readonly historyColumns: readonly TableColumn[] = [
-    { key: 'user', label: 'Utilisateur' },
-    { key: 'variation', label: 'Variation' },
-    { key: 'reason', label: 'Motif' },
-    { key: 'date', label: 'Date' },
+    { key: 'user', label: 'points.column.user' },
+    { key: 'variation', label: 'points.column.variation' },
+    { key: 'reason', label: 'points.column.reason' },
+    { key: 'date', label: 'points.column.date' },
   ];
 
   protected readonly adjustTarget = signal<UserBalance | null>(null);
@@ -118,7 +121,7 @@ export class PointsPage {
     const reason = this.form.controls.reason.value.trim();
 
     if (!reason) {
-      this.formError.set('Le motif est obligatoire.');
+      this.formError.set('points.error.reason');
       return;
     }
 
@@ -127,7 +130,7 @@ export class PointsPage {
       .subscribe({
         next: () => {
           this.closeAdjust();
-          this.showFeedback('Solde mis à jour.');
+          this.showFeedback('points.feedback.updated');
         },
         error: (err) => this.formError.set(apiError(err)),
       });
@@ -136,23 +139,24 @@ export class PointsPage {
   protected amountError(): string {
     const control = this.form.controls.variation;
 
-    return control.touched && control.invalid
-      ? 'Saisissez un entier non nul entre -10 000 et 10 000.'
-      : '';
+    return control.touched && control.invalid ? 'points.error.amount' : '';
   }
 
   protected reasonError(): string {
     const control = this.form.controls.reason;
 
-    return control.touched && control.invalid
-      ? 'Le motif est obligatoire (250 caractères max).'
-      : '';
+    return control.touched && control.invalid ? 'points.error.reason' : '';
   }
 
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-points.csv',
-      ['Utilisateur', 'Variation', 'Motif', 'Date'],
+      [
+        this.i18n.t('points.column.user'),
+        this.i18n.t('points.column.variation'),
+        this.i18n.t('points.column.reason'),
+        this.i18n.t('points.column.date'),
+      ],
       this.history().map((movement) => [
         movement.userName,
         this.formatVariation(movement.variation),
@@ -167,11 +171,13 @@ export class PointsPage {
   }
 
   private formatDate(date: string): string {
-    return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(date));
+    const locale = this.i18n.lang() === 'en' ? 'en-GB' : 'fr-FR';
+
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(date));
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import type { BusStatus } from '../../buses/models/bus';
 import type { AttentionItem, DashboardMetric } from '../models/dashboard';
 import { apiError, apiUrl } from '../../../core/services/api';
+import { LanguageService } from '../../../core/i18n/language.service';
 
 interface ApiIndicateurs {
   bus_en_service: number;
@@ -39,6 +40,7 @@ const ETAT_TO_LABEL: Record<string, string> = {
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(LanguageService);
   private readonly donnees = signal<ApiDashboard['data'] | null>(null);
   private readonly erreur = signal('');
 
@@ -59,30 +61,30 @@ export class DashboardService {
     const indicateurs = data?.indicateurs;
     return [
       {
-        label: 'Bus en service',
+        label: this.i18n.t('dashboard.metric.bus'),
         value: Number(indicateurs?.bus_en_service ?? 0),
-        hint: `${data?.flotte.length ?? 0} bus dans la flotte`,
+        hint: this.i18n.t('dashboard.metric.busHint', { count: data?.flotte.length ?? 0 }),
         icon: 'bus',
         link: '/bus',
       },
       {
-        label: 'Zones actives',
+        label: this.i18n.t('dashboard.metric.zones'),
         value: Number(indicateurs?.zones_actives ?? 0),
-        hint: 'Zones de couverture actives',
+        hint: this.i18n.t('dashboard.metric.zonesHint'),
         icon: 'zone',
         link: '/zones',
       },
       {
-        label: 'Comptes voyageurs',
+        label: this.i18n.t('dashboard.metric.users'),
         value: Number(indicateurs?.comptes_voyageurs ?? 0),
-        hint: 'Comptes enregistrés',
+        hint: this.i18n.t('dashboard.metric.usersHint'),
         icon: 'users',
         link: '/utilisateurs',
       },
       {
-        label: 'Signalements à traiter',
+        label: this.i18n.t('dashboard.metric.reports'),
         value: Number(indicateurs?.signalements_a_verifier ?? 0),
-        hint: 'En attente de vérification',
+        hint: this.i18n.t('dashboard.metric.reportsHint'),
         icon: 'flag',
         link: '/signalements',
       },
@@ -95,8 +97,8 @@ export class DashboardService {
     if (data && data.avis_a_moderer > 0) {
       items.push({
         id: 'reviews',
-        title: `${data.avis_a_moderer} avis à modérer`,
-        subtitle: 'Consultez les contributions',
+        title: this.i18n.t('dashboard.attention.reviews', { count: data.avis_a_moderer }),
+        subtitle: this.i18n.t('dashboard.attention.reviewsHint'),
         icon: 'chat',
         tone: 'orange',
       });

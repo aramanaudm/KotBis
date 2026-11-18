@@ -1,13 +1,11 @@
-<app-page-header title="Personnel" description="Gérez les agents et leurs rôles dans le back-office.">
+<app-page-header title="staff.title" description="staff.description">
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
-    Ajouter
+    {{ 'common.add' | t }}
   </button>
 </app-page-header>
 
-<p class="notice">
-  Les rôles et permissions seront appliqués lors du branchement à l’authentification.
-</p>
+<p class="notice">{{ 'users.notice' | t }}</p>
 
 <section class="card">
   <div class="toolbar">
@@ -15,8 +13,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher un membre du personnel"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'staff.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -24,18 +22,18 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par état"
+      [attr.aria-label]="'common.filterState' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      <option value="">{{ 'common.allStates' | t }}</option>
+      <option value="active">{{ 'status.staff.active' | t }}</option>
+      <option value="inactive">{{ 'status.staff.inactive' | t }}</option>
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
       <app-icon name="export" />
-      Exporter CSV
+      {{ 'common.exportCsv' | t }}
     </button>
   </div>
 
@@ -43,7 +41,7 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
-    emptyMessage="Aucun membre ne correspond à la recherche."
+    emptyMessage="staff.empty"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -61,33 +59,33 @@
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <app-form-field
-          label="Nom"
+          label="staff.field.name"
           forId="staff-name"
-          [error]="errorFor('name', 'Le nom est obligatoire.')"
+          [error]="errorFor('name', 'staff.error.name')"
         >
           <input id="staff-name" type="text" formControlName="name" maxlength="120" />
         </app-form-field>
 
         <app-form-field
-          label="Email"
+          label="staff.field.email"
           forId="staff-email"
-          [error]="errorFor('email', 'Saisissez une adresse email valide.')"
+          [error]="errorFor('email', 'staff.error.email')"
         >
           <input id="staff-email" type="email" formControlName="email" maxlength="254" />
         </app-form-field>
 
-        <app-form-field label="Rôle" forId="staff-role">
+        <app-form-field label="staff.field.role" forId="staff-role">
           <select id="staff-role" formControlName="role">
-            <option value="operator">Opérateur</option>
-            <option value="moderator">Modérateur</option>
-            <option value="admin">Administrateur</option>
+            <option value="operator">{{ 'role.operator' | t }}</option>
+            <option value="moderator">{{ 'role.moderator' | t }}</option>
+            <option value="admin">{{ 'role.admin' | t }}</option>
           </select>
         </app-form-field>
 
-        <app-form-field label="État" forId="staff-status">
+        <app-form-field label="staff.field.status" forId="staff-status">
           <select id="staff-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'status.staff.active' | t }}</option>
+            <option value="inactive">{{ 'status.staff.inactive' | t }}</option>
           </select>
         </app-form-field>
       </div>
@@ -97,20 +95,26 @@
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeForm()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
 }
 
 @if (deleteTarget(); as member) {
-  <app-modal title="Supprimer ce membre ?" (close)="cancelDelete()">
-    <p>Le membre {{ member.name }} sera retiré de la liste.</p>
+  <app-modal title="staff.delete.title" (close)="cancelDelete()">
+    <p>{{ 'staff.delete.message' | t: { name: member.name } }}</p>
 
     <div class="form-footer">
-      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
-      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+      <button class="secondary" type="button" (click)="cancelDelete()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button class="danger" type="button" (click)="confirmDelete()">
+        {{ 'common.delete' | t }}
+      </button>
     </div>
   </app-modal>
 }

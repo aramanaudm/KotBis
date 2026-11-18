@@ -1,30 +1,30 @@
-<app-page-header title="Points" description="Consultez les soldes et ajustez les points des voyageurs.">
+<app-page-header title="points.title" description="points.description">
   <button class="secondary" type="button" (click)="exportCsv()">
     <app-icon name="export" />
-    Exporter
+    {{ 'common.export' | t }}
   </button>
 </app-page-header>
 
-<p class="notice">
-  Barème à définir. Les ajustements seront disponibles après connexion à la base.
-</p>
+<p class="notice">{{ 'points.notice' | t }}</p>
 
 <section class="card">
   <div class="card-head">
     <div>
-      <h2>Soldes des utilisateurs</h2>
-      <p>Solde actuel de chaque compte</p>
+      <h2>{{ 'points.balances.title' | t }}</h2>
+      <p>{{ 'points.balances.description' | t }}</p>
     </div>
-    <span class="balance-badge">{{ balances().length }} compte(s)</span>
+    <span class="balance-badge">
+      {{ 'points.balances.count' | t: { count: balances().length } }}
+    </span>
   </div>
 
   <app-data-table
     [columns]="balanceColumns"
     [rows]="balanceRows()"
     [showRemove]="false"
-    editLabel="Ajuster les points"
+    editLabel="points.adjust.title"
     editIcon="plus"
-    emptyMessage="Aucun utilisateur à afficher."
+    emptyMessage="points.balances.empty"
     (edit)="openAdjust($event)"
   />
 </section>
@@ -32,8 +32,8 @@
 <section class="card history-card">
   <div class="card-head">
     <div>
-      <h2>Historique des ajustements</h2>
-      <p>Mouvements enregistrés</p>
+      <h2>{{ 'points.history.title' | t }}</h2>
+      <p>{{ 'points.history.description' | t }}</p>
     </div>
     <app-icon name="clock" />
   </div>
@@ -42,20 +42,22 @@
     [columns]="historyColumns"
     [rows]="historyRows()"
     [showActions]="false"
-    emptyMessage="Aucun ajustement enregistré."
+    emptyMessage="points.history.empty"
   />
 </section>
 
 @if (adjustTarget(); as balance) {
-  <app-modal title="Ajuster les points" (close)="closeAdjust()">
+  <app-modal title="points.adjust.title" (close)="closeAdjust()">
     <p class="adjust-summary">
       <b>{{ balance.pseudo }}</b>
-      <span>{{ balance.email }} · solde actuel : {{ balance.points }} point(s)</span>
+      <span>
+        {{ balance.email }} · {{ 'points.adjust.summary' | t: { points: balance.points } }}
+      </span>
     </p>
 
     <form [formGroup]="form" (ngSubmit)="save()">
       <app-form-field
-        label="Variation (positive ou négative)"
+        label="points.field.variation"
         forId="points-amount"
         [error]="amountError()"
       >
@@ -69,27 +71,27 @@
         />
       </app-form-field>
 
-      <app-form-field label="Motif" forId="points-reason" [error]="reasonError()">
+      <app-form-field label="points.field.reason" forId="points-reason" [error]="reasonError()">
         <textarea
           id="points-reason"
           formControlName="reason"
           rows="3"
           maxlength="250"
-          placeholder="Expliquez la raison de cet ajustement…"
+          [placeholder]="'points.field.reasonPlaceholder' | t"
         ></textarea>
       </app-form-field>
 
-      <p class="adjust-hint">
-        Une variation positive crédite des points, une variation négative en retire.
-      </p>
+      <p class="adjust-hint">{{ 'points.hint' | t }}</p>
 
       @if (formError()) {
-        <p class="form-error" role="alert">{{ formError() }}</p>
+        <p class="form-error" role="alert">{{ formError() | t }}</p>
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeAdjust()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeAdjust()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>

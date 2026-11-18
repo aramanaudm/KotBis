@@ -18,7 +18,7 @@ export const BUS_STATUS_LABELS: Readonly<Record<BusStatus, string>> = {
 };
 
 export const BUS_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  Actif: 'green',
-  Inactif: 'neutral',
-  'En panne': 'red',
+  'status.bus.active': 'green',
+  'status.bus.inactive': 'neutral',
+  'status.bus.breakdown': 'red',
 };

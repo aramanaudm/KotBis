@@ -1,7 +1,7 @@
-<app-page-header title="Arrêts" description="Consultez et gérez les arrêts géolocalisés du réseau.">
+<app-page-header title="stops.title" description="stops.description">
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
-    Ajouter
+    {{ 'common.add' | t }}
   </button>
 </app-page-header>
 
@@ -11,8 +11,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher un arrêt"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'stops.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -20,18 +20,18 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par état"
+      [attr.aria-label]="'common.filterState' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      <option value="">{{ 'common.allStates' | t }}</option>
+      <option value="active">{{ 'status.common.active' | t }}</option>
+      <option value="inactive">{{ 'status.common.inactive' | t }}</option>
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
       <app-icon name="export" />
-      Exporter CSV
+      {{ 'common.exportCsv' | t }}
     </button>
   </div>
 
@@ -39,7 +39,7 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
-    emptyMessage="Aucun arrêt ne correspond à la recherche."
+    emptyMessage="stops.empty"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -56,18 +56,18 @@
   <app-modal [title]="formTitle()" (close)="closeForm()">
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
-        <app-form-field label="Nom" forId="stop-name" [error]="nameError()">
+        <app-form-field label="stops.field.name" forId="stop-name" [error]="nameError()">
           <input id="stop-name" type="text" formControlName="name" maxlength="150" />
         </app-form-field>
 
-        <app-form-field label="État" forId="stop-status">
+        <app-form-field label="stops.field.status" forId="stop-status">
           <select id="stop-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'status.common.active' | t }}</option>
+            <option value="inactive">{{ 'status.common.inactive' | t }}</option>
           </select>
         </app-form-field>
 
-        <app-form-field label="Latitude" forId="stop-latitude" [error]="latitudeError()">
+        <app-form-field label="stops.field.latitude" forId="stop-latitude" [error]="latitudeError()">
           <input
             id="stop-latitude"
             type="number"
@@ -78,7 +78,11 @@
           />
         </app-form-field>
 
-        <app-form-field label="Longitude" forId="stop-longitude" [error]="longitudeError()">
+        <app-form-field
+          label="stops.field.longitude"
+          forId="stop-longitude"
+          [error]="longitudeError()"
+        >
           <input
             id="stop-longitude"
             type="number"
@@ -95,20 +99,26 @@
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeForm()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
 }
 
 @if (deleteTarget(); as stop) {
-  <app-modal title="Supprimer cet arrêt ?" (close)="cancelDelete()">
-    <p>L’arrêt {{ stop.name }} sera retiré de la liste.</p>
+  <app-modal title="stops.delete.title" (close)="cancelDelete()">
+    <p>{{ 'stops.delete.message' | t: { name: stop.name } }}</p>
 
     <div class="form-footer">
-      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
-      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+      <button class="secondary" type="button" (click)="cancelDelete()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button class="danger" type="button" (click)="confirmDelete()">
+        {{ 'common.delete' | t }}
+      </button>
     </div>
   </app-modal>
 }

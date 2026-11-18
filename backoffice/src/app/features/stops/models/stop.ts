@@ -16,6 +16,6 @@ export const STOP_STATUS_LABELS: Readonly<Record<StopStatus, string>> = {
 };
 
 export const STOP_STATUS_TONES: Readonly<Record<string, StatusTone>> = {
-  Actif: 'green',
-  Inactif: 'neutral',
+  'status.common.active': 'green',
+  'status.common.inactive': 'neutral',
 };

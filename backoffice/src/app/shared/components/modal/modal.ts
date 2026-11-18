@@ -1,9 +1,10 @@
 import { Component, HostListener, input, output } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Icon } from '../icon/icon';
 
 @Component({
   selector: 'app-modal',
-  imports: [Icon],
+  imports: [Icon, TranslatePipe],
   templateUrl: './modal.html',
   styleUrl: './modal.scss',
 })

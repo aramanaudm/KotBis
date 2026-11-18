@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -10,12 +12,21 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { StaffMember, StaffRole, StaffStatus } from '../models/staff';
-import { STAFF_ROLE_LABELS, STAFF_STATUS_LABELS, STAFF_STATUS_TONES } from '../models/staff';
+import { STAFF_STATUS_TONES } from '../models/staff';
 import { StaffService } from '../services/staff.service';
 
 @Component({
   selector: 'app-staff-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, ReactiveFormsModule],
+  imports: [
+    DataTable,
+    FormField,
+    Icon,
+    Modal,
+    PageHeader,
+    Pagination,
+    ReactiveFormsModule,
+    TranslatePipe,
+  ],
   templateUrl: './staff-page.html',
   styleUrl: './staff-page.scss',
 })
@@ -23,6 +34,7 @@ export class StaffPage {
   private readonly staff = inject(StaffService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.staff.load();
@@ -31,10 +43,10 @@ export class StaffPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = STAFF_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'name', label: 'Membre' },
-    { key: 'email', label: 'Email' },
-    { key: 'role', label: 'Rôle' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'name', label: 'staff.column.name' },
+    { key: 'email', label: 'staff.column.email' },
+    { key: 'role', label: 'staff.column.role' },
+    { key: 'status', label: 'staff.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -61,7 +73,7 @@ export class StaffPage {
     return this.staff.all().filter((member) => {
       const matchesSearch =
         !search ||
-        [member.name, member.email, STAFF_ROLE_LABELS[member.role]].some((value) =>
+        [member.name, member.email, this.i18n.t(this.roleKey(member.role))].some((value) =>
           value.toLowerCase().includes(search),
         );
       const matchesFilter = !filter || member.status === filter;
@@ -85,14 +97,14 @@ export class StaffPage {
         values: {
           name: member.name,
           email: member.email,
-          role: STAFF_ROLE_LABELS[member.role],
-          status: STAFF_STATUS_LABELS[member.status],
+          role: this.i18n.t(this.roleKey(member.role)),
+          status: `status.staff.${member.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingMember() ? 'Modifier · Personnel' : 'Ajouter · Personnel',
+    this.editingMember() ? 'staff.form.edit' : 'staff.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -160,7 +172,7 @@ export class StaffPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Membre modifié.' : 'Membre ajouté.');
+        this.showFeedback(editing ? 'staff.feedback.updated' : 'staff.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -187,7 +199,7 @@ export class StaffPage {
     this.staff.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Membre désactivé.');
+        this.showFeedback('staff.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -196,24 +208,33 @@ export class StaffPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-personnel.csv',
-      ['Membre', 'Email', 'Rôle', 'État'],
+      [
+        this.i18n.t('staff.column.name'),
+        this.i18n.t('staff.column.email'),
+        this.i18n.t('staff.column.role'),
+        this.i18n.t('staff.column.status'),
+      ],
       this.filteredStaff().map((member) => [
         member.name,
         member.email,
-        STAFF_ROLE_LABELS[member.role],
-        STAFF_STATUS_LABELS[member.status],
+        this.i18n.t(this.roleKey(member.role)),
+        this.i18n.t(`status.staff.${member.status}`),
       ]),
     );
   }
 
-  protected errorFor(name: 'name' | 'email', message: string): string {
+  protected errorFor(name: 'name' | 'email', key: string): string {
     const control = this.form.controls[name];
 
-    return control.touched && control.invalid ? message : '';
+    return control.touched && control.invalid ? key : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private roleKey(role: StaffRole): string {
+    return `role.${role}`;
+  }
+
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

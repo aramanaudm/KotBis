@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -10,13 +12,22 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { Bus, BusStatus } from '../models/bus';
-import { BUS_STATUS_LABELS, BUS_STATUS_TONES } from '../models/bus';
+import { BUS_STATUS_TONES } from '../models/bus';
 import { RoutesService } from '../../routes/services/routes.service';
 import { BusesService } from '../services/buses.service';
 
 @Component({
   selector: 'app-buses-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, ReactiveFormsModule],
+  imports: [
+    DataTable,
+    FormField,
+    Icon,
+    Modal,
+    PageHeader,
+    Pagination,
+    ReactiveFormsModule,
+    TranslatePipe,
+  ],
   templateUrl: './buses-page.html',
   styleUrl: './buses-page.scss',
 })
@@ -25,6 +36,7 @@ export class BusesPage {
   private readonly routes = inject(RoutesService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.buses.load();
@@ -34,10 +46,10 @@ export class BusesPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = BUS_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'plate', label: 'Plaque' },
-    { key: 'line', label: 'Ligne' },
-    { key: 'direction', label: 'Direction' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'plate', label: 'buses.column.plate' },
+    { key: 'line', label: 'buses.column.line' },
+    { key: 'direction', label: 'buses.column.direction' },
+    { key: 'status', label: 'buses.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -91,13 +103,13 @@ export class BusesPage {
           plate: bus.plate,
           line: bus.line,
           direction: bus.direction,
-          status: BUS_STATUS_LABELS[bus.status],
+          status: `status.bus.${bus.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingBus() ? 'Modifier · Bus' : 'Ajouter · Bus',
+    this.editingBus() ? 'buses.form.edit' : 'buses.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -168,7 +180,7 @@ export class BusesPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Bus modifié.' : 'Bus créé.');
+        this.showFeedback(editing ? 'buses.feedback.updated' : 'buses.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -196,7 +208,7 @@ export class BusesPage {
     this.buses.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Bus archivé.');
+        this.showFeedback('buses.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -205,24 +217,29 @@ export class BusesPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-bus.csv',
-      ['Plaque', 'Ligne', 'Direction', 'État'],
+      [
+        this.i18n.t('buses.column.plate'),
+        this.i18n.t('buses.column.line'),
+        this.i18n.t('buses.column.direction'),
+        this.i18n.t('buses.column.status'),
+      ],
       this.filteredBuses().map((bus) => [
         bus.plate,
         bus.line,
         bus.direction,
-        BUS_STATUS_LABELS[bus.status],
+        this.i18n.t(`status.bus.${bus.status}`),
       ]),
     );
   }
 
-  protected errorFor(name: 'plate' | 'trajetCode', message: string): string {
+  protected errorFor(name: 'plate' | 'trajetCode', key: string): string {
     const control = this.form.controls[name];
 
-    return control.touched && control.invalid ? message : '';
+    return control.touched && control.invalid ? key : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

@@ -1,7 +1,7 @@
-<app-page-header title="Zones" description="Délimitez les zones de couverture du réseau sur la carte.">
+<app-page-header title="zones.title" description="zones.description">
   <button class="primary" type="button" (click)="openCreate()">
     <app-icon name="plus" />
-    Ajouter
+    {{ 'common.add' | t }}
   </button>
 </app-page-header>
 
@@ -11,8 +11,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher une zone"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'zones.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -20,18 +20,18 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par état"
+      [attr.aria-label]="'common.filterState' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les états</option>
-      <option value="active">Actif</option>
-      <option value="inactive">Inactif</option>
+      <option value="">{{ 'common.allStates' | t }}</option>
+      <option value="active">{{ 'status.common.active' | t }}</option>
+      <option value="inactive">{{ 'status.common.inactive' | t }}</option>
     </select>
 
     <button class="secondary" type="button" (click)="exportCsv()">
       <app-icon name="export" />
-      Exporter CSV
+      {{ 'common.exportCsv' | t }}
     </button>
   </div>
 
@@ -39,7 +39,7 @@
     [columns]="columns"
     [rows]="rows()"
     [statusTones]="statusTones"
-    emptyMessage="Aucune zone ne correspond à la recherche."
+    emptyMessage="zones.empty"
     (edit)="openEdit($event)"
     (remove)="askDelete($event)"
   />
@@ -55,10 +55,12 @@
 <section class="card map-card">
   <div class="card-head">
     <div>
-      <h2>Zones actives sur le réseau</h2>
-      <p>Visualisation schématique de la couverture</p>
+      <h2>{{ 'zones.map.title' | t }}</h2>
+      <p>{{ 'zones.map.description' | t }}</p>
     </div>
-    <span class="zone-badge">{{ activeZones().length }} active(s)</span>
+    <span class="zone-badge">
+      {{ 'zones.map.count' | t: { count: activeZones().length } }}
+    </span>
   </div>
 
   <app-zone-map [zones]="activeZones()" />
@@ -68,14 +70,14 @@
   <app-modal [title]="formTitle()" (close)="closeForm()">
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
-        <app-form-field label="Nom de la zone" forId="zone-name" [error]="nameError()">
+        <app-form-field label="zones.field.name" forId="zone-name" [error]="nameError()">
           <input id="zone-name" type="text" formControlName="name" maxlength="150" />
         </app-form-field>
 
-        <app-form-field label="État" forId="zone-status">
+        <app-form-field label="zones.field.status" forId="zone-status">
           <select id="zone-status" formControlName="status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'status.common.active' | t }}</option>
+            <option value="inactive">{{ 'status.common.inactive' | t }}</option>
           </select>
         </app-form-field>
       </div>
@@ -91,7 +93,7 @@
           [disabled]="vertices().length === 0"
           (click)="undoVertex()"
         >
-          Annuler le point
+          {{ 'zones.draw.undo' | t }}
         </button>
         <button
           class="secondary"
@@ -99,30 +101,38 @@
           [disabled]="vertices().length === 0"
           (click)="clearVertices()"
         >
-          Effacer
+          {{ 'zones.draw.clear' | t }}
         </button>
-        <span class="vertex-count">{{ vertices().length }} point(s)</span>
+        <span class="vertex-count">
+          {{ 'zones.draw.count' | t: { count: vertices().length } }}
+        </span>
       </div>
 
       @if (formError()) {
-        <p class="form-error" role="alert">{{ formError() }}</p>
+        <p class="form-error" role="alert">{{ formError() | t }}</p>
       }
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeForm()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
 }
 
 @if (deleteTarget(); as zone) {
-  <app-modal title="Supprimer cette zone ?" (close)="cancelDelete()">
-    <p>La zone {{ zone.name }} sera retirée de la liste.</p>
+  <app-modal title="zones.delete.title" (close)="cancelDelete()">
+    <p>{{ 'zones.delete.message' | t: { name: zone.name } }}</p>
 
     <div class="form-footer">
-      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
-      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+      <button class="secondary" type="button" (click)="cancelDelete()">
+        {{ 'common.cancel' | t }}
+      </button>
+      <button class="danger" type="button" (click)="confirmDelete()">
+        {{ 'common.delete' | t }}
+      </button>
     </div>
   </app-modal>
 }

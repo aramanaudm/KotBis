@@ -1,4 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
@@ -8,19 +10,20 @@ import { Icon } from '../../../shared/components/icon/icon';
 import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
-import type { Report, ReportStatus } from '../models/report';
-import { REPORT_STATUS_LABELS, REPORT_STATUS_TONES, REPORT_TYPE_LABELS } from '../models/report';
+import type { Report, ReportStatus, ReportType } from '../models/report';
+import { REPORT_STATUS_TONES } from '../models/report';
 import { ReportsService } from '../services/reports.service';
 
 @Component({
   selector: 'app-reports-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination],
+  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, TranslatePipe],
   templateUrl: './reports-page.html',
   styleUrl: './reports-page.scss',
 })
 export class ReportsPage {
   private readonly reports = inject(ReportsService);
   private readonly csv = inject(CsvExportService);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.reports.load();
@@ -28,13 +31,12 @@ export class ReportsPage {
 
   protected readonly pageSize = 6;
   protected readonly statusTones = REPORT_STATUS_TONES;
-  protected readonly typeLabels = REPORT_TYPE_LABELS;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'id', label: 'Référence' },
-    { key: 'bus', label: 'Bus' },
-    { key: 'type', label: 'Type' },
-    { key: 'status', label: 'Statut', type: 'status' },
-    { key: 'date', label: 'Date' },
+    { key: 'id', label: 'reports.column.reference' },
+    { key: 'bus', label: 'reports.column.bus' },
+    { key: 'type', label: 'reports.column.type' },
+    { key: 'status', label: 'reports.column.status', type: 'status' },
+    { key: 'date', label: 'reports.column.date' },
   ];
 
   protected readonly search = signal('');
@@ -52,9 +54,13 @@ export class ReportsPage {
     return this.reports.all().filter((report) => {
       const matchesSearch =
         !search ||
-        [report.id, report.bus, REPORT_TYPE_LABELS[report.type], report.comment, report.date].some(
-          (value) => value.toLowerCase().includes(search),
-        );
+        [
+          report.id,
+          report.bus,
+          this.i18n.t(this.typeKey(report.type)),
+          report.comment,
+          report.date,
+        ].some((value) => value.toLowerCase().includes(search));
       const matchesFilter = !filter || report.status === filter;
 
       return matchesSearch && matchesFilter;
@@ -76,8 +82,8 @@ export class ReportsPage {
         values: {
           id: report.id,
           bus: report.bus,
-          type: REPORT_TYPE_LABELS[report.type],
-          status: REPORT_STATUS_LABELS[report.status],
+          type: this.i18n.t(this.typeKey(report.type)),
+          status: `status.report.${report.status}`,
           date: report.date,
         },
       }));
@@ -129,7 +135,7 @@ export class ReportsPage {
     this.reports.update(report.id, statut).subscribe({
       next: () => {
         this.closeReview();
-        this.showFeedback('Signalement mis à jour.');
+        this.showFeedback('reports.feedback.updated');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -138,19 +144,29 @@ export class ReportsPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-signalements.csv',
-      ['Référence', 'Bus', 'Type', 'Statut', 'Date'],
+      [
+        this.i18n.t('reports.column.reference'),
+        this.i18n.t('reports.column.bus'),
+        this.i18n.t('reports.column.type'),
+        this.i18n.t('reports.column.status'),
+        this.i18n.t('reports.column.date'),
+      ],
       this.filteredReports().map((report) => [
         report.id,
         report.bus,
-        REPORT_TYPE_LABELS[report.type],
-        REPORT_STATUS_LABELS[report.status],
+        this.i18n.t(this.typeKey(report.type)),
+        this.i18n.t(`status.report.${report.status}`),
         report.date,
       ]),
     );
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  protected typeKey(type: ReportType): string {
+    return `reportType.${type}`;
+  }
+
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

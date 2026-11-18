@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LanguageService } from '../../../core/i18n/language.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -11,12 +13,21 @@ import { Pagination } from '../../../shared/components/pagination/pagination';
 import { apiError } from '../../../core/services/api';
 import { StopsService } from '../../stops/services/stops.service';
 import type { TransitRoute, TransitRouteStatus } from '../models/route';
-import { ROUTE_STATUS_LABELS, ROUTE_STATUS_TONES } from '../models/route';
+import { ROUTE_STATUS_TONES } from '../models/route';
 import { RoutesService } from '../services/routes.service';
 
 @Component({
   selector: 'app-routes-page',
-  imports: [DataTable, FormField, Icon, Modal, PageHeader, Pagination, ReactiveFormsModule],
+  imports: [
+    DataTable,
+    FormField,
+    Icon,
+    Modal,
+    PageHeader,
+    Pagination,
+    ReactiveFormsModule,
+    TranslatePipe,
+  ],
   templateUrl: './routes-page.html',
   styleUrl: './routes-page.scss',
 })
@@ -25,6 +36,7 @@ export class RoutesPage {
   private readonly stops = inject(StopsService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(LanguageService);
 
   constructor() {
     this.stops.load();
@@ -34,10 +46,10 @@ export class RoutesPage {
   protected readonly pageSize = 6;
   protected readonly statusTones = ROUTE_STATUS_TONES;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'name', label: 'Trajet' },
-    { key: 'line', label: 'Ligne' },
-    { key: 'stops', label: 'Arrêts' },
-    { key: 'status', label: 'État', type: 'status' },
+    { key: 'name', label: 'routes.column.name' },
+    { key: 'line', label: 'routes.column.line' },
+    { key: 'stops', label: 'routes.column.stops' },
+    { key: 'status', label: 'routes.column.status', type: 'status' },
   ];
 
   protected readonly search = signal('');
@@ -92,14 +104,14 @@ export class RoutesPage {
         values: {
           name: route.name,
           line: route.line,
-          stops: `${route.stops.length} arrêt(s)`,
-          status: ROUTE_STATUS_LABELS[route.status],
+          stops: this.i18n.t('routes.stops.count', { count: route.stops.length }),
+          status: `status.common.${route.status}`,
         },
       }));
   });
 
   protected readonly formTitle = computed(() =>
-    this.editingRoute() ? 'Modifier · Trajet' : 'Ajouter · Trajet',
+    this.editingRoute() ? 'routes.form.edit' : 'routes.form.create',
   );
 
   protected onSearch(event: Event): void {
@@ -159,12 +171,12 @@ export class RoutesPage {
     const name = this.selectedStop();
 
     if (!name) {
-      this.formError.set('Sélectionnez un arrêt à ajouter.');
+      this.formError.set('routes.error.selectStop');
       return;
     }
 
     if (this.routeStops().includes(name)) {
-      this.formError.set('Cet arrêt est déjà présent dans le trajet.');
+      this.formError.set('routes.error.duplicateStop');
       return;
     }
 
@@ -195,7 +207,7 @@ export class RoutesPage {
     }
 
     if (this.routeStops().length < 2) {
-      this.formError.set('Ajoutez au moins un départ et un terminus.');
+      this.formError.set('routes.error.minStops');
       return;
     }
 
@@ -218,7 +230,7 @@ export class RoutesPage {
     operation.subscribe({
       next: () => {
         this.closeForm();
-        this.showFeedback(editing ? 'Trajet modifié.' : 'Trajet créé.');
+        this.showFeedback(editing ? 'routes.feedback.updated' : 'routes.feedback.created');
       },
       error: (err) => this.formError.set(apiError(err)),
     });
@@ -245,7 +257,7 @@ export class RoutesPage {
     this.routes.delete(target.id).subscribe({
       next: () => {
         this.deleteTarget.set(null);
-        this.showFeedback('Trajet archivé.');
+        this.showFeedback('routes.feedback.deleted');
       },
       error: (err) => this.showFeedback(apiError(err)),
     });
@@ -254,24 +266,29 @@ export class RoutesPage {
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-trajets.csv',
-      ['Trajet', 'Ligne', 'Arrêts', 'État'],
+      [
+        this.i18n.t('routes.column.name'),
+        this.i18n.t('routes.column.line'),
+        this.i18n.t('routes.column.stops'),
+        this.i18n.t('routes.column.status'),
+      ],
       this.filteredRoutes().map((route) => [
         route.name,
         route.line,
         route.stops.join(' → '),
-        ROUTE_STATUS_LABELS[route.status],
+        this.i18n.t(`status.common.${route.status}`),
       ]),
     );
   }
 
-  protected errorFor(name: 'name' | 'line', message: string): string {
+  protected errorFor(name: 'name' | 'line', key: string): string {
     const control = this.form.controls[name];
 
-    return control.touched && control.invalid ? message : '';
+    return control.touched && control.invalid ? key : '';
   }
 
-  private showFeedback(message: string): void {
-    this.feedback.set(message);
+  private showFeedback(key: string): void {
+    this.feedback.set(this.i18n.t(key));
     window.setTimeout(() => this.feedback.set(''), 3000);
   }
 }

@@ -1,10 +1,7 @@
-<app-page-header
-  title="Signalements"
-  description="Vérifiez les signalements envoyés par les voyageurs."
->
+<app-page-header title="reports.title" description="reports.description">
   <button class="secondary" type="button" (click)="exportCsv()">
     <app-icon name="export" />
-    Exporter
+    {{ 'common.export' | t }}
   </button>
 </app-page-header>
 
@@ -14,8 +11,8 @@
       <app-icon name="search" />
       <input
         type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher un signalement"
+        [placeholder]="'common.search' | t"
+        [attr.aria-label]="'reports.search' | t"
         [value]="search()"
         (input)="onSearch($event)"
       />
@@ -23,14 +20,14 @@
 
     <select
       class="filter"
-      aria-label="Filtrer par statut"
+      [attr.aria-label]="'common.filterStatus' | t"
       [value]="statusFilter()"
       (change)="onFilter($event)"
     >
-      <option value="">Tous les statuts</option>
-      <option value="pending">À vérifier</option>
-      <option value="confirmed">Confirmé</option>
-      <option value="dismissed">Classé sans suite</option>
+      <option value="">{{ 'common.allStatuses' | t }}</option>
+      <option value="pending">{{ 'status.report.pending' | t }}</option>
+      <option value="confirmed">{{ 'status.report.confirmed' | t }}</option>
+      <option value="dismissed">{{ 'status.report.dismissed' | t }}</option>
     </select>
   </div>
 
@@ -39,9 +36,9 @@
     [rows]="rows()"
     [statusTones]="statusTones"
     [showRemove]="false"
-    editLabel="Traiter le signalement"
+    editLabel="reports.action.process"
     editIcon="check"
-    emptyMessage="Aucun signalement ne correspond à la recherche."
+    emptyMessage="reports.empty"
     (edit)="openReview($event)"
   />
 
@@ -54,30 +51,29 @@
 </section>
 
 @if (reviewTarget(); as report) {
-  <app-modal title="Traiter le signalement" (close)="closeReview()">
+  <app-modal title="reports.modal.title" (close)="closeReview()">
     <div class="review-summary">
       <p class="review-reference">{{ report.id }} · {{ report.bus }}</p>
       <p class="review-comment">{{ report.comment }}</p>
-      <p class="review-meta">{{ typeLabels[report.type] }} · {{ report.date }}</p>
+      <p class="review-meta">{{ typeKey(report.type) | t }} · {{ report.date }}</p>
     </div>
 
     <form (submit)="saveReview($event)">
-      <app-form-field label="Statut" forId="report-status">
+      <app-form-field label="reports.field.status" forId="report-status">
         <select id="report-status" [value]="reviewStatus()" (change)="onReviewStatus($event)">
-          <option value="pending">À vérifier</option>
-          <option value="confirmed">Confirmé</option>
-          <option value="dismissed">Classé sans suite</option>
+          <option value="pending">{{ 'status.report.pending' | t }}</option>
+          <option value="confirmed">{{ 'status.report.confirmed' | t }}</option>
+          <option value="dismissed">{{ 'status.report.dismissed' | t }}</option>
         </select>
       </app-form-field>
 
-      <p class="review-hint">
-        Confirmer ce signalement ne change pas automatiquement l’état du bus. Modifiez le bus après
-        vérification.
-      </p>
+      <p class="review-hint">{{ 'reports.hint' | t }}</p>
 
       <div class="form-footer">
-        <button class="secondary" type="button" (click)="closeReview()">Annuler</button>
-        <button class="primary" type="submit">Enregistrer</button>
+        <button class="secondary" type="button" (click)="closeReview()">
+          {{ 'common.cancel' | t }}
+        </button>
+        <button class="primary" type="submit">{{ 'common.save' | t }}</button>
       </div>
     </form>
   </app-modal>
