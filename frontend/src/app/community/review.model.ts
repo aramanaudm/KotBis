@@ -6,4 +6,5 @@ export interface Review {
   readonly userName: string;
   readonly text: string;
   readonly createdAt: string;
+  readonly updatedAt?: string;
 }
