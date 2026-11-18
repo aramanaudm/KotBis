@@ -1,4 +1,4 @@
-import { Pool, PoolConfig, QueryResultRow } from "pg";
+import { Pool, PoolClient, PoolConfig, QueryResultRow } from "pg";
 import "dotenv/config";
 
 // Variables d'environnement obligatoires pour la connexion PostgreSQL
@@ -41,7 +41,7 @@ export function lireConfigurationBdd(env: NodeJS.ProcessEnv = process.env): Pool
 }
 
 // Code technique sûr à journaliser (ex. 28P01, 3D000, ECONNREFUSED)
-function extraireCode(erreur: unknown): string | undefined {
+export function codeErreurPostgres(erreur: unknown): string | undefined {
   if (erreur && typeof erreur === "object" && "code" in erreur) {
     return String((erreur as { code: unknown }).code);
   }
@@ -57,7 +57,7 @@ export function obtenirPool(): Pool {
 
     // Sans ce gestionnaire, une erreur sur une connexion inactive arrête le processus
     pool.on("error", (erreur) => {
-      console.error(`[BDD] Erreur sur une connexion inactive (code : ${extraireCode(erreur) ?? "inconnu"})`);
+      console.error(`[BDD] Erreur sur une connexion inactive (code : ${codeErreurPostgres(erreur) ?? "inconnu"})`);
     });
   }
   return pool;
@@ -71,7 +71,35 @@ async function executer<T extends QueryResultRow>(texte: string, parametres: unk
     const resultat = await poolBdd.query<T>(texte, parametres);
     return resultat.rows;
   } catch (erreur) {
-    throw new ErreurBaseDeDonnees(extraireCode(erreur));
+    throw new ErreurBaseDeDonnees(codeErreurPostgres(erreur));
+  }
+}
+
+// Encapsule une opération dans une transaction BEGIN / COMMIT / ROLLBACK
+export async function avecTransaction<T>(
+  poolBdd: Pool,
+  action: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await poolBdd.connect();
+  let transactionOuverte = false;
+  try {
+    await client.query("BEGIN");
+    transactionOuverte = true;
+    const resultat = await action(client);
+    await client.query("COMMIT");
+    transactionOuverte = false;
+    return resultat;
+  } catch (erreur) {
+    if (transactionOuverte) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (erreurRollback) {
+        console.error(`[BDD] Échec du rollback (code : ${codeErreurPostgres(erreurRollback) ?? "inconnu"})`);
+      }
+    }
+    throw erreur;
+  } finally {
+    client.release();
   }
 }
 

@@ -1,5 +1,6 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -9,13 +10,7 @@ import { Modal } from '../../../shared/components/modal/modal';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Pagination } from '../../../shared/components/pagination/pagination';
 import type { User, UserRole, UserStatus } from '../models/user';
-import {
-  USER_ROLES,
-  USER_ROLE_LABELS,
-  USER_STATUSES,
-  USER_STATUS_LABELS,
-  USER_STATUS_TONES,
-} from '../models/user';
+import { USER_ROLE_LABELS, USER_STATUS_LABELS, USER_STATUS_TONES } from '../models/user';
 import { UsersService } from '../services/users.service';
 
 @Component({
@@ -24,49 +19,39 @@ import { UsersService } from '../services/users.service';
   templateUrl: './users-page.html',
   styleUrl: './users-page.scss',
 })
-export class UsersPage implements OnInit {
+export class UsersPage {
   private readonly users = inject(UsersService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly dateFormatter = new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
+
+  constructor() {
+    this.users.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = USER_STATUS_TONES;
-  protected readonly roles = USER_ROLES;
-  protected readonly statuses = USER_STATUSES;
-  protected readonly roleLabels = USER_ROLE_LABELS;
-  protected readonly statusLabels = USER_STATUS_LABELS;
   protected readonly columns: readonly TableColumn[] = [
-    { key: 'pseudo', label: 'Utilisateur', type: 'avatar' },
+    { key: 'pseudo', label: 'Utilisateur' },
     { key: 'email', label: 'Email' },
     { key: 'role', label: 'Rôle' },
     { key: 'status', label: 'État', type: 'status' },
-    { key: 'createdAt', label: 'Date de création' },
   ];
 
   protected readonly search = signal('');
   protected readonly statusFilter = signal<UserStatus | ''>('');
   protected readonly page = signal(1);
 
-  protected readonly detailTarget = signal<User | null>(null);
   protected readonly formOpen = signal(false);
   protected readonly editingUser = signal<User | null>(null);
   protected readonly deleteTarget = signal<User | null>(null);
   protected readonly formError = signal('');
   protected readonly feedback = signal('');
-  protected readonly saving = signal(false);
 
   protected readonly form = this.formBuilder.nonNullable.group({
     pseudo: ['', [Validators.required, Validators.maxLength(60)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
-    role: this.formBuilder.nonNullable.control<UserRole>('voyageur'),
-    status: this.formBuilder.nonNullable.control<UserStatus>('actif'),
-    city: ['', [Validators.maxLength(120)]],
-    motDePasse: ['', [Validators.minLength(8)]],
+    role: this.formBuilder.nonNullable.control<UserRole>('traveller'),
+    status: this.formBuilder.nonNullable.control<UserStatus>('active'),
   });
 
   protected readonly filteredUsers = computed(() => {
@@ -76,13 +61,9 @@ export class UsersPage implements OnInit {
     return this.users.all().filter((user) => {
       const matchesSearch =
         !search ||
-        [
-          user.pseudo,
-          user.email,
-          user.city,
-          USER_ROLE_LABELS[user.role],
-          USER_STATUS_LABELS[user.status],
-        ].some((value) => value.toLowerCase().includes(search));
+        [user.pseudo, user.email, USER_ROLE_LABELS[user.role]].some((value) =>
+          value.toLowerCase().includes(search),
+        );
       const matchesFilter = !filter || user.status === filter;
 
       return matchesSearch && matchesFilter;
@@ -106,7 +87,6 @@ export class UsersPage implements OnInit {
           email: user.email,
           role: USER_ROLE_LABELS[user.role],
           status: USER_STATUS_LABELS[user.status],
-          createdAt: this.formatDate(user.createdAt),
         },
       }));
   });
@@ -114,10 +94,6 @@ export class UsersPage implements OnInit {
   protected readonly formTitle = computed(() =>
     this.editingUser() ? 'Modifier · Utilisateur' : 'Ajouter · Utilisateur',
   );
-
-  ngOnInit(): void {
-    void this.users.load();
-  }
 
   protected onSearch(event: Event): void {
     this.search.set((event.target as HTMLInputElement).value);
@@ -133,37 +109,19 @@ export class UsersPage implements OnInit {
     this.page.set(page);
   }
 
-  protected formatDate(value: string): string {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? '—' : this.dateFormatter.format(date);
-  }
-
-  protected openDetail(row: TableRow): void {
-    const user = this.users.all().find((item) => item.id === row.id);
-    if (user) this.detailTarget.set(user);
-  }
-
-  protected closeDetail(): void {
-    this.detailTarget.set(null);
-  }
-
   protected openCreate(): void {
     this.editingUser.set(null);
     this.formError.set('');
-    this.form.reset({
-      pseudo: '',
-      email: '',
-      role: 'voyageur',
-      status: 'actif',
-      city: '',
-      motDePasse: '',
-    });
+    this.form.reset({ pseudo: '', email: '', role: 'traveller', status: 'active' });
     this.formOpen.set(true);
   }
 
   protected openEdit(row: TableRow): void {
     const user = this.users.all().find((item) => item.id === row.id);
-    if (!user) return;
+
+    if (!user) {
+      return;
+    }
 
     this.editingUser.set(user);
     this.formError.set('');
@@ -172,8 +130,6 @@ export class UsersPage implements OnInit {
       email: user.email,
       role: user.role,
       status: user.status,
-      city: user.city === '—' ? '' : user.city,
-      motDePasse: '',
     });
     this.formOpen.set(true);
   }
@@ -184,88 +140,75 @@ export class UsersPage implements OnInit {
     this.editingUser.set(null);
   }
 
-  protected async save(): Promise<void> {
+  protected save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     const editing = this.editingUser();
-    const payload = this.form.getRawValue();
-    this.saving.set(true);
-    this.formError.set('');
-    try {
-      if (editing) {
-        await this.users.update(editing.id, payload);
-      } else {
-        await this.users.create(payload);
-      }
-      this.closeForm();
-      this.showFeedback(editing ? 'Utilisateur mis à jour.' : 'Utilisateur ajouté.');
-    } catch (error) {
-      this.formError.set(this.errorMessage(error));
-    } finally {
-      this.saving.set(false);
-    }
-  }
+    const user: Omit<User, 'id'> = {
+      pseudo: this.form.controls.pseudo.value,
+      email: this.form.controls.email.value,
+      role: this.form.controls.role.value,
+      status: this.form.controls.status.value,
+      points: editing?.points ?? 0,
+    };
+    const operation = editing ? this.users.update(editing.id, user) : this.users.create(user);
 
-  protected async toggleStatus(row: TableRow): Promise<void> {
-    const user = this.users.all().find((item) => item.id === row.id);
-    if (!user) return;
-
-    const next: UserStatus = user.status === 'actif' ? 'inactif' : 'actif';
-    try {
-      await this.users.setStatus(user.id, next);
-      this.showFeedback(next === 'actif' ? 'Utilisateur activé.' : 'Utilisateur désactivé.');
-    } catch (error) {
-      this.showFeedback(this.errorMessage(error));
-    }
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Utilisateur modifié.' : 'Utilisateur créé.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
     const user = this.users.all().find((item) => item.id === row.id);
-    if (user) this.deleteTarget.set(user);
+
+    if (user) {
+      this.deleteTarget.set(user);
+    }
   }
 
   protected cancelDelete(): void {
     this.deleteTarget.set(null);
   }
 
-  protected async confirmDelete(): Promise<void> {
+  protected confirmDelete(): void {
     const target = this.deleteTarget();
-    if (!target) return;
-
-    try {
-      await this.users.remove(target.id);
-      this.showFeedback('Utilisateur supprimé.');
-    } catch (error) {
-      this.showFeedback(this.errorMessage(error));
-    } finally {
-      this.deleteTarget.set(null);
+    if (!target) {
+      return;
     }
+
+    this.users.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Compte désactivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {
     this.csv.export(
       'kotbis-utilisateurs.csv',
-      ['Utilisateur', 'Email', 'Rôle', 'État', 'Date de création'],
+      ['Utilisateur', 'Email', 'Rôle', 'État'],
       this.filteredUsers().map((user) => [
         user.pseudo,
         user.email,
         USER_ROLE_LABELS[user.role],
         USER_STATUS_LABELS[user.status],
-        this.formatDate(user.createdAt),
       ]),
     );
   }
 
-  protected errorFor(name: 'pseudo' | 'email' | 'motDePasse', message: string): string {
+  protected errorFor(name: 'pseudo' | 'email', message: string): string {
     const control = this.form.controls[name];
-    return control.touched && control.invalid ? message : '';
-  }
 
-  private errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : 'Une erreur est survenue.';
+    return control.touched && control.invalid ? message : '';
   }
 
   private showFeedback(message: string): void {

@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
   apiBaseUrl: '/api',
-  frontendUrl: '/',
+  apiUrl: '',
   useMockApi: false,
 } as const;
