@@ -66,3 +66,22 @@ export interface Arret {
   dateMiseAJour: string;
 
 }
+/**
+ * KBE-28 — Trouver les arrêts proches
+ *
+ * Interface représentant un arrêt de bus situé
+ * à proximité d'une position géographique.
+ *
+ * Elle hérite de toutes les propriétés de
+ * l'interface Arret définie pour KBE-27.
+ */
+export interface ArretProche extends Arret {
+
+  // Distance entre la position recherchée
+  // et l'arrêt de bus, exprimée en mètres.
+  //
+  // Cette distance sera calculée par PostGIS
+  // à l'aide de la fonction ST_Distance.
+  distanceMetres: number;
+
+}
