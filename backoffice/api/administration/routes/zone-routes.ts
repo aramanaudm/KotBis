@@ -72,6 +72,28 @@ export function zoneRoutes(pool: Pool): Router {
     }
   });
 
+  router.get('/zones/:id/stops', async (req, res) => {
+    try {
+      const zone = await pool.query(
+        'SELECT id FROM zones WHERE id = $1 AND archive_le IS NULL',
+        [req.params.id],
+      );
+      if (zone.rowCount === 0) return res.status(404).json({ error: 'Zone non trouvée' });
+
+      const resultat = await pool.query(`
+        SELECT a.id, a.code, a.nom, a.actif,
+               ST_Y(a.position) AS latitude, ST_X(a.position) AS longitude
+        FROM zones z
+        JOIN arrets a ON a.archive_le IS NULL AND ST_Intersects(z.contour, a.position)
+        WHERE z.id = $1
+        ORDER BY a.nom
+      `, [req.params.id]);
+      res.json({ success: true, data: resultat.rows });
+    } catch (error) {
+      repondreErreur(res, error);
+    }
+  });
+
   router.post('/zones', async (req, res) => {
     try {
       const { code, nom, contour, actif } = req.body;

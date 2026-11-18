@@ -1,64 +1,125 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { apiError } from '../../../../core/services/api';
+import type { Stop } from '../../../stops/models/stop';
+import { StopsService } from '../../../stops/services/stops.service';
+import { ZoneMap } from '../../../zones/components/zone-map/zone-map';
+import { ZonesService } from '../../../zones/services/zones.service';
 
 @Component({
   selector: 'app-network-map',
+  standalone: true,
+  imports: [ZoneMap],
   template: `
-    <div class="map">
-      <svg
-        viewBox="0 0 600 300"
-        preserveAspectRatio="none"
-        role="img"
-        aria-label="Carte du réseau"
-      >
-        <defs>
-          <pattern
-            id="streets"
-            width="65"
-            height="65"
-            patternTransform="rotate(26)"
-            patternUnits="userSpaceOnUse"
-          >
-            <path d="M0 0V65M0 0H65" stroke="#dae2dc" stroke-width="3" />
-          </pattern>
-        </defs>
+    <div class="map-toolbar">
+      <label for="zone-select">Zone</label>
+      <select id="zone-select" (change)="choisirZone($event)">
+        <option value="">Toutes les zones</option>
+        @for (zone of zones.active(); track zone.id) {
+          <option [value]="zone.id">{{ zone.name }}</option>
+        }
+      </select>
 
-        <rect width="600" height="300" fill="#e8eeeb" />
-        <rect width="600" height="300" fill="url(#streets)" />
-        <ellipse cx="40" cy="70" rx="110" ry="90" fill="#cfe2cd" />
-        <ellipse cx="550" cy="260" rx="120" ry="70" fill="#cfe2cd" />
-        <path d="M-20 260 630 70M240 -20 170 320M0 30 650 200" stroke="white" stroke-width="12" />
-      </svg>
+      @if (zoneSelectionnee()) {
+        <span class="stop-count">{{ arrets().length }} arrêt(s)</span>
+      } @else {
+        <span class="map-note">{{ zones.active().length }} zone(s) active(s)</span>
+      }
 
-      <span class="map-note">Aucune donnée cartographique</span>
+      @if (erreur()) {
+        <span class="map-error">{{ erreur() }}</span>
+      }
     </div>
+
+    <app-zone-map [zones]="zonesAffichees()" [stops]="arrets()" />
   `,
   styles: `
     :host {
       display: block;
-    }
-
-    .map {
-      position: relative;
-      height: 280px;
-      overflow: hidden;
-      background: #e8eeeb;
-    }
-
-    svg {
       width: 100%;
-      height: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .map-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 22px;
+      color: var(--muted);
+      font-size: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .map-toolbar label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .map-toolbar select {
+      min-width: 180px;
+      padding: 7px 9px;
+      color: var(--ink);
+      font-size: 11px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+    }
+
+    .stop-count {
+      margin-left: auto;
+      color: var(--green);
+      font-weight: 600;
     }
 
     .map-note {
-      position: absolute;
-      bottom: 12px;
-      left: 15px;
-      padding: 6px 9px;
-      color: #6b7f7d;
-      font-size: 9px;
-      background: #ffffffc9;
-      border-radius: 6px;
+      margin-left: auto;
+    }
+
+    .map-error {
+      color: var(--red);
     }
   `,
 })
-export class NetworkMap {}
+export class NetworkMap {
+  protected readonly zones = inject(ZonesService);
+  private readonly stops = inject(StopsService);
+
+  protected readonly zoneSelectionnee = signal('');
+  protected readonly arrets = signal<readonly Stop[]>([]);
+  protected readonly erreur = signal('');
+
+  protected readonly zonesAffichees = computed(() => {
+    const id = this.zoneSelectionnee();
+
+    return id ? this.zones.active().filter((zone) => zone.id === id) : this.zones.active();
+  });
+
+  constructor() {
+    this.zones.load();
+  }
+
+  protected choisirZone(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    this.zoneSelectionnee.set(id);
+    this.erreur.set('');
+
+    if (!id) {
+      this.arrets.set([]);
+      return;
+    }
+
+    this.stops.stopsForZone(id).subscribe({
+      next: (stops) => {
+        if (this.zoneSelectionnee() === id) {
+          this.arrets.set(stops);
+        }
+      },
+      error: (err) => {
+        this.arrets.set([]);
+        this.erreur.set(apiError(err));
+      },
+    });
+  }
+}
