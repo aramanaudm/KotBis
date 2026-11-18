@@ -1,0 +1,119 @@
+<ion-content>
+  <main class="shell">
+    <a routerLink="/favoris">← Retour aux favoris</a>
+    <h1>Gestion des alertes</h1>
+    <button class="primary" type="button" (click)="ouvrir(dialogue, formulaire)">Créer une alerte</button>
+    <p role="status">{{ annonce() }}</p>
+    <ul aria-label="Alertes de trajet">
+      @for (alerte of alertes(); track alerte.id) {
+      <li>
+        <div>
+          <span class="trajet">
+            {{ alerte.depart ? alerte.depart + ' → ' : 'Destination : ' }}{{ alerte.destination }}
+          </span>
+          @if (alerte.heure) {
+          <span class="horaire">{{ alerte.heure }} · {{ alerte.repetition }}</span>
+          }
+        </div>
+        <span class="etat" [class.active]="alerte.active"> {{ alerte.active ? 'Active' : 'Inactive' }} </span>
+        <div class="actions">
+          <button
+            type="button"
+            (click)="ouvrir(dialogue, formulaire, alerte)"
+            [attr.aria-label]="'Modifier l’alerte pour ' + alerte.destination"
+          >
+            Modifier
+          </button>
+          <button
+            type="button"
+            (click)="changerEtat(alerte, !alerte.active)"
+            [attr.aria-label]="(alerte.active ? 'Désactiver' : 'Réactiver') + ' l’alerte pour ' + alerte.destination"
+          >
+            {{ alerte.active ? 'Désactiver' : 'Réactiver' }}
+          </button>
+        </div>
+        <details class="detail">
+          <summary>Détails de l’alerte</summary>
+          <dl>
+            <div>
+              <dt>État</dt>
+              <dd>
+                <span class="etat" [class.active]="alerte.active">{{ alerte.active ? 'Active' : 'Inactive' }}</span>
+              </dd>
+            </div>
+            <div>
+              <dt>Destination</dt>
+              <dd>{{ alerte.destination }}</dd>
+            </div>
+            <div>
+              <dt>Heure du rappel</dt>
+              <dd>{{ alerte.heure ?? 'Non renseignée' }}</dd>
+            </div>
+            <div>
+              <dt>Répétition</dt>
+              <dd>{{ alerte.repetition ?? 'Non renseignée' }}</dd>
+            </div>
+            <div>
+              <dt>Notification</dt>
+              <dd>Non programmée</dd>
+            </div>
+          </dl>
+        </details>
+      </li>
+      } @empty {
+      <li>Aucune alerte enregistrée.</li>
+      }
+    </ul>
+    <section class="notifications" aria-labelledby="titre-notifications">
+      <h2 id="titre-notifications">Notifications</h2>
+      <p>La programmation et l’envoi des notifications sont indisponibles dans cette version.</p>
+      <details class="detail">
+        <summary>Voir les exemples d’états</summary>
+        <dl>
+          <div>
+            <dt>Alerte enregistrée</dt>
+            <dd>Les paramètres de l’alerte ont été enregistrés.</dd>
+          </div>
+          <div>
+            <dt>Notification programmée</dt>
+            <dd>Un rappel est prévu pour l’heure choisie.</dd>
+          </div>
+          <div>
+            <dt>Échec d’envoi</dt>
+            <dd>Une tentative d’envoi a échoué.</dd>
+          </div>
+        </dl>
+      </details>
+    </section>
+  </main>
+</ion-content>
+
+<dialog #dialogue aria-labelledby="titre-formulaire-alerte" (close)="formulaire.reset()">
+  <header class="dialog-header">
+    <button class="fermer" type="button" aria-label="Fermer" (click)="dialogue.close()">×</button>
+  </header>
+  <h2 id="titre-formulaire-alerte">{{ alerteEnCours() ? 'Modifier une alerte' : 'Créer une alerte' }}</h2>
+  <form #formulaire (submit)="enregistrer($event, formulaire, dialogue)">
+    <label for="destination-alerte">Destination</label>
+    <select name="destination" id="destination-alerte" required>
+      <option value="">Choisir une destination</option>
+      <option>Rose Hill</option>
+      <option>Port-Louis</option>
+      <option>Curepipe</option>
+      <option>Quatre Bornes</option>
+    </select>
+
+    <label for="heure-alerte">Heure du rappel</label>
+    <input name="heure" id="heure-alerte" type="time" required />
+
+    <label for="repetition-alerte">Répétition</label>
+    <select name="repetition" id="repetition-alerte" required>
+      <option value="">Choisir une répétition</option>
+      <option>Lundi à vendredi</option>
+      <option>Tous les jours</option>
+      <option>Une seule fois</option>
+    </select>
+
+    <button class="primary enregistrer" type="submit">Enregistrer</button>
+  </form>
+</dialog>
