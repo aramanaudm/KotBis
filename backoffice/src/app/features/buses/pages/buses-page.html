@@ -1,0 +1,118 @@
+<app-page-header title="Bus" description="Consultez et gérez les véhicules de votre réseau.">
+  <button class="primary" type="button" (click)="openCreate()">
+    <app-icon name="plus" />
+    Ajouter
+  </button>
+</app-page-header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" />
+      <input
+        type="search"
+        placeholder="Rechercher…"
+        aria-label="Rechercher un bus"
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+    </label>
+
+    <select
+      class="filter"
+      aria-label="Filtrer par état"
+      [value]="statusFilter()"
+      (change)="onFilter($event)"
+    >
+      <option value="">Tous les états</option>
+      <option value="active">Actif</option>
+      <option value="inactive">Inactif</option>
+      <option value="breakdown">En panne</option>
+    </select>
+
+    <button class="secondary" type="button" (click)="exportCsv()">
+      <app-icon name="export" />
+      Exporter CSV
+    </button>
+  </div>
+
+  <app-data-table
+    [columns]="columns"
+    [rows]="rows()"
+    [statusTones]="statusTones"
+    emptyMessage="Aucun bus ne correspond à la recherche."
+    (edit)="openEdit($event)"
+    (remove)="askDelete($event)"
+  />
+
+  <app-pagination
+    [page]="page()"
+    [total]="filteredBuses().length"
+    [pageSize]="pageSize"
+    (pageChange)="changePage($event)"
+  />
+</section>
+
+@if (formOpen()) {
+  <app-modal [title]="formTitle()" (close)="closeForm()">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <app-form-field
+          label="Plaque"
+          forId="bus-plate"
+          [error]="errorFor('plate', 'La plaque est obligatoire.')"
+        >
+          <input id="bus-plate" type="text" formControlName="plate" maxlength="25" />
+        </app-form-field>
+
+        <app-form-field
+          label="Ligne"
+          forId="bus-line"
+          [error]="errorFor('line', 'La ligne est obligatoire.')"
+        >
+          <input id="bus-line" type="text" formControlName="line" maxlength="20" />
+        </app-form-field>
+
+        <app-form-field
+          label="Direction"
+          forId="bus-direction"
+          [error]="errorFor('direction', 'La direction est obligatoire.')"
+        >
+          <input id="bus-direction" type="text" formControlName="direction" maxlength="150" />
+        </app-form-field>
+
+        <app-form-field label="État" forId="bus-status">
+          <select id="bus-status" formControlName="status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+            <option value="breakdown">En panne</option>
+          </select>
+        </app-form-field>
+      </div>
+
+      @if (formError()) {
+        <p class="form-error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="form-footer">
+        <button class="secondary" type="button" (click)="closeForm()">Annuler</button>
+        <button class="primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+  </app-modal>
+}
+
+@if (deleteTarget(); as bus) {
+  <app-modal title="Supprimer ce bus ?" (close)="cancelDelete()">
+    <p>Le bus {{ bus.plate }} sera retiré de la liste.</p>
+
+    <div class="form-footer">
+      <button class="secondary" type="button" (click)="cancelDelete()">Annuler</button>
+      <button class="danger" type="button" (click)="confirmDelete()">Supprimer</button>
+    </div>
+  </app-modal>
+}
+
+@if (feedback()) {
+  <div class="toast" role="status">{{ feedback() }}</div>
+}
