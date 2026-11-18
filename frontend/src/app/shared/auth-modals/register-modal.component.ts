@@ -205,10 +205,10 @@ export class RegisterModalComponent {
       return;
     }
 
-    const { pseudo, email, city, phone, password } = this.form.getRawValue();
+    const { pseudo, email, city, phone, password, terms } = this.form.getRawValue();
     this.submitting.set(true);
     try {
-      await this.auth.register({ pseudo, email, city, phone, password });
+      await this.auth.register({ pseudo, email, city, phone, password, acceptTerms: terms });
       await this.modals.dismiss(null, 'done');
     } catch (error) {
       this.serverError.set(
