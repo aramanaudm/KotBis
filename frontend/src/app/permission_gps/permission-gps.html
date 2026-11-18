@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BUS-FE-021 – Demande de permission GPS</title>
-  <link rel="stylesheet" href="permission-gps.css">
+  <link rel="stylesheet" href="permission-gps.scss">
 </head>
 <body>
 <main class="carte">
@@ -15,12 +15,28 @@
     <h2 id="titre-gps">Utiliser votre position ?</h2>
     <p>Elle sert uniquement à trouver l'arrêt le plus proche. Elle n'est pas partagée avec les autres usagers.</p>
     <button id="refuser" type="button">Refuser</button>
-    <button id="autoriser" class="principal" type="button">Autoriser</button>
+    <button id="autoriser" <button class="bouton-partage" (click)="ouvrirDialogue()" type="button">
+  Partage de position
+</button>
+
+<dialog #dialogueGps class="dialogue-gps" aria-labelledby="titre-gps">
+  <h2 id="titre-gps">Utiliser votre position ?</h2>
+  <p>Elle sert uniquement à trouver l'arrêt le plus proche. Elle n'est pas partagée avec les autres usagers.</p>
+  
+  <div class="dialog-actions">
+    <button (click)="refuser()" type="button">Refuser</button>
+    <button class="principal" (click)="autoriser()" type="button">Autoriser</button>
+  </div>
+</dialog>
+
+<p id="resultat-gps" role="status" aria-live="polite" class="resultat-gps">
+  {{ messageResultat() }}
+</p>class="principal" type="button">Autoriser</button>
   </dialog>
 
   <p id="resultat-gps" role="status" aria-live="polite"></p>
 </main>
 
-  <script src="permission-gps.js"></script>
+  <script src="permission-gps.ts"></script>
 </body>
 </html>

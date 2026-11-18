@@ -53,6 +53,7 @@
   </header>
 
   <app-partage-position></app-partage-position>
+  <app-gps-dialog></app-gps-dialog>
 
   @if (carteIndisponible()) {
     <div class="map-warning" role="alert">
@@ -78,9 +79,9 @@
 
     <button
       type="button"
-      (click)="recentrer()"
-      aria-label="Revenir à la vue de départ"
-      title="Revenir à la vue de départ"
+      (click)="localiser()"
+      aria-label="Ma position"
+      title="Ma position"
     >
       ◎
     </button>
@@ -196,6 +197,8 @@
         </dd>
       </dl>
     } @else {
+      <app-champ-depart></app-champ-depart>
+
       <button class="search-preview" type="button" disabled>
         <span aria-hidden="true">⌕</span>
         <span>Où allez-vous ?</span>
