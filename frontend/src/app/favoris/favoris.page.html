@@ -1,5 +1,5 @@
 <ion-content>
-  <main class="shell">
+  <main class="shell" [attr.aria-busy]="enCours()">
     <header class="topbar">
       <a class="icon-button back" routerLink="/home" [replaceUrl]="true" aria-label="Retour à l’accueil"></a>
       <h1 #titre tabindex="-1">Favoris</h1>
@@ -7,16 +7,28 @@
 
     <p class="feedback" role="status" [class.feedback-error]="retour()?.erreur">{{ retour()?.message }}</p>
 
-    @if (favoris().length) {
+    @if (!connecte()) {
+    <section class="empty" aria-labelledby="titre-connexion">
+      <span class="star-tile" aria-hidden="true"><span class="star"></span></span>
+      <h2 id="titre-connexion">Connectez-vous pour retrouver vos favoris</h2>
+      <p>Vos trajets favoris sont enregistrés sur votre compte.</p>
+      <button class="action" type="button" (click)="seConnecter()">Se connecter</button>
+    </section>
+    } @else { @if (favoris().length) {
     <ul class="favorites" aria-label="Trajets favoris enregistrés">
       @for (favori of favoris(); track favori.id) {
-      <li class="favorite">
+      <li class="favorite" [class.indisponible]="!favori.disponible">
         <span class="star-tile" aria-hidden="true"><span class="star"></span></span>
-        <span class="route-title">{{ favori.depart }} → {{ favori.destination }}</span>
+        <span class="route-title">
+          {{ intitule(favori) }} @if (!favori.disponible) {
+          <small class="statut">Plus desservi</small>
+          }
+        </span>
         <button
           class="icon-button close remove"
           type="button"
-          [attr.aria-label]="'Retirer le trajet de ' + favori.depart + ' à ' + favori.destination + ' des favoris'"
+          [disabled]="enCours()"
+          [attr.aria-label]="'Retirer le trajet ' + intitule(favori) + ' des favoris'"
           (click)="retirer(favori, titre)"
         ></button>
       </li>
@@ -27,17 +39,38 @@
       <span class="star-tile" aria-hidden="true"><span class="star"></span></span>
       <h2 id="titre-vide">Aucun favori enregistré</h2>
     </section>
-    } @if (trajetsAjoutables().length) {
-    <section class="catalogue" aria-labelledby="titre-exemples">
-      <h2 id="titre-exemples">Trajets</h2>
+    }
+
+    <section class="catalogue" aria-labelledby="titre-trajets">
+      <h2 id="titre-trajets">Trajets</h2>
+      <form class="recherche" role="search" (submit)="rechercher($event)">
+        <label for="recherche-trajet">Rechercher une ligne, un arrêt ou une direction</label>
+        <div class="recherche-champ">
+          <input
+            id="recherche-trajet"
+            type="search"
+            maxlength="100"
+            autocomplete="off"
+            [value]="recherche()"
+            (input)="recherche.set($any($event.target).value)"
+          />
+          <button class="action" type="submit" [disabled]="enCours()">Rechercher</button>
+        </div>
+      </form>
+
+      @if (trajetsAjoutables().length) {
       <ul class="favorites">
-        @for (trajet of trajetsAjoutables(); track trajet.id) {
+        @for (trajet of trajetsAjoutables(); track trajet.trajetId) {
         <li class="favorite trajet-disponible">
-          <span class="route-title">{{ trajet.depart }} → {{ trajet.destination }}</span>
+          <span class="route-title">
+            {{ trajet.depart.nom }} → {{ trajet.arrivee.nom }}
+            <small class="statut">Ligne {{ trajet.ligne }}</small>
+          </span>
           <button
             class="action"
             type="button"
-            [attr.aria-label]="'Ajouter aux favoris le trajet de ' + trajet.depart + ' à ' + trajet.destination"
+            [disabled]="enCours()"
+            [attr.aria-label]="'Ajouter aux favoris le trajet de ' + trajet.depart.nom + ' à ' + trajet.arrivee.nom"
             (click)="ajouter(trajet, titre)"
           >
             Ajouter aux favoris
@@ -45,6 +78,9 @@
         </li>
         }
       </ul>
+      } @else if (!enCours()) {
+      <p class="aucun-trajet">Aucun trajet trouvé.</p>
+      }
     </section>
     }
   </main>
