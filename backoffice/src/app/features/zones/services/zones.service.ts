@@ -11,6 +11,17 @@ interface ApiZone {
   contour: { type: string; coordinates: number[][][] };
 }
 
+export interface ZoneBus {
+  readonly id: string;
+  readonly plaque: string;
+  readonly etat: string;
+  readonly actif: boolean;
+  readonly trajet_code: string | null;
+  readonly direction: string | null;
+  readonly ligne_code: string | null;
+  readonly ligne_libelle: string | null;
+}
+
 function versSommets(contour: ApiZone['contour']): readonly ZonePoint[] {
   const ring = contour?.coordinates?.[0] ?? [];
 
@@ -84,6 +95,12 @@ export class ZonesService {
       },
       error: (err) => this.erreur.set(apiError(err)),
     });
+  }
+
+  busesForZone(id: string): Observable<readonly ZoneBus[]> {
+    return this.http
+      .get<{ success: boolean; data: readonly ZoneBus[] }>(`${apiUrl}/api/admin/zones/${id}/buses`)
+      .pipe(map((res) => res.data));
   }
 
   create(zone: Omit<Zone, 'id'>): Observable<void> {

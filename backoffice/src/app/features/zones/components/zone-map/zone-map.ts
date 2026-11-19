@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
+import type { Stop } from '../../../stops/models/stop';
 import type { Zone, ZonePoint } from '../../models/zone';
 
 @Component({
@@ -43,8 +44,9 @@ import type { Zone, ZonePoint } from '../../models/zone';
 
     .map {
       width: 100%;
-      height: 360px;
-      background: #e8eef5;
+      height: clamp(300px, 42vh, 420px);
+      min-height: 300px;
+      background: #eef1f4;
       z-index: 0;
     }
 
@@ -67,6 +69,8 @@ import type { Zone, ZonePoint } from '../../models/zone';
 export class ZoneMap implements AfterViewInit, OnDestroy {
   readonly mode = input<'preview' | 'edit'>('preview');
   readonly zones = input<readonly Zone[]>([]);
+  readonly stops = input<readonly Stop[]>([]);
+  readonly bus = input<readonly any[]>([]); // Input pour les bus
   readonly vertices = input<readonly ZonePoint[]>([]);
   readonly verticesChange = output<readonly ZonePoint[]>();
 
@@ -74,6 +78,8 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
     viewChild.required<ElementRef<HTMLDivElement>>('canvas');
 
   private readonly ready = signal(false);
+
+  private readonly mauriceBounds = L.latLngBounds([-20.6, 57.2], [-19.9, 57.9]);
 
   private map?: L.Map;
   private layers?: L.LayerGroup;
@@ -85,22 +91,31 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
       const ready = this.ready();
       const mode = this.mode();
       const zones = this.zones();
+      const stops = this.stops();
+      const bus = this.bus();
       const vertices = this.vertices();
 
       if (ready) {
-        this.render(mode, zones, vertices);
+        this.render(mode, zones, stops, bus, vertices);
       }
     });
   }
 
   ngAfterViewInit(): void {
     this.map = L.map(this.canvas().nativeElement, {
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-    }).setView([-20.25, 57.55], 10);
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      minZoom: 8,
+      maxZoom: 18,
+      maxBounds: this.mauriceBounds,
+      maxBoundsViscosity: 1,
+      worldCopyJump: true,
+    }).fitBounds(this.mauriceBounds, { padding: [10, 10], animate: false });
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      subdomains: 'abc',
       maxZoom: 19,
+      detectRetina: true,
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.map);
@@ -126,12 +141,18 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
     });
 
     this.observer.observe(this.canvas().nativeElement);
-    this.ready.set(true);
+    setTimeout(() => {
+      this.map?.invalidateSize();
+      this.map?.fitBounds(this.mauriceBounds, { padding: [10, 10], animate: false });
+      this.ready.set(true);
+    }, 50);
   }
 
   private render(
     mode: 'preview' | 'edit',
     zones: readonly Zone[],
+    stops: readonly Stop[],
+    bus: readonly any[],
     vertices: readonly ZonePoint[],
   ): void {
     if (!this.map || !this.layers) {
@@ -197,6 +218,7 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
         });
       });
     } else {
+      // === ZONES (Rendu adouci) ===
       for (const zone of zones) {
         const valide =
           zone.vertices.length >= 3 &&
@@ -218,9 +240,10 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
 
         const polygon = L.polygon(points, {
           color: '#2069e7',
-          fillColor: '#2069e7',
-          fillOpacity: 0.3,
-          weight: 3,
+          weight: 2,
+          dashArray: '5, 5',
+          fillColor: '#60a5fa',
+          fillOpacity: 0.04,
         }).addTo(this.layers);
 
         const label = document.createElement('span');
@@ -229,13 +252,72 @@ export class ZoneMap implements AfterViewInit, OnDestroy {
 
         points.forEach((point) => bounds.extend(point));
       }
+
+      // === ARRÊTS (Plus visibles) ===
+      for (const stop of stops) {
+        if (!Number.isFinite(stop.latitude) || !Number.isFinite(stop.longitude)) {
+          continue;
+        }
+
+        const position: L.LatLngTuple = [stop.latitude, stop.longitude];
+        const marker = L.circleMarker(position, {
+          radius: 5,                // Un peu plus gros
+          color: '#ffffff',         // Bordure blanche
+          weight: 2,                // Bordure plus épaisse
+          fillColor: stop.status === 'active' ? '#1c9b71' : '#8390a2',
+          fillOpacity: 1,
+        }).addTo(this.layers);
+
+        const label = document.createElement('span');
+        label.textContent = stop.name;
+        marker.bindPopup(label);
+        bounds.extend(position);
+      }
+
+      // === BUS (Ombre plus forte) ===
+      for (const b of bus) {
+        // On place le bus sur le premier arrêt de la zone
+        const position: L.LatLngTuple | null = stops.length > 0
+          ? [stops[0].latitude, stops[0].longitude]
+          : null;
+
+        if (!position) {
+          continue;
+        }
+
+        const busMarker = L.marker(position, {
+          icon: L.divIcon({
+            className: '',
+            html: `
+              <div style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                background: #2069e7;
+                border: 2px solid white;
+                border-radius: 50%;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+                font-size: 16px;
+              ">🚌</div>
+            `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+          }),
+        }).addTo(this.layers);
+
+        const label = document.createElement('span');
+        label.innerHTML = `<strong>Bus ${b.plaque}</strong><br>${b.etat} · ${b.trajet_code ?? '—'}`;
+        busMarker.bindPopup(label);
+      }
     }
 
-    // Centrer la carte sur les contours valides.
-    if (!this.framed && bounds.isValid()) {
+    if (bounds.isValid() && mode === 'edit' && !this.framed) {
       this.map.fitBounds(bounds, {
         padding: [25, 25],
         maxZoom: 14,
+        animate: false,
       });
 
       this.framed = true;

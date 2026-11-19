@@ -200,5 +200,65 @@ export function busRoutes(pool: Pool): Router {
     }
   });
 
+  router.post('/buses/:id/assign', async (req, res) => {
+    const client = await pool.connect();
+    let transaction = false;
+    try {
+      const { trajet_id } = req.body;
+      if (!trajet_id) {
+        return res.status(400).json({ error: 'trajet_id est obligatoire' });
+      }
+
+      await client.query('BEGIN');
+      transaction = true;
+
+      const bus = await client.query(
+        'SELECT id FROM bus WHERE id = $1 AND archive_le IS NULL',
+        [req.params.id],
+      );
+      if (bus.rowCount === 0) {
+        await client.query('ROLLBACK');
+        transaction = false;
+        return res.status(404).json({ error: 'Bus non trouvé' });
+      }
+
+      const trajet = await client.query(
+        'SELECT id FROM trajets WHERE id = $1 AND archive_le IS NULL',
+        [trajet_id],
+      );
+      if (trajet.rowCount === 0) {
+        await client.query('ROLLBACK');
+        transaction = false;
+        return res.status(404).json({ error: 'Trajet non trouvé' });
+      }
+
+      await client.query(
+        'UPDATE affectations_bus SET fin_le = now() WHERE bus_id = $1 AND fin_le IS NULL',
+        [req.params.id],
+      );
+
+      const resultat = await client.query(
+        `
+          INSERT INTO affectations_bus (bus_id, trajet_id, debut_le, cree_par)
+          VALUES ($1, $2, now(), $3)
+          RETURNING id, bus_id, trajet_id, debut_le
+        `,
+        [req.params.id, trajet_id, await agentSysteme(client)],
+      );
+
+      await client.query('COMMIT');
+      transaction = false;
+      res.status(201).json({ success: true, data: resultat.rows[0] });
+    } catch (error) {
+      if (transaction) await client.query('ROLLBACK');
+      repondreErreur(res, error, {
+        23503: 'Référence invalide (bus ou trajet)',
+        '23P01': 'Ce bus a déjà une affectation qui chevauche cette période',
+      });
+    } finally {
+      client.release();
+    }
+  });
+
   return router;
 }

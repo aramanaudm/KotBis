@@ -13,6 +13,16 @@ interface ApiStop {
   actif: boolean;
 }
 
+function versStop(stop: ApiStop): Stop {
+  return {
+    id: String(stop.id),
+    name: stop.nom,
+    latitude: Number(stop.latitude),
+    longitude: Number(stop.longitude),
+    status: stop.actif ? 'active' : 'inactive',
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class StopsService {
   private readonly http = inject(HttpClient);
@@ -28,18 +38,16 @@ export class StopsService {
     this.http.get<{ success: boolean; data: ApiStop[] }>(`${apiUrl}/api/admin/stops`).subscribe({
       next: (res) => {
         this.erreur.set('');
-        this.stops.set(
-          res.data.map((stop) => ({
-            id: String(stop.id),
-            name: stop.nom,
-            latitude: Number(stop.latitude),
-            longitude: Number(stop.longitude),
-            status: stop.actif ? 'active' : 'inactive',
-          })),
-        );
+        this.stops.set(res.data.map(versStop));
       },
       error: (err) => this.erreur.set(apiError(err)),
     });
+  }
+
+  stopsForZone(zoneId: string): Observable<readonly Stop[]> {
+    return this.http
+      .get<{ success: boolean; data: ApiStop[] }>(`${apiUrl}/api/admin/zones/${zoneId}/stops`)
+      .pipe(map((res) => res.data.map(versStop)));
   }
 
   create(stop: Omit<Stop, 'id'>): Observable<void> {
