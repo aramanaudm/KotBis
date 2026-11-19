@@ -1,4 +1,4 @@
-import { computed,  Component, inject, OnDestroy, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { AuthService } from '../core/auth/auth.service';
 import { PartagePositionService } from './partage-position.service';
 
@@ -19,7 +19,7 @@ export class PartagePositionComponent implements OnDestroy {
   readonly message = signal('Partage désactivé.');
   readonly estConnecte = this.auth.isLoggedIn;
 
-  readonly backendConnecte = computed(() => !!this.auth.backendToken());
+  readonly backendConnecte = this.service.connecte;
   readonly connexionEnCours = signal(false);
 
   private sessionId: string | null = null;
