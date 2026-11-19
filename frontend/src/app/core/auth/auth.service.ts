@@ -41,13 +41,9 @@ interface ApiErrorBody {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly storage = inject(StorageService);
-  private readonly http = inject(HttpClient);
-  private readonly backendUrl = 'http://localhost:3000/api';
-  private readonly tokenKey = 'kotbis.backend.jeton';
+  private readonly api = environment.apiUrl;
 
-  readonly backendToken = signal<string | null>(
-    sessionStorage.getItem(this.tokenKey)
-  );
+  readonly backendToken = signal<string | null>(null);
   private readonly currentUser = signal<PublicAccount | null>(null);
   private session: StoredSession | null = null;
 
@@ -74,6 +70,7 @@ export class AuthService {
     }
 
     this.session = saved;
+    this.backendToken.set(saved.token);
     this.currentUser.set(saved.user);
     void this.renewSession();
   }
@@ -107,79 +104,31 @@ export class AuthService {
   async login(identifier: string, password: string): Promise<PublicAccount> {
     try {
       const response = await firstValueFrom(
-        this.http.post<{
-          jeton: string;
-          utilisateur: {
-            compteId: string;
-            pseudo?: string;
-            email?: string;
-          };
-        }>(`${this.backendUrl}/connexion`, {
-          identifiant: identifier,
+        this.http.post<ConnexionResponse>(`${this.api}/connexion`, {
+          identifiant: identifier.trim(),
           motDePasse: password,
-        })
+        }),
       );
-
-      sessionStorage.setItem(this.tokenKey, response.jeton);
-      this.backendToken.set(response.jeton);
-
-      const backendUser = response.utilisateur;
-
-      const user: PublicAccount = {
-        id: backendUser.compteId,
-        pseudo: backendUser.pseudo || identifier,
-        email: backendUser.email || '',
-        createdAt: new Date().toISOString(),
-        counters: { ...EMPTY_COUNTERS },
-      };
-
-      this.currentUser.set(user);
+      const user = this.toPublic(response.utilisateur);
+      await this.saveSession({ token: response.jeton, expiresAt: response.expireLe, user });
       return user;
-    } catch {
-      // Repli sur les comptes locaux existants.
+    } catch (error) {
+      throw this.toAuthError(error);
     }
-
-    const value = identifier.trim().toLowerCase();
-    const accounts = await this.loadAccounts();
-    const account = accounts.find((a) =>
-      isEmail(value) ? a.email === value : a.pseudo.toLowerCase() === value,
-    );
-
-    // Même message que le compte existe ou non, pour ne pas révéler quels comptes existent.
-    const invalid = new AuthError('INVALID_CREDENTIALS', 'Identifiant ou mot de passe incorrect.');
-    if (!account) throw invalid;
-    if ((await this.hash(password, account.salt)) !== account.passwordHash) throw invalid;
-
-    const user = this.toPublic(response.utilisateur);
-    await this.saveSession({ token: response.jeton, expiresAt: response.expireLe, user });
-    return user;
   }
 
   async logout(): Promise<void> {
-    const token = this.backendToken();
-
+    const token = this.token();
+    await this.clearSession();
     if (token) {
       try {
         await firstValueFrom(
-          this.http.post(
-            `${this.backendUrl}/deconnexion`,
-            {},
-            {
-              headers: new HttpHeaders({
-                Authorization: `Bearer ${token}`,
-              }),
-            }
-          )
+          this.http.post(`${this.api}/deconnexion`, {}, { headers: this.bearer(token) }),
         );
       } catch {
-        // La session locale est supprimée même si le serveur est inaccessible.
+        // La session de l'appareil est déjà fermée.
       }
     }
-
-    sessionStorage.removeItem(this.tokenKey);
-    this.backendToken.set(null);
-    await this.storage.remove(SESSION_KEY);
-    this.currentUser.set(null);
   }
 
   /**
@@ -216,12 +165,14 @@ export class AuthService {
 
   private async saveSession(session: StoredSession): Promise<void> {
     this.session = session;
+    this.backendToken.set(session.token);
     this.currentUser.set(session.user);
     await this.storage.set(SESSION_KEY, session);
   }
 
   private async clearSession(): Promise<void> {
     this.session = null;
+    this.backendToken.set(null);
     this.currentUser.set(null);
     await this.storage.remove(SESSION_KEY);
   }
