@@ -11,6 +11,9 @@
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "test:inscription": "node --import tsx --test tests/inscription.test.ts",
     "test:connexion-sessions": "node --import tsx --test tests/connexion-sessions.test.ts",
+    "test:mot-de-passe-email": "node --import tsx --test tests/motDePasseEmail.test.ts",
+    "test:profil": "node --import tsx --test tests/profil.test.ts",
+    "test:suppression": "node --import tsx --test tests/suppression.test.ts",
     "test:integration": "node --import tsx --test \"tests/integration/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },

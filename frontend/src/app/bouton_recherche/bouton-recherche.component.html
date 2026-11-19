@@ -1,0 +1,11 @@
+<p class="erreur" role="alert">{{ recherche.erreurDepart() }}</p>
+<p class="erreur" role="alert">{{ recherche.erreurDestination() }}</p>
+
+<button
+  type="button"
+  class="principal"
+  [disabled]="recherche.etat() === 'chargement'"
+  (click)="recherche.rechercher()"
+>
+  Valider et rechercher
+</button>

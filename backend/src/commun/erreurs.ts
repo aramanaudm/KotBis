@@ -31,6 +31,13 @@ export class ErreurAuthentification extends ErreurApi {
   }
 }
 
+export class ErreurNonTrouve extends ErreurApi {
+  constructor(message = "Ressource introuvable.") {
+    super(404, "RESSOURCE_INTROUVABLE", message);
+    this.name = "ErreurNonTrouve";
+  }
+}
+
 export class ErreurConflit extends ErreurApi {
   constructor(code = "CONFLIT", message = "La ressource est déjà utilisée.") {
     super(409, code, message);

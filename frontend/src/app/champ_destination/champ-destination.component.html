@@ -1,0 +1,31 @@
+<div class="champ">
+  <label for="destination">Destination</label>
+  <input
+    id="destination"
+    type="text"
+    autocomplete="off"
+    placeholder="Où allez-vous ? Ex. Rose Hill"
+    role="combobox"
+    aria-controls="suggestions-destination"
+    [attr.aria-expanded]="listeVisible()"
+    [value]="texte()"
+    (input)="saisir($event)"
+  />
+
+  @if (listeVisible()) {
+    <ul id="suggestions-destination" role="listbox">
+      @for (a of suggestions(); track a.id) {
+        <li role="option" tabindex="0" (click)="choisir(a)" (keydown.enter)="choisir(a)">
+          <strong>{{ a.nom }}</strong> <small>{{ a.zone }}</small>
+        </li>
+      } @empty {
+        <li class="vide">Aucun arrêt ne correspond.</li>
+      }
+    </ul>
+  }
+
+  <!-- Confirme à l'usager (et aux lecteurs d'écran) quel arrêt est choisi -->
+  <p role="status" aria-live="polite" class="etat">
+    @if (recherche.destination(); as d) { Destination : {{ d.nom }} ({{ d.zone }}) }
+  </p>
+</div>

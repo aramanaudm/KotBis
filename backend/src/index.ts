@@ -11,12 +11,22 @@ import {
 import { DepotAuthentificationPostgres } from "./authentification/depot";
 import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
-import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
+import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
+import { creerMiddlewareSession } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
+<<<<<<< HEAD
 import { DepotSignalementsPostgres } from "./signalements/signalements.depot";
 import { ServiceSignalements } from "./signalements/signalements.service";
 import { SignalementsController } from "./signalements/signalements.controller";
 import { creerRoutesSignalements } from "./signalements/signalements.routes";
+=======
+import routeurTransport from "./transport/transport.routes";
+import { DepotFavorisPostgres } from "./favoris/favoris.depot.postgres";
+import { FavorisControleur } from "./favoris/favoris.controleur";
+import { creerRoutesFavoris } from "./favoris/favoris.routes";
+import { FavorisService } from "./favoris/favoris.service";
+import { ReferentielReseauPostgres } from "./favoris/reseau.referentiel.postgres";
+>>>>>>> origin/develop
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -26,6 +36,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/sante", routeurSante);
+app.use("/api", routeurTransport);
 
 // KBE-23 : authentification par sessions stockées en base (jeton opaque)
 const serviceAuthentification = new ServiceAuthentification(
@@ -34,6 +45,7 @@ const serviceAuthentification = new ServiceAuthentification(
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
 
+<<<<<<< HEAD
 const serviceSignalements = new ServiceSignalements(new DepotSignalementsPostgres(obtenirPool));
 const controllerSignalements = new SignalementsController(serviceSignalements);
 app.use("/api/signalements", creerRoutesSignalements(controllerSignalements, middlewareSession));
@@ -67,6 +79,18 @@ app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) =
     client.release();
   }
 });
+=======
+// KBE-40 : favoris du voyageur connecté
+app.use(
+  "/api/favoris",
+  creerRoutesFavoris(
+    middlewareSession,
+    new FavorisControleur(
+      new FavorisService(new DepotFavorisPostgres(obtenirPool), new ReferentielReseauPostgres())
+    )
+  )
+);
+>>>>>>> origin/develop
 
 app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();
@@ -89,6 +113,8 @@ app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any
     client.release();
   }
 });
+
+app.use("/api/utilisateurs", creerRouteurUtilisateurs(serviceAuthentification, middlewareSession));
 
 app.get("/", (req, res) => {
   res.json({
