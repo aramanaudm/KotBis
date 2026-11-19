@@ -146,7 +146,16 @@ Cette route vérifie les identifiants et crée une session en base. Elle renvoie
 *   **Sécurité :** le mot de passe actuel est obligatoire. Un e-mail déjà utilisé renvoie `409 EMAIL_DEJA_UTILISE` ; un mot de passe incorrect renvoie `401 MOT_DE_PASSE_INCORRECT`.
 *   **Sessions :** le changement de mot de passe révoque les autres sessions et conserve la session courante. Une réinitialisation révoque toutes les sessions.
 
-### 7. Suppression de compte (`DELETE /api/utilisateurs/moi`) 🔒
+### 7. Consultation et modification du profil (`GET /api/utilisateurs/moi`, `PATCH /api/utilisateurs/moi`)
+*Requiert une authentification. Le compte est toujours lu depuis la session : aucun identifiant de compte fourni dans le corps n'est utilisé.*
+
+*   **Consultation :** `GET /api/utilisateurs/moi`. Réponse `200 OK` avec `{ "utilisateur": { ... } }`.
+*   **Modification :** `PATCH /api/utilisateurs/moi` avec un ou plusieurs champs parmi `pseudo`, `zoneLibre`, `telephone` et `avatarRef`. Les alias `pseudonyme`, `city` et `phone` sont acceptés. Réponse `200 OK` avec le profil à jour.
+*   **Avatar :** `PATCH /api/utilisateurs/moi/avatar` avec `{ "avatarRef": "avatar-01" }`, ou `{ "avatarRef": null }` pour le retirer.
+*   **Sécurité :** les champs `compteId`, `email`, `role`, mot de passe et secrets de session sont ignorés ou refusés. Aucun mot de passe, hash ou jeton n'est renvoyé.
+*   **Erreurs :** un pseudonyme déjà pris renvoie `409 PSEUDO_DEJA_UTILISE` ; un champ invalide ou un corps sans champ modifiable renvoie `422`.
+
+### 8. Suppression de compte (`DELETE /api/utilisateurs/moi`) 🔒
 *Requiert une authentification.*
 
 *   **Méthode :** `DELETE`
@@ -154,9 +163,9 @@ Cette route vérifie les identifiants et crée une session en base. Elle renvoie
 *   **Onglet "Authorization" :** Sélectionnez `Bearer Token` et collez votre jeton.
 *   **Résultat attendu :** `200 OK`. Supprime le profil `voyageurs`, les sessions associées et le compte `comptes`.
 
-### 8. Tests de sécurité (routes protégées)
+### 9. Tests de sécurité (routes protégées)
 Pour vérifier que la sécurité est bien en place :
-*   Appelez `PATCH /api/utilisateurs/moi/email` **sans** jeton. Résultat attendu : `401 Unauthorized` avec le code `AUTHENTIFICATION_REQUISE`.
+*   Appelez `GET /api/utilisateurs/moi` ou `PATCH /api/utilisateurs/moi/email` **sans** jeton. Résultat attendu : `401 Unauthorized` avec le code `AUTHENTIFICATION_REQUISE`.
 *   Appelez la même route avec un faux jeton (ex: `Bearer faux_jeton`). Résultat attendu : `401 Unauthorized` avec le code `SESSION_INVALIDE`.
 *   Appelez `POST /api/connexion` avec un mauvais mot de passe. Résultat attendu : `401 Unauthorized` avec le code `IDENTIFIANTS_INVALIDES`.
 *   Répétez la connexion avec un mauvais mot de passe plus de 5 fois en 15 minutes. Résultat attendu : `429 Too Many Requests` avec le code `TROP_DE_TENTATIVES`.
@@ -179,10 +188,10 @@ Pour vérifier que la sécurité est bien en place :
 
 *   `src/index.ts` : Point d'entrée de l'application (Express) et montage des routeurs.
 *   `src/authentification/` : Inscription, connexion, réinitialisation, validation, service, dépôt PostgreSQL, jetons et mots de passe.
-*   `src/utilisateurs/` : Routes de changement d'e-mail et de mot de passe du compte connecté.
+*   `src/utilisateurs/` : Routes de consultation/modification du profil, de l'avatar, de l'e-mail et du mot de passe du compte connecté.
 *   `src/middlewares/` : Middleware de session, limitation des tentatives et gestion des erreurs.
 *   `src/commun/erreurs.ts` : Erreurs métier et codes HTTP associés.
 *   `src/configuration/baseDeDonnees.ts` : Configuration et vérification de la connexion à PostgreSQL/PostGIS.
 *   `src/commun/crud-reflect.ts` : Module de génération de requêtes SQL par réflexion (utilisé pour l'administration et les tests).
 *   `documentation/` : Contient les cahiers des charges et guides de l'équipe.
-*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:inscription`, `npm run test:connexion-sessions`, `npm run test:mot-de-passe-email`, `npm run typecheck`).
+*   `tests/` : Tests unitaires et d'intégration (`npm test`, `npm run test:inscription`, `npm run test:connexion-sessions`, `npm run test:mot-de-passe-email`, `npm run test:profil`, `npm run typecheck`).

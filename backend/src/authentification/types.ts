@@ -53,3 +53,10 @@ export interface DonneesChangementEmail {
   email: string;
   motDePasse: string;
 }
+
+export interface ChampsProfilModifiables {
+  pseudo?: string;
+  zoneLibre?: string | null;
+  avatarRef?: string | null;
+  telephone?: string | null;
+}
