@@ -149,6 +149,9 @@ de session. Les routes protégées attendent l'en-tête
 | POST | `/api/mot-de-passe/reinitialisation` | Public |
 | POST | `/api/deconnexion` | Session valide |
 | POST | `/api/renouvellement-session` | Session valide |
+| GET | `/api/utilisateurs/moi` | Session valide |
+| PATCH | `/api/utilisateurs/moi` | Session valide |
+| PATCH | `/api/utilisateurs/moi/avatar` | Session valide |
 | PATCH | `/api/utilisateurs/moi/email` | Session valide |
 | PATCH | `/api/utilisateurs/moi/mot-de-passe` | Session valide |
 
@@ -162,6 +165,15 @@ de session. Les routes protégées attendent l'en-tête
 - Rôle `voyageur` imposé par le serveur, jamais choisi par le client.
 - Doublons d'e-mail ou de pseudonyme refusés en `409`.
 - Le mot de passe est haché avec Argon2id et n'est jamais renvoyé.
+
+### Profil personnel
+
+- Le profil est toujours lu depuis la session ; un `compteId` fourni dans le corps est ignoré.
+- Champs modifiables : `pseudo`, `zoneLibre`, `telephone` et `avatarRef`.
+- `avatarRef` peut être retiré avec `null` via `PATCH /api/utilisateurs/moi/avatar`.
+- Les champs `email`, `role`, mot de passe et secrets de session ne sont jamais modifiables via ces routes.
+- Un pseudonyme déjà pris renvoie `409 PSEUDO_DEJA_UTILISE`.
+- Les réponses ne contiennent ni mot de passe, ni hash, ni empreinte de session.
 
 ### Réinitialisation et changement d'accès
 
@@ -188,6 +200,7 @@ npm run typecheck
 npm run test:inscription
 npm run test:connexion-sessions
 npm run test:mot-de-passe-email
+npm run test:profil
 npm test
 
 # Scénario réel avec une base migrée

@@ -5,7 +5,11 @@ import {
   codeErreurPostgres,
   ErreurBaseDeDonnees as ErreurConnexionBdd
 } from "../configuration/baseDeDonnees";
-import type { CompteAvecSecret, ProfilUtilisateur } from "./types";
+import type {
+  ChampsProfilModifiables,
+  CompteAvecSecret,
+  ProfilUtilisateur
+} from "./types";
 
 interface LigneProfil {
   compte_id: string;
@@ -62,6 +66,11 @@ export interface DepotAuthentification {
   revoquerToutesSessions(client: PoolClient, compteId: string, saufEmpreinte?: string): Promise<void>;
   mettreAJourMotDePasse(client: PoolClient, compteId: string, hash: string): Promise<void>;
   mettreAJourEmail(client: PoolClient, compteId: string, email: string): Promise<ProfilUtilisateur>;
+  mettreAJourProfil(
+    client: PoolClient,
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur>;
   creerCodeReinitialisation(
     client: PoolClient,
     compteId: string,
@@ -362,6 +371,45 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
     );
     if (resultat.rowCount === 0) {
       throw new ErreurNonTrouve("Compte introuvable.");
+    }
+    return this.exigerProfil(client, compteId);
+  }
+
+  async mettreAJourProfil(
+    client: PoolClient,
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur> {
+    const affectations: string[] = [];
+    const valeurs: unknown[] = [compteId];
+
+    if (champs.pseudo !== undefined) {
+      valeurs.push(champs.pseudo);
+      affectations.push(`pseudo = $${valeurs.length}`);
+    }
+    if (champs.zoneLibre !== undefined) {
+      valeurs.push(champs.zoneLibre);
+      affectations.push(`zone_libre = $${valeurs.length}`);
+    }
+    if (champs.avatarRef !== undefined) {
+      valeurs.push(champs.avatarRef);
+      affectations.push(`avatar_ref = $${valeurs.length}`);
+    }
+    if (champs.telephone !== undefined) {
+      valeurs.push(champs.telephone);
+      affectations.push(`telephone = $${valeurs.length}`);
+    }
+
+    affectations.push("modifie_le = now()", "version = version + 1");
+
+    const resultat = await client.query(
+      `UPDATE voyageurs
+       SET ${affectations.join(", ")}
+       WHERE compte_id = $1`,
+      valeurs
+    );
+    if (resultat.rowCount === 0) {
+      throw new ErreurNonTrouve("Profil voyageur introuvable.");
     }
     return this.exigerProfil(client, compteId);
   }

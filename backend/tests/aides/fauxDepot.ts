@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { ErreurConflit, ErreurNonTrouve } from "../../src/commun/erreurs";
-import type { CompteAvecSecret, ProfilUtilisateur } from "../../src/authentification/types";
+import type {
+  ChampsProfilModifiables,
+  CompteAvecSecret,
+  ProfilUtilisateur
+} from "../../src/authentification/types";
 import type {
   DepotAuthentification,
   DonneesCreationCompte,
@@ -227,6 +231,38 @@ export class FauxDepot implements DepotAuthentification {
     }
 
     compte.email = emailNormalise;
+    return versProfil(compte);
+  }
+
+  async mettreAJourProfil(
+    _client: PoolClient,
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur> {
+    const compte = this.comptes.get(compteId);
+    if (!compte) {
+      throw new ErreurNonTrouve("Profil voyageur introuvable.");
+    }
+
+    if (champs.pseudo !== undefined) {
+      const pseudo = champs.pseudo.toLowerCase();
+      for (const autre of this.comptes.values()) {
+        if (autre.compteId !== compteId && autre.pseudo?.toLowerCase() === pseudo) {
+          throw new ErreurConflit("PSEUDO_DEJA_UTILISE", "Ce pseudonyme est déjà utilisé.");
+        }
+      }
+      compte.pseudo = champs.pseudo;
+    }
+    if (champs.zoneLibre !== undefined) {
+      compte.zoneLibre = champs.zoneLibre;
+    }
+    if (champs.avatarRef !== undefined) {
+      compte.avatarRef = champs.avatarRef;
+    }
+    if (champs.telephone !== undefined) {
+      compte.telephone = champs.telephone;
+    }
+
     return versProfil(compte);
   }
 
