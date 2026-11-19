@@ -19,8 +19,7 @@ import { obtenirPool } from "../configuration/baseDeDonnees";
 // Importation des interfaces TypeScript.
 // Le mot-clé "type" indique qu'elles servent
 // uniquement à la vérification des types.
-import type { Ligne, Arret } from "./transport.types";
-
+import type { Ligne, Arret, ArretProche } from "./transport.types";
 
 /**
  * Récupère toutes les lignes de bus actives
@@ -140,6 +139,96 @@ export async function lireArrets(): Promise<Arret[]> {
   //
   // Si aucun arrêt n'existe,
   // PostgreSQL retourne un tableau vide [].
+  return resultat.rows;
+
+}
+
+
+/**
+ * KBE-28 — Trouver les arrêts proches
+ *
+ * Recherche les arrêts de bus situés dans un rayon
+ * donné autour d'une position géographique.
+ *
+ * @param latitude Latitude de la position recherchée.
+ * @param longitude Longitude de la position recherchée.
+ * @param rayon Rayon de recherche exprimé en mètres.
+ *
+ * @returns Promise<ArretProche[]>
+ * Tableau des arrêts proches, triés par distance croissante.
+ *
+ * Si aucun arrêt ne se trouve dans le rayon,
+ * la fonction retourne un tableau vide [].
+ */
+export async function lireArretsProches(
+  latitude: number,
+  longitude: number,
+  rayon: number
+): Promise<ArretProche[]> {
+
+  // Exécution d'une requête SQL paramétrée.
+  // Les paramètres $1, $2 et $3 empêchent
+  // l'insertion directe de valeurs dans le SQL.
+  const resultat = await obtenirPool().query<ArretProche>(`
+
+    SELECT
+
+      -- Identifiant de l'arrêt converti en texte.
+      id::text AS id,
+
+      -- Code et nom de l'arrêt.
+      code,
+      nom,
+
+      -- Coordonnées géographiques de l'arrêt.
+      ST_Y(position) AS latitude,
+      ST_X(position) AS longitude,
+
+      -- Date de dernière modification au format ISO 8601.
+      to_char(
+        modifie_le AT TIME ZONE 'UTC',
+        'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'
+      ) AS "dateMiseAJour",
+
+      -- Distance entre l'arrêt et la position recherchée.
+      -- Le type geography permet un calcul en mètres.
+      ST_Distance(
+        position::geography,
+        ST_SetSRID(
+          ST_MakePoint($2, $1),
+          4326
+        )::geography
+      ) AS "distanceMetres"
+
+    FROM arrets
+
+    WHERE actif = TRUE
+
+      -- Exclusion des arrêts archivés.
+      AND archive_le IS NULL
+
+      -- Vérification de la présence des coordonnées.
+      AND position IS NOT NULL
+
+      -- Recherche uniquement les arrêts dans le rayon.
+      -- ST_DWithin retourne TRUE si la distance
+      -- est inférieure ou égale au rayon demandé.
+      AND ST_DWithin(
+        position::geography,
+        ST_SetSRID(
+          ST_MakePoint($2, $1),
+          4326
+        )::geography,
+        $3
+      )
+
+    -- Les arrêts les plus proches apparaissent en premier.
+    -- L'identifiant départage les distances identiques.
+    ORDER BY "distanceMetres" ASC, id ASC
+
+  `, [latitude, longitude, rayon]);
+
+  // Retourne les arrêts trouvés.
   return resultat.rows;
 
 }
