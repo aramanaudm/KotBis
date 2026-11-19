@@ -5,7 +5,8 @@ import type {
   DonneesChangementMotDePasse,
   DonneesConnexion,
   DonneesInscription,
-  DonneesReinitialisation
+  DonneesReinitialisation,
+  DonneesSuppressionCompte
 } from "./types";
 
 const LONGUEUR_MAX_EMAIL = 254;
@@ -257,6 +258,23 @@ export function validerAvatar(corps: unknown): string | null {
     throw new ErreurValidation("Le champ avatarRef est obligatoire.");
   }
   return texteOptionnel(corps.avatarRef, "avatarRef", 120);
+}
+
+export function validerDemandeSuppression(corps: unknown): DonneesSuppressionCompte {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+  const motDePasse = lireChamp(corps, CHAMPS_MOT_DE_PASSE);
+  if (typeof motDePasse !== "string" || !motDePasse) {
+    throw erreurChamp("motDePasse", "Le mot de passe est obligatoire.");
+  }
+  if (motDePasse.length > LONGUEUR_MAX_MOT_DE_PASSE) {
+    throw erreurChamp("motDePasse", "Le mot de passe est trop long.");
+  }
+  return {
+    motDePasse,
+    motif: texteOptionnel(lireChamp(corps, ["motif", "reason"]), "motif", 600)
+  };
 }
 
 export function validerConnexion(corps: unknown): DonneesConnexion {

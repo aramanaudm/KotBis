@@ -27,6 +27,12 @@ interface CodeReinitialisationSimule {
   utiliseLe: Date | null;
 }
 
+interface DemandeSuppressionSimulee {
+  compteId: string;
+  motif: string | null;
+  statut: "en_attente";
+}
+
 function versProfil(compte: CompteAvecSecret): ProfilUtilisateur {
   return {
     compteId: compte.compteId,
@@ -45,6 +51,7 @@ export class FauxDepot implements DepotAuthentification {
   readonly comptes = new Map<string, CompteAvecSecret>();
   readonly sessions = new Map<string, SessionSimulee>();
   readonly codes = new Map<string, CodeReinitialisationSimule>();
+  readonly demandesSuppression: DemandeSuppressionSimulee[] = [];
   private prochainId = 1;
   private prochainCodeId = 1;
 
@@ -307,5 +314,23 @@ export class FauxDepot implements DepotAuthentification {
     }
     code.utiliseLe = new Date();
     return true;
+  }
+
+  async creerDemandeSuppression(
+    _client: PoolClient,
+    compteId: string,
+    motif: string | null
+  ): Promise<void> {
+    if (!this.comptes.has(compteId)) {
+      throw new ErreurNonTrouve("Compte introuvable.");
+    }
+    if (
+      this.demandesSuppression.some(
+        (demande) => demande.compteId === compteId && demande.statut === "en_attente"
+      )
+    ) {
+      return;
+    }
+    this.demandesSuppression.push({ compteId, motif, statut: "en_attente" });
   }
 }

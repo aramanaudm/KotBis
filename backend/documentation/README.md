@@ -154,6 +154,7 @@ de session. Les routes protégées attendent l'en-tête
 | PATCH | `/api/utilisateurs/moi/avatar` | Session valide |
 | PATCH | `/api/utilisateurs/moi/email` | Session valide |
 | PATCH | `/api/utilisateurs/moi/mot-de-passe` | Session valide |
+| DELETE | `/api/utilisateurs/moi` | Session valide + mot de passe |
 
 ### Règles d'inscription
 
@@ -175,6 +176,16 @@ de session. Les routes protégées attendent l'en-tête
 - Un pseudonyme déjà pris renvoie `409 PSEUDO_DEJA_UTILISE`.
 - Les réponses ne contiennent ni mot de passe, ni hash, ni empreinte de session.
 
+### Demande de suppression
+
+- `DELETE /api/utilisateurs/moi` exige le mot de passe actuel et un motif facultatif.
+- La réponse est `202` avec `{ "demande": { "statut": "en_attente" } }`.
+- Aucun compte, profil, session ou historique n'est supprimé immédiatement.
+- La demande est conservée dans `demandes_suppression` ; une seule demande en attente
+  est autorisée par compte.
+- Le traitement et les règles de conservation doivent être validés par le Back-Office
+  et la BDD avant toute suppression ou anonymisation.
+
 ### Réinitialisation et changement d'accès
 
 - La demande de réinitialisation répond `202` même pour un compte inconnu ou inactif.
@@ -189,7 +200,8 @@ de session. Les routes protégées attendent l'en-tête
 ### Dépendance BDD
 
 L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
-`sessions`. La réinitialisation utilise `codes_reinitialisation`.
+`sessions`. La réinitialisation utilise `codes_reinitialisation` et la
+demande de suppression utilise `demandes_suppression`.
 Le téléphone optionnel et ces tables nécessitent la migration BDD
 `database/migrations/001_authentification.sql`, gérée par l'équipe BDD.
 
@@ -201,6 +213,7 @@ npm run test:inscription
 npm run test:connexion-sessions
 npm run test:mot-de-passe-email
 npm run test:profil
+npm run test:suppression
 npm test
 
 # Scénario réel avec une base migrée

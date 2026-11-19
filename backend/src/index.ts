@@ -12,7 +12,7 @@ import { DepotAuthentificationPostgres } from "./authentification/depot";
 import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
-import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
+import { creerMiddlewareSession } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
 import { DepotFavorisPostgres } from "./favoris/favoris.depot.postgres";
 import { FavorisControleur } from "./favoris/favoris.controleur";
