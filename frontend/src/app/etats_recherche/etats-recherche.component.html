@@ -1,0 +1,8 @@
+<section role="status" aria-live="polite">
+  <p class="icone" aria-hidden="true">{{ message().icone }}</p>
+  <h3>{{ message().titre }}</h3>
+  <p>{{ message().detail }}</p>
+  @if (etat() === 'quota') {
+    <button type="button" class="principal" (click)="auth.openLogin()">Se connecter</button>
+  }
+</section>

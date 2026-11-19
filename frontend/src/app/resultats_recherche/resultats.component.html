@@ -1,0 +1,21 @@
+<h3>Résultats</h3>
+<ul>
+  @for (r of recherche.resultats(); track r.id) {
+    <li>
+      <button
+        type="button"
+        [attr.aria-pressed]="recherche.resultatChoisi()?.id === r.id"
+        (click)="recherche.choisir(r)"
+      >
+        <strong>Ligne {{ r.ligne }} → {{ r.destination }}</strong><br />
+        Montée : {{ r.arretMontee }}<br />
+        Attente : {{ minutes(r.attenteMin) }}<br />
+        Marche : {{ minutes(r.marcheMin) }}<br />
+        Durée : {{ minutes(r.dureeMin) }}
+      </button>
+    </li>
+  }
+</ul>
+<p aria-live="polite" class="selection">
+  @if (recherche.resultatChoisi(); as r) { Trajet sélectionné : ligne {{ r.ligne }}. }
+</p>

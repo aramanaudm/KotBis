@@ -1,0 +1,22 @@
+@if (gps.dialogueOuvert()) {
+  <div class="fond" (keydown.escape)="gps.refuser()">
+    <section
+      class="boite"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titre-gps"
+    >
+      <h2 id="titre-gps">Utiliser votre position ?</h2>
+      <p>
+        Elle sert uniquement à trouver l'arrêt le plus proche. Elle n'est pas
+        partagée avec les autres usagers.
+      </p>
+      <div class="actions">
+        <button type="button" (click)="gps.refuser()">Refuser</button>
+        <button type="button" class="principal" (click)="gps.autoriser()" autofocus>
+          Autoriser
+        </button>
+      </div>
+    </section>
+  </div>
+}

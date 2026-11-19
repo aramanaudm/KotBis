@@ -53,6 +53,7 @@
   </header>
 
   <app-partage-position></app-partage-position>
+  <app-gps-dialog></app-gps-dialog>
 
   @if (carteIndisponible()) {
     <div class="map-warning" role="alert">
@@ -78,9 +79,9 @@
 
     <button
       type="button"
-      (click)="recentrer()"
-      aria-label="Revenir à la vue de départ"
-      title="Revenir à la vue de départ"
+      (click)="localiser()"
+      aria-label="Ma position"
+      title="Ma position"
     >
       ◎
     </button>
@@ -195,22 +196,58 @@
           Longitude : {{ bus.position[1] }}
         </dd>
       </dl>
+    } @else if (recherche.ouvert()) {
+      <div class="stop-heading">
+        <h2>Votre trajet</h2>
+
+        <button
+          class="close-stop"
+          type="button"
+          (click)="recherche.fermer()"
+          aria-label="Fermer la recherche"
+        >
+          ✕
+        </button>
+      </div>
+
+      @switch (recherche.etat()) {
+        @case ('repos') {
+          <app-champ-depart></app-champ-depart>
+          <app-champ-destination></app-champ-destination>
+          <app-bouton-recherche></app-bouton-recherche>
+        }
+        @case ('resultats') {
+          @if (recherche.resultatChoisi()) {
+            <app-detail-trajet></app-detail-trajet>
+          } @else {
+            <app-resultats></app-resultats>
+            <button type="button" class="modifier-recherche" (click)="recherche.modifier()">
+              Modifier la recherche
+            </button>
+          }
+        }
+        @default {
+          <app-etats-recherche [etat]="recherche.etat()"></app-etats-recherche>
+          @if (recherche.etat() !== 'chargement') {
+            <button type="button" class="modifier-recherche" (click)="recherche.modifier()">
+              Modifier la recherche
+            </button>
+          }
+        }
+      }
     } @else {
-      <button class="search-preview" type="button" disabled>
+      <button class="search-preview" type="button" (click)="recherche.ouvrir()">
         <span aria-hidden="true">⌕</span>
         <span>Où allez-vous ?</span>
         <span class="arrow" aria-hidden="true">›</span>
       </button>
 
-      <p class="preview-note">
-        Recherche non disponible dans cette première étape.
-      </p>
-
       <div class="panel-footer">
         <span>Bus de démonstration</span>
         <span>3 bus — positions fictives</span>
       </div>
-      <nav class="community-actions" aria-label="Avis et signalements">
+      <nav class="community-actions" aria-label="Favoris, avis et signalements">
+        <a class="community-button" routerLink="/favoris">Favoris</a>
         <a class="community-button" routerLink="/home/avis">Les avis</a>
         <a class="community-button" routerLink="/home/signaler">Signaler un bus</a>
       </nav>

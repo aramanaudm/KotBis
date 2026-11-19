@@ -1,5 +1,6 @@
-import { bootstrapApplication } from '@angular/platform-browser';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { inject, provideAppInitializer } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
 import {
   RouteReuseStrategy,
   provideRouter,
@@ -17,6 +18,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
+    provideHttpClient(withFetch()),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
     provideAppInitializer(() => inject(AuthService).restore()),
   ],

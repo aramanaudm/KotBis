@@ -11,9 +11,15 @@ import {
 import { DepotAuthentificationPostgres } from "./authentification/depot";
 import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
-import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
+import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
+import { creerMiddlewareSession } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
 import routeurTransport from "./transport/transport.routes";
+import { DepotFavorisPostgres } from "./favoris/favoris.depot.postgres";
+import { FavorisControleur } from "./favoris/favoris.controleur";
+import { creerRoutesFavoris } from "./favoris/favoris.routes";
+import { FavorisService } from "./favoris/favoris.service";
+import { ReferentielReseauPostgres } from "./favoris/reseau.referentiel.postgres";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -32,35 +38,16 @@ const serviceAuthentification = new ServiceAuthentification(
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
 
-app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
-  const client = await obtenirPool().connect();
-  try {
-    const { pseudo, email } = req.body;
-    const compteId = obtenirUtilisateurCourant(req).compteId;
-
-    await client.query('BEGIN');
-
-    // 1. Mise à jour de l'email dans 'comptes'
-    if (email) {
-      await client.query('UPDATE comptes SET email = $1, modifie_le = now() WHERE id = $2', [email, compteId]);
-    }
-
-    // 2. Mise à jour du pseudo dans 'voyageurs'
-    if (pseudo) {
-      await client.query('UPDATE voyageurs SET pseudo = $1, modifie_le = now() WHERE compte_id = $2', [pseudo, compteId]);
-    }
-
-    await client.query('COMMIT');
-    res.json({ message: "Profil mis à jour avec succès." });
-
-  } catch (error: any) {
-    await client.query('ROLLBACK');
-    if (error.code === '23505') return res.status(409).json({ erreur: "Cet email ou pseudo est déjà pris." });
-    res.status(500).json({ erreur: "Erreur lors de la mise à jour." });
-  } finally {
-    client.release();
-  }
-});
+// KBE-40 : favoris du voyageur connecté
+app.use(
+  "/api/favoris",
+  creerRoutesFavoris(
+    middlewareSession,
+    new FavorisControleur(
+      new FavorisService(new DepotFavorisPostgres(obtenirPool), new ReferentielReseauPostgres())
+    )
+  )
+);
 
 app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();
@@ -83,6 +70,8 @@ app.delete('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any
     client.release();
   }
 });
+
+app.use("/api/utilisateurs", creerRouteurUtilisateurs(serviceAuthentification, middlewareSession));
 
 app.get("/", (req, res) => {
   res.json({

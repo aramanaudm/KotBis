@@ -1,11 +1,15 @@
 import type { Pool, PoolClient } from "pg";
-import { ErreurApi, ErreurConflit } from "../commun/erreurs";
+import { ErreurApi, ErreurConflit, ErreurNonTrouve } from "../commun/erreurs";
 import {
   avecTransaction,
   codeErreurPostgres,
   ErreurBaseDeDonnees as ErreurConnexionBdd
 } from "../configuration/baseDeDonnees";
-import type { CompteAvecSecret, ProfilUtilisateur } from "./types";
+import type {
+  ChampsProfilModifiables,
+  CompteAvecSecret,
+  ProfilUtilisateur
+} from "./types";
 
 interface LigneProfil {
   compte_id: string;
@@ -43,10 +47,13 @@ export interface SessionActive extends ProfilUtilisateur {
 
 export interface DepotAuthentification {
   avecTransaction<T>(action: (client: PoolClient) => Promise<T>): Promise<T>;
+  trouverCompteParEmail(client: PoolClient, email: string): Promise<CompteAvecSecret | null>;
   trouverCompteParIdentifiant(
     client: PoolClient,
     identifiant: string
   ): Promise<CompteAvecSecret | null>;
+  trouverCompteParId(client: PoolClient, compteId: string): Promise<CompteAvecSecret | null>;
+  trouverProfilParId(client: PoolClient, compteId: string): Promise<ProfilUtilisateur | null>;
   creerCompteVoyageur(client: PoolClient, donnees: DonneesCreationCompte): Promise<ProfilUtilisateur>;
   creerSession(
     client: PoolClient,
@@ -56,6 +63,27 @@ export interface DepotAuthentification {
   ): Promise<string>;
   trouverSessionValide(client: PoolClient, empreinteJeton: string): Promise<SessionActive | null>;
   revoquerSession(client: PoolClient, empreinteJeton: string): Promise<boolean>;
+  revoquerToutesSessions(client: PoolClient, compteId: string, saufEmpreinte?: string): Promise<void>;
+  mettreAJourMotDePasse(client: PoolClient, compteId: string, hash: string): Promise<void>;
+  mettreAJourEmail(client: PoolClient, compteId: string, email: string): Promise<ProfilUtilisateur>;
+  mettreAJourProfil(
+    client: PoolClient,
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur>;
+  creerCodeReinitialisation(
+    client: PoolClient,
+    compteId: string,
+    empreinteCode: string,
+    expireLe: Date
+  ): Promise<void>;
+  trouverCodeReinitialisationValide(
+    client: PoolClient,
+    compteId: string,
+    empreinteCode: string
+  ): Promise<{ id: string } | null>;
+  marquerCodeUtilise(client: PoolClient, codeId: string): Promise<boolean>;
+  creerDemandeSuppression(client: PoolClient, compteId: string, motif: string | null): Promise<void>;
 }
 
 const COLONNES_PROFIL = `
@@ -147,16 +175,21 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
     }
   }
 
+  async trouverCompteParEmail(client: PoolClient, email: string): Promise<CompteAvecSecret | null> {
+    const resultat = await client.query<LigneCompte>(
+      `SELECT ${COLONNES_COMPTE} ${JOINTURES_PROFIL} WHERE lower(c.email) = lower($1) LIMIT 1`,
+      [email]
+    );
+    return resultat.rows[0] ? versCompte(resultat.rows[0]) : null;
+  }
+
   async trouverCompteParIdentifiant(
     client: PoolClient,
     identifiant: string
   ): Promise<CompteAvecSecret | null> {
-    const parEmail = await client.query<LigneCompte>(
-      `SELECT ${COLONNES_COMPTE} ${JOINTURES_PROFIL} WHERE lower(c.email) = lower($1) LIMIT 1`,
-      [identifiant]
-    );
-    if (parEmail.rows[0]) {
-      return versCompte(parEmail.rows[0]);
+    const parEmail = await this.trouverCompteParEmail(client, identifiant);
+    if (parEmail) {
+      return parEmail;
     }
 
     const parPseudo = await client.query<LigneCompte>(
@@ -164,6 +197,25 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
       [identifiant]
     );
     return parPseudo.rows[0] ? versCompte(parPseudo.rows[0]) : null;
+  }
+
+  async trouverCompteParId(client: PoolClient, compteId: string): Promise<CompteAvecSecret | null> {
+    const resultat = await client.query<LigneCompte>(
+      `SELECT ${COLONNES_COMPTE} ${JOINTURES_PROFIL} WHERE c.id = $1 LIMIT 1`,
+      [compteId]
+    );
+    return resultat.rows[0] ? versCompte(resultat.rows[0]) : null;
+  }
+
+  async trouverProfilParId(
+    client: PoolClient,
+    compteId: string
+  ): Promise<ProfilUtilisateur | null> {
+    const resultat = await client.query<LigneProfil>(
+      `SELECT ${COLONNES_PROFIL} ${JOINTURES_PROFIL} WHERE c.id = $1 LIMIT 1`,
+      [compteId]
+    );
+    return resultat.rows[0] ? versProfil(resultat.rows[0]) : null;
   }
 
   async creerCompteVoyageur(
@@ -270,5 +322,168 @@ export class DepotAuthentificationPostgres implements DepotAuthentification {
       [empreinteJeton]
     );
     return (resultat.rowCount ?? 0) > 0;
+  }
+
+  async revoquerToutesSessions(
+    client: PoolClient,
+    compteId: string,
+    saufEmpreinte?: string
+  ): Promise<void> {
+    if (saufEmpreinte) {
+      await client.query(
+        `UPDATE sessions
+         SET revoque_le = now()
+         WHERE compte_id = $1 AND revoque_le IS NULL AND empreinte_jeton <> $2`,
+        [compteId, saufEmpreinte]
+      );
+      return;
+    }
+
+    await client.query(
+      `UPDATE sessions
+       SET revoque_le = now()
+       WHERE compte_id = $1 AND revoque_le IS NULL`,
+      [compteId]
+    );
+  }
+
+  async mettreAJourMotDePasse(client: PoolClient, compteId: string, hash: string): Promise<void> {
+    const resultat = await client.query(
+      `UPDATE comptes
+       SET mot_de_passe_hash = $2, modifie_le = now(), version = version + 1
+       WHERE id = $1`,
+      [compteId, hash]
+    );
+    if (resultat.rowCount === 0) {
+      throw new ErreurNonTrouve("Compte introuvable.");
+    }
+  }
+
+  async mettreAJourEmail(
+    client: PoolClient,
+    compteId: string,
+    email: string
+  ): Promise<ProfilUtilisateur> {
+    const resultat = await client.query(
+      `UPDATE comptes
+       SET email = $2, modifie_le = now(), version = version + 1
+       WHERE id = $1`,
+      [compteId, email]
+    );
+    if (resultat.rowCount === 0) {
+      throw new ErreurNonTrouve("Compte introuvable.");
+    }
+    return this.exigerProfil(client, compteId);
+  }
+
+  async mettreAJourProfil(
+    client: PoolClient,
+    compteId: string,
+    champs: ChampsProfilModifiables
+  ): Promise<ProfilUtilisateur> {
+    const affectations: string[] = [];
+    const valeurs: unknown[] = [compteId];
+
+    if (champs.pseudo !== undefined) {
+      valeurs.push(champs.pseudo);
+      affectations.push(`pseudo = $${valeurs.length}`);
+    }
+    if (champs.zoneLibre !== undefined) {
+      valeurs.push(champs.zoneLibre);
+      affectations.push(`zone_libre = $${valeurs.length}`);
+    }
+    if (champs.avatarRef !== undefined) {
+      valeurs.push(champs.avatarRef);
+      affectations.push(`avatar_ref = $${valeurs.length}`);
+    }
+    if (champs.telephone !== undefined) {
+      valeurs.push(champs.telephone);
+      affectations.push(`telephone = $${valeurs.length}`);
+    }
+
+    affectations.push("modifie_le = now()", "version = version + 1");
+
+    const resultat = await client.query(
+      `UPDATE voyageurs
+       SET ${affectations.join(", ")}
+       WHERE compte_id = $1`,
+      valeurs
+    );
+    if (resultat.rowCount === 0) {
+      throw new ErreurNonTrouve("Profil voyageur introuvable.");
+    }
+    return this.exigerProfil(client, compteId);
+  }
+
+  async creerCodeReinitialisation(
+    client: PoolClient,
+    compteId: string,
+    empreinteCode: string,
+    expireLe: Date
+  ): Promise<void> {
+    await client.query(
+      `UPDATE codes_reinitialisation
+       SET utilise_le = now()
+       WHERE compte_id = $1 AND utilise_le IS NULL`,
+      [compteId]
+    );
+    await client.query(
+      `INSERT INTO codes_reinitialisation (compte_id, empreinte_code, expire_le)
+       VALUES ($1, $2, $3)`,
+      [compteId, empreinteCode, expireLe]
+    );
+  }
+
+  async trouverCodeReinitialisationValide(
+    client: PoolClient,
+    compteId: string,
+    empreinteCode: string
+  ): Promise<{ id: string } | null> {
+    const resultat = await client.query<{ id: string }>(
+      `SELECT id::text AS id
+       FROM codes_reinitialisation
+       WHERE compte_id = $1
+         AND empreinte_code = $2
+         AND utilise_le IS NULL
+         AND expire_le > now()
+       LIMIT 1`,
+      [compteId, empreinteCode]
+    );
+    return resultat.rows[0] ?? null;
+  }
+
+  async marquerCodeUtilise(client: PoolClient, codeId: string): Promise<boolean> {
+    const resultat = await client.query(
+      `UPDATE codes_reinitialisation
+       SET utilise_le = now()
+       WHERE id = $1 AND utilise_le IS NULL`,
+      [codeId]
+    );
+    return (resultat.rowCount ?? 0) > 0;
+  }
+
+  async creerDemandeSuppression(
+    client: PoolClient,
+    compteId: string,
+    motif: string | null
+  ): Promise<void> {
+    await client.query(
+      `INSERT INTO demandes_suppression (compte_id, motif)
+       SELECT $1, $2
+       WHERE NOT EXISTS (
+         SELECT 1
+         FROM demandes_suppression
+         WHERE compte_id = $1 AND statut = 'en_attente'
+       )`,
+      [compteId, motif]
+    );
+  }
+
+  private async exigerProfil(client: PoolClient, compteId: string): Promise<ProfilUtilisateur> {
+    const profil = await this.trouverProfilParId(client, compteId);
+    if (!profil) {
+      throw new ErreurNonTrouve("Compte introuvable.");
+    }
+    return profil;
   }
 }

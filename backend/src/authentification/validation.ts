@@ -1,5 +1,13 @@
 import { ErreurValidation } from "../commun/erreurs";
-import type { DonneesConnexion, DonneesInscription } from "./types";
+import type {
+  ChampsProfilModifiables,
+  DonneesChangementEmail,
+  DonneesChangementMotDePasse,
+  DonneesConnexion,
+  DonneesInscription,
+  DonneesReinitialisation,
+  DonneesSuppressionCompte
+} from "./types";
 
 const LONGUEUR_MAX_EMAIL = 254;
 const LONGUEUR_MIN_MOT_DE_PASSE = 8;
@@ -18,6 +26,12 @@ const CARACTERES_CONTROLE = /[\u0000-\u001F\u007F]/;
 
 const CHAMPS_IDENTIFIANT = ["identifiant", "identifier", "email", "pseudo", "pseudonyme"] as const;
 const CHAMPS_MOT_DE_PASSE = ["motDePasse", "password"] as const;
+const CHAMPS_MOT_DE_PASSE_ACTUEL = ["motDePasseActuel", "currentPassword"] as const;
+const CHAMPS_NOUVEAU_MOT_DE_PASSE = ["nouveauMotDePasse", "newPassword"] as const;
+const CHAMPS_NOUVEAU_MOT_DE_PASSE_REINITIALISATION = [
+  ...CHAMPS_NOUVEAU_MOT_DE_PASSE,
+  "password"
+] as const;
 const CHAMPS_PSEUDO = ["pseudo", "pseudonyme"] as const;
 const CHAMPS_ZONE = ["zoneLibre", "city", "ville"] as const;
 const CHAMPS_TELEPHONE = ["telephone", "phone"] as const;
@@ -38,6 +52,10 @@ function lireChamp(corps: Record<string, unknown>, noms: readonly string[]): unk
     }
   }
   return undefined;
+}
+
+function champFourni(corps: Record<string, unknown>, noms: readonly string[]): boolean {
+  return noms.some((nom) => nom in corps);
 }
 
 function texteObligatoire(valeur: unknown, champ: string, longueurMax: number): string {
@@ -100,6 +118,16 @@ function validerMotDePasse(valeur: unknown, champ: string): string {
   return valeur;
 }
 
+function validerMotDePasseActuel(valeur: unknown, champ = "motDePasseActuel"): string {
+  if (typeof valeur !== "string" || !valeur) {
+    throw erreurChamp(champ, "Le mot de passe actuel est obligatoire.");
+  }
+  if (valeur.length > LONGUEUR_MAX_MOT_DE_PASSE) {
+    throw erreurChamp(champ, "Le mot de passe actuel est trop long.");
+  }
+  return valeur;
+}
+
 function validerPseudo(valeur: unknown): string {
   const pseudo = texteObligatoire(valeur, "pseudo", LONGUEUR_MAX_PSEUDO);
   if (pseudo.length < LONGUEUR_MIN_PSEUDO || !PSEUDO_VALIDE.test(pseudo)) {
@@ -149,6 +177,104 @@ export function validerInscription(corps: unknown): DonneesInscription {
   const telephone = validerTelephone(lireChamp(corps, CHAMPS_TELEPHONE));
 
   return { pseudo, email, motDePasse, accepteConditions: true, zoneLibre, telephone };
+}
+
+export function validerDemandeReinitialisation(corps: unknown): string {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+  return validerEmail(corps.email);
+}
+
+export function validerReinitialisation(corps: unknown): DonneesReinitialisation {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const email = validerEmail(corps.email);
+  if (typeof corps.code !== "string" || !/^\d{6}$/.test(corps.code)) {
+    throw erreurChamp("code", "Le code de réinitialisation doit contenir six chiffres.");
+  }
+  const nouveauMotDePasse = validerMotDePasse(
+    lireChamp(corps, CHAMPS_NOUVEAU_MOT_DE_PASSE_REINITIALISATION),
+    "nouveauMotDePasse"
+  );
+
+  return { email, code: corps.code, nouveauMotDePasse };
+}
+
+export function validerChangementMotDePasse(corps: unknown): DonneesChangementMotDePasse {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const motDePasseActuel = validerMotDePasseActuel(lireChamp(corps, CHAMPS_MOT_DE_PASSE_ACTUEL));
+  const nouveauMotDePasse = validerMotDePasse(
+    lireChamp(corps, CHAMPS_NOUVEAU_MOT_DE_PASSE),
+    "nouveauMotDePasse"
+  );
+
+  return { motDePasseActuel, nouveauMotDePasse };
+}
+
+export function validerChangementEmail(corps: unknown): DonneesChangementEmail {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const motDePasse = validerMotDePasseActuel(lireChamp(corps, CHAMPS_MOT_DE_PASSE), "motDePasse");
+  return { email: validerEmail(corps.email), motDePasse };
+}
+
+export function validerMiseAJourProfil(corps: unknown): ChampsProfilModifiables {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+
+  const champs: ChampsProfilModifiables = {};
+  if (champFourni(corps, CHAMPS_PSEUDO)) {
+    champs.pseudo = validerPseudo(lireChamp(corps, CHAMPS_PSEUDO));
+  }
+  if (champFourni(corps, CHAMPS_ZONE)) {
+    champs.zoneLibre = texteOptionnel(lireChamp(corps, CHAMPS_ZONE), "zoneLibre", LONGUEUR_MAX_ZONE);
+  }
+  if ("avatarRef" in corps) {
+    champs.avatarRef = texteOptionnel(corps.avatarRef, "avatarRef", 120);
+  }
+  if (champFourni(corps, CHAMPS_TELEPHONE)) {
+    champs.telephone = validerTelephone(lireChamp(corps, CHAMPS_TELEPHONE));
+  }
+  if (Object.keys(champs).length === 0) {
+    throw new ErreurValidation("Aucun champ modifiable n'a été fourni.");
+  }
+  return champs;
+}
+
+export function validerAvatar(corps: unknown): string | null {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+  if (!("avatarRef" in corps)) {
+    throw new ErreurValidation("Le champ avatarRef est obligatoire.");
+  }
+  return texteOptionnel(corps.avatarRef, "avatarRef", 120);
+}
+
+export function validerDemandeSuppression(corps: unknown): DonneesSuppressionCompte {
+  if (!estObjet(corps)) {
+    throw new ErreurValidation("Le corps de la requête doit être un objet JSON.");
+  }
+  const motDePasse = lireChamp(corps, CHAMPS_MOT_DE_PASSE);
+  if (typeof motDePasse !== "string" || !motDePasse) {
+    throw erreurChamp("motDePasse", "Le mot de passe est obligatoire.");
+  }
+  if (motDePasse.length > LONGUEUR_MAX_MOT_DE_PASSE) {
+    throw erreurChamp("motDePasse", "Le mot de passe est trop long.");
+  }
+  return {
+    motDePasse,
+    motif: texteOptionnel(lireChamp(corps, ["motif", "reason"]), "motif", 600)
+  };
 }
 
 export function validerConnexion(corps: unknown): DonneesConnexion {
