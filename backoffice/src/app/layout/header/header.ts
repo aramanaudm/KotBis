@@ -47,4 +47,55 @@ export class Header {
       this.language.set(value);
     }
   }
+    protected readonly accountView = signal<'profile' | 'security'>('profile');
+
+  // Données de démonstration de la maquette Figma.
+  protected readonly profileName = signal('Anaïs David');
+  protected readonly profileEmail = signal('anais.david@kotbis.mu');
+
+  protected readonly roleLabels = {
+    administrateur: 'Administrateur',
+    operateur: 'Opérateur',
+    moderateur: 'Modérateur',
+  };
+
+  protected readonly accountMessage = signal('');
+
+  protected openAccount(
+    view: 'profile' | 'security',
+    menu: HTMLElement,
+    panel: HTMLDialogElement,
+  ): void {
+    menu.hidePopover();
+    this.accountMessage.set('');
+    this.accountView.set(view);
+    panel.showModal();
+  }
+
+  protected saveProfile(name: HTMLInputElement, email: HTMLInputElement): void {
+    const fullName = name.value.trim();
+    name.setCustomValidity(fullName ? '' : 'Saisis ton nom complet.');
+
+    if (!name.reportValidity() || !email.reportValidity()) return;
+
+    this.profileName.set(fullName);
+    this.profileEmail.set(email.value.trim());
+
+    const initials = fullName.split(/\s+/)
+      .filter((_, index, words) => index === 0 || index === words.length - 1)
+      .map(word => word.charAt(0).toUpperCase())
+      .join('');
+
+    this.session.currentUser.update(user => ({
+      ...user,
+      name: fullName,
+      initials,
+    }));
+
+    this.accountMessage.set('Profil enregistré pour cette session.');
+  }
+
+  protected seDeconnecter(): void {
+    window.location.replace('about:blank');
+  }  
 }

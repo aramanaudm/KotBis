@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomInt } from "node:crypto";
 
 export function genererJetonSession(): string {
   return randomBytes(32).toString("base64url");
@@ -6,6 +6,10 @@ export function genererJetonSession(): string {
 
 export function hacherJeton(jeton: string): string {
   return createHash("sha256").update(jeton).digest("hex");
+}
+
+export function genererCodeReinitialisation(): string {
+  return randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
 export function dateDansMinutes(minutes: number, maintenant: Date = new Date()): Date {

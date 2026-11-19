@@ -1,0 +1,8 @@
+:host { display: block; margin-top: 8px; }
+.erreur { margin: 2px 0; color: #b3261e; font-weight: 600; }
+.erreur:empty { display: none; }
+.principal {
+  width: 100%; min-height: 48px; border-radius: 14px; border: 0;
+  background: #008060; color: #fff; font-weight: 700; cursor: pointer;
+}
+.principal:disabled { opacity: 0.45; cursor: not-allowed; }

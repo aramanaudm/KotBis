@@ -135,8 +135,9 @@ Le fichier `.env.example` sert uniquement de modèle.
 ## 6. Authentification et sessions
 
 Le module `src/authentification/` fournit l'inscription, la connexion,
-la déconnexion et le renouvellement de session. Les routes protégées
-attendent l'en-tête `Authorization: Bearer <jeton>`.
+la réinitialisation du mot de passe, la déconnexion et le renouvellement
+de session. Les routes protégées attendent l'en-tête
+`Authorization: Bearer <jeton>`.
 
 ### Endpoints disponibles
 
@@ -144,8 +145,16 @@ attendent l'en-tête `Authorization: Bearer <jeton>`.
 |---|---|---|
 | POST | `/api/inscription` | Public |
 | POST | `/api/connexion` | Public |
+| POST | `/api/mot-de-passe/oublie` | Public |
+| POST | `/api/mot-de-passe/reinitialisation` | Public |
 | POST | `/api/deconnexion` | Session valide |
 | POST | `/api/renouvellement-session` | Session valide |
+| GET | `/api/utilisateurs/moi` | Session valide |
+| PATCH | `/api/utilisateurs/moi` | Session valide |
+| PATCH | `/api/utilisateurs/moi/avatar` | Session valide |
+| PATCH | `/api/utilisateurs/moi/email` | Session valide |
+| PATCH | `/api/utilisateurs/moi/mot-de-passe` | Session valide |
+| DELETE | `/api/utilisateurs/moi` | Session valide + mot de passe |
 
 ### Règles d'inscription
 
@@ -158,11 +167,42 @@ attendent l'en-tête `Authorization: Bearer <jeton>`.
 - Doublons d'e-mail ou de pseudonyme refusés en `409`.
 - Le mot de passe est haché avec Argon2id et n'est jamais renvoyé.
 
+### Profil personnel
+
+- Le profil est toujours lu depuis la session ; un `compteId` fourni dans le corps est ignoré.
+- Champs modifiables : `pseudo`, `zoneLibre`, `telephone` et `avatarRef`.
+- `avatarRef` peut être retiré avec `null` via `PATCH /api/utilisateurs/moi/avatar`.
+- Les champs `email`, `role`, mot de passe et secrets de session ne sont jamais modifiables via ces routes.
+- Un pseudonyme déjà pris renvoie `409 PSEUDO_DEJA_UTILISE`.
+- Les réponses ne contiennent ni mot de passe, ni hash, ni empreinte de session.
+
+### Demande de suppression
+
+- `DELETE /api/utilisateurs/moi` exige le mot de passe actuel et un motif facultatif.
+- La réponse est `202` avec `{ "demande": { "statut": "en_attente" } }`.
+- Aucun compte, profil, session ou historique n'est supprimé immédiatement.
+- La demande est conservée dans `demandes_suppression` ; une seule demande en attente
+  est autorisée par compte.
+- Le traitement et les règles de conservation doivent être validés par le Back-Office
+  et la BDD avant toute suppression ou anonymisation.
+
+### Réinitialisation et changement d'accès
+
+- La demande de réinitialisation répond `202` même pour un compte inconnu ou inactif.
+- Le code contient six chiffres, expire après `CODE_REINITIALISATION_DUREE_MINUTES`
+  (15 minutes par défaut), est à usage unique et n'est stocké que sous forme hachée.
+- Les tentatives sont limitées par e-mail (`MAX_TENTATIVES_REINITIALISATION`).
+- Une réinitialisation réussie révoque toutes les sessions du compte.
+- Le changement d'e-mail exige le mot de passe actuel et refuse un e-mail déjà pris en `409`.
+- Le changement de mot de passe exige le mot de passe actuel et révoque les autres sessions.
+- `AUTH_EXPOSER_CODE_DEV=true` ne renvoie `devCode` qu'hors production.
+
 ### Dépendance BDD
 
 L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
-`sessions`. Le téléphone optionnel nécessite la colonne
-`voyageurs.telephone` fournie par la migration BDD
+`sessions`. La réinitialisation utilise `codes_reinitialisation` et la
+demande de suppression utilise `demandes_suppression`.
+Le téléphone optionnel et ces tables nécessitent la migration BDD
 `database/migrations/001_authentification.sql`, gérée par l'équipe BDD.
 
 ### Vérifications
@@ -171,6 +211,9 @@ L'inscription utilise les tables `comptes`, `voyageurs`, `roles` et
 npm run typecheck
 npm run test:inscription
 npm run test:connexion-sessions
+npm run test:mot-de-passe-email
+npm run test:profil
+npm run test:suppression
 npm test
 
 # Scénario réel avec une base migrée

@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+  /** API Back-End KotBis (backend/ : `npm run dev`, port 3000 par défaut). */
+  apiUrl: 'http://localhost:3000/api',
 };
 
 /*

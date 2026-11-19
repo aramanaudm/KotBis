@@ -99,6 +99,7 @@ describe('RegisterModalComponent (BUS-FE-028/029/030)', () => {
       city: 'Quatre Bornes',
       phone: '+230 5123 4567',
       password: 'motdepasse1',
+      acceptTerms: true,
     });
     expect(dismiss).toHaveBeenCalledWith(null, 'done');
   });

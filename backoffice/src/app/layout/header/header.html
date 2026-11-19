@@ -37,8 +37,135 @@
       <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
     </button>
 
-    <span class="avatar" [attr.title]="session.currentUser().name">
-      {{ session.currentUser().initials }}
-    </span>
+<button
+  type="button"
+  class="avatar profile-trigger"
+  popovertarget="profile-menu"
+  aria-label="Ouvrir le menu du profil"
+>
+  {{ session.currentUser().initials }}
+</button>
+
+<section #accountMenu id="profile-menu" popover aria-label="Menu du compte">
+  <div class="account-identity">
+    <span class="account-avatar">{{ session.currentUser().initials }}</span>
+    <div>
+      <strong>{{ profileName() }}</strong>
+      <small>{{ roleLabels[session.currentUser().role] }}</small>
+    </div>
+  </div>
+
+  <button type="button" class="account-row"
+    (click)="openAccount('profile', accountMenu, accountPanel)">
+    <span class="account-icon"><app-icon name="users" /></span>
+    <span><strong>Mon profil</strong><small>Informations personnelles</small></span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+
+  <button type="button" class="account-row"
+    (click)="openAccount('security', accountMenu, accountPanel)">
+    <span class="account-icon" aria-hidden="true">◇</span>
+    <span><strong>Sécurité du compte</strong><small>Mot de passe et accès</small></span>
+    <span class="chevron" aria-hidden="true">›</span>
+  </button>
+
+<button
+  type="button"
+  class="account-row logout"
+  (click)="seDeconnecter()"
+>
+  <span class="account-icon" aria-hidden="true">↪</span>
+  <strong>Se déconnecter</strong>
+</button>
+</section>
+
+<dialog #accountPanel class="account-panel" aria-labelledby="account-title"
+  (close)="profileForm.reset(); securityForm.reset(); accountMessage.set('')">
+
+  <div class="panel-layout">
+    <header class="panel-heading">
+      <form method="dialog">
+        <button type="submit" class="panel-close" aria-label="Fermer">×</button>
+      </form>
+
+      <small>{{ accountView() === 'profile' ? 'VOTRE COMPTE' : 'CONFIDENTIALITÉ' }}</small>
+      <h2 id="account-title">
+        {{ accountView() === 'profile' ? 'Mon profil' : 'Sécurité du compte' }}
+      </h2>
+      <p>{{ accountView() === 'profile'
+        ? 'Gérez vos informations personnelles.'
+        : 'Mettez à jour votre mot de passe.' }}</p>
+    </header>
+
+    <div class="panel-body">
+      <form #profileForm id="kotbis-profile-form" [hidden]="accountView() !== 'profile'"
+        (submit)="$event.preventDefault(); saveProfile(fullName, email)">
+        <div class="identity-card">
+          <span class="account-avatar">{{ session.currentUser().initials }}</span>
+          <div>
+            <strong>{{ profileName() }}</strong>
+            <small>{{ profileEmail() }}</small>
+          </div>
+        </div>
+
+        <label for="profile-name">Nom complet</label>
+        <input #fullName id="profile-name" required autocomplete="name"
+          [defaultValue]="profileName()" (input)="fullName.setCustomValidity('')">
+
+        <label for="profile-email">Adresse e-mail</label>
+        <input #email id="profile-email" type="email" required autocomplete="email"
+          [defaultValue]="profileEmail()">
+
+        <div for="profile-role">Rôle</div>
+        <div class="role-field" role="group" aria-labelledby="profile-role-label">
+          <strong>{{ roleLabels[session.currentUser().role] }}</strong>
+          <span>Lecture seule</span>
+        </div>
+
+        <p class="info-note">Votre rôle et vos permissions sont gérés par l’administrateur principal.</p>
+        <p role="status">{{ accountMessage() }}</p>
+      </form>
+
+      <form #securityForm [hidden]="accountView() !== 'security'"
+        (submit)="$event.preventDefault()">
+        <div class="security-card">
+          <strong>Choisissez un mot de passe sécurisé</strong>
+          <small>Utilisez au moins 8 caractères, avec des lettres et des chiffres.</small>
+        </div>
+
+        @for (field of [
+          { id: 'current', label: 'Mot de passe actuel' },
+          { id: 'new', label: 'Nouveau mot de passe' },
+          { id: 'confirm', label: 'Confirmer le nouveau mot de passe' }
+        ]; track field.id) {
+          <label [for]="'password-' + field.id">{{ field.label }}</label>
+          <div class="password-field">
+            <input #password [id]="'password-' + field.id" type="password"
+              [attr.autocomplete]="field.id === 'current' ? 'current-password' : 'new-password'">
+            <button type="button"
+              [attr.aria-label]="(password.type === 'password' ? 'Afficher : ' : 'Masquer : ') + field.label"
+              (click)="password.type = password.type === 'password' ? 'text' : 'password'">
+              {{ password.type === 'password' ? 'Voir' : 'Masquer' }}
+            </button>
+          </div>
+        }
+      </form>
+    </div>
+
+    <footer class="panel-footer">
+      <button type="button" (click)="accountPanel.close()">Annuler</button>
+      @if (accountView() === 'profile') {
+        <button class="save-button" type="submit" form="kotbis-profile-form">
+          Enregistrer
+        </button>
+      } @else {
+        <button class="save-button" type="button" disabled
+          title="Disponible après la mise en place de la connexion">
+          Mettre à jour
+        </button>
+      }
+    </footer>
+  </div>
+</dialog>
   </div>
 </header>

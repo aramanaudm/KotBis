@@ -1,10 +1,17 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../app.routes';
 
 describe('Accueil KotBis et navigation après intégration', () => {
-  beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter(routes)] }));
+  // L'accueil lit le compte connecté (AuthService), qui dépend désormais de l'API.
+  beforeEach(() =>
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
+    }),
+  );
 
   it('conserve le partage de position et les deux accès communautaires sur la carte', async () => {
     const harness = await RouterTestingHarness.create('/home');
