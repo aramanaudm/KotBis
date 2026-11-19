@@ -14,6 +14,7 @@ import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerRouteurUtilisateurs } from "./utilisateurs/routes";
 import { creerMiddlewareSession } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
+import routeurTransport from "./transport/transport.routes";
 import { DepotFavorisPostgres } from "./favoris/favoris.depot.postgres";
 import { FavorisControleur } from "./favoris/favoris.controleur";
 import { creerRoutesFavoris } from "./favoris/favoris.routes";
@@ -28,6 +29,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/sante", routeurSante);
+app.use("/api", routeurTransport);
 
 // KBE-23 : authentification par sessions stockées en base (jeton opaque)
 const serviceAuthentification = new ServiceAuthentification(
