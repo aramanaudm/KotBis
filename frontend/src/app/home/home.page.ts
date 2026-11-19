@@ -7,10 +7,20 @@ import {
   ViewChild,
   signal,
   inject,
+  effect,
 } from '@angular/core';
 import * as L from 'leaflet';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { PartagePositionComponent } from '../partage-position/partage-position.component';
+import { GpsService } from '../core/gps/gps.service';
+import { GpsDialogComponent } from '../permission_gps/gps-dialog.component';
+import { ChampDepartComponent } from '../champ_depart/champ-depart.component';
+import { ChampDestinationComponent } from '../champ_destination/champ-destination.component';
+import { RechercheService } from '../core/recherche/recherche.service';
+import { BoutonRechercheComponent } from '../bouton_recherche/bouton-recherche.component';
+import { ResultatsComponent } from '../resultats_recherche/resultats.component';
+import { DetailTrajetComponent } from '../detail_trajet/detail-trajet.component';
+import { EtatsRechercheComponent } from '../etats_recherche/etats-recherche.component';
 
 interface ArretDemo {
   id: number;
@@ -39,13 +49,34 @@ type EtatFraicheur = 'recente' | 'ancienne' | 'inconnue';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [PartagePositionComponent, RouterLink, RouterOutlet],
+  imports: [PartagePositionComponent, GpsDialogComponent, ChampDepartComponent, ChampDestinationComponent, BoutonRechercheComponent, ResultatsComponent, DetailTrajetComponent, EtatsRechercheComponent, RouterLink, RouterOutlet],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
 export class HomePage implements OnDestroy {
   readonly user = inject(AuthService).user;
   private readonly nav = inject(NavController);
+  private readonly gps = inject(GpsService);
+
+  /** État de la recherche (public : lu dans le template). */
+  readonly recherche = inject(RechercheService);
+
+  /** Marqueur « Vous êtes ici » (position GPS de l'usager). */
+  private marqueurPosition?: L.CircleMarker;
+
+  constructor() {
+    // Dès que le GPS fournit une position, on la montre sur la carte.
+    effect(() => {
+      const pos = this.gps.position();
+      if (pos) {
+        this.afficherPosition([pos.latitude, pos.longitude]);
+      } else {
+        // Position annulée : on retire le point « Vous êtes ici » de la carte.
+        this.marqueurPosition?.remove();
+        this.marqueurPosition = undefined;
+      }
+    });
+  }
 
   mySpace(): Promise<boolean> {
     return this.nav.navigateForward('/mon-espace');
@@ -379,6 +410,41 @@ export class HomePage implements OnDestroy {
     this.map?.setView(this.centre, 14);
   }
 
+  /**
+   * BUS-FE-021 – Bouton ◎ « Ma position ».
+   * Position déjà connue → on recentre la carte dessus ;
+   * sinon on ouvre la boîte qui explique pourquoi on demande le GPS.
+   */
+  localiser(): void {
+    const pos = this.gps.position();
+    if (this.gps.etat() === 'accorde' && pos) {
+      this.afficherPosition([pos.latitude, pos.longitude]);
+    } else {
+      this.gps.ouvrirDialogue();
+    }
+  }
+
+  /** Pose (ou déplace) le marqueur de l'usager et centre la carte dessus. */
+  private afficherPosition(position: L.LatLngTuple): void {
+    if (!this.map) {
+      return;
+    }
+    if (this.marqueurPosition) {
+      this.marqueurPosition.setLatLng(position);
+    } else {
+      this.marqueurPosition = L.circleMarker(position, {
+        radius: 9,
+        color: '#ffffff',
+        weight: 3,
+        fillColor: '#1a73e8',
+        fillOpacity: 1,
+      })
+        .bindTooltip('Vous êtes ici')
+        .addTo(this.map);
+    }
+    this.map.setView(position, 15);
+  }
+
   reessayer(): void {
     this.carteIndisponible.set(false);
     this.tiles?.redraw();
@@ -391,5 +457,6 @@ export class HomePage implements OnDestroy {
     this.map = undefined;
     this.tiles = undefined;
     this.marqueurSelectionne = undefined;
+    this.marqueurPosition = undefined;
   }
 }

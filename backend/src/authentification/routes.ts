@@ -1,7 +1,12 @@
 import { Router, type RequestHandler } from "express";
 import { obtenirSessionCourante, obtenirUtilisateurCourant } from "../middlewares/authentification";
 import type { ServiceAuthentification } from "./service";
-import { validerConnexion, validerInscription } from "./validation";
+import {
+  validerConnexion,
+  validerDemandeReinitialisation,
+  validerInscription,
+  validerReinitialisation
+} from "./validation";
 
 function adresseIp(requete: Parameters<RequestHandler>[0]): string {
   return requete.ip ?? requete.socket.remoteAddress ?? "inconnu";
@@ -42,6 +47,28 @@ export function creerRouteurAuthentification(
     const nouvelleSession = await service.renouvelerSession(utilisateur, session.empreinteJeton);
     reponse.set("Cache-Control", "no-store");
     reponse.status(200).json(nouvelleSession);
+  });
+
+  routeur.post("/mot-de-passe/oublie", async (requete, reponse) => {
+    const email = validerDemandeReinitialisation(requete.body);
+    const resultat = await service.demanderReinitialisation(email);
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(202).json({
+      message:
+        "Si un compte actif correspond à cette adresse, un code de réinitialisation a été envoyé.",
+      ...resultat
+    });
+  });
+
+  routeur.post("/mot-de-passe/reinitialisation", async (requete, reponse) => {
+    const donnees = validerReinitialisation(requete.body);
+    await service.reinitialiserMotDePasse(
+      donnees.email,
+      donnees.code,
+      donnees.nouveauMotDePasse
+    );
+    reponse.set("Cache-Control", "no-store");
+    reponse.status(204).send();
   });
 
   return routeur;

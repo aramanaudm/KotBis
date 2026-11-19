@@ -1,17 +1,12 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonContent } from '@ionic/angular';
 
-interface TrajetFavori {
-  readonly id: number;
-  readonly depart: string;
-  readonly destination: string;
-}
+import { AuthModalService } from '../core/auth/auth-modal.service';
+import { AuthService } from '../core/auth/auth.service';
 
-const EXEMPLES: readonly TrajetFavori[] = [
-  { id: 1, depart: 'Port-Louis', destination: 'Curepipe' },
-  { id: 2, depart: 'Rose-Hill', destination: 'Quatre Bornes' },
-];
+import type { ArretFavori, Favori, TrajetPropose } from './favoris.service';
+import { FavorisError, FavorisService } from './favoris.service';
 
 @Component({
   selector: 'app-favoris',
@@ -20,24 +15,77 @@ const EXEMPLES: readonly TrajetFavori[] = [
   imports: [IonContent, RouterLink],
 })
 export class FavorisPage {
-  readonly etat = input<string>();
-  readonly vue = input<string>();
-  readonly trajet = input<string>();
-  readonly favorisRetires = signal<readonly number[]>([]);
-  readonly annonce = signal('');
-  readonly favoris = computed(() =>
-    this.etat() === 'liste' ? EXEMPLES.filter((favori) => !this.favorisRetires().includes(favori.id)) : [],
-  );
-  readonly trajetSelectionne = computed(() => EXEMPLES.find((favori) => String(favori.id) === this.trajet()));
+  private readonly serviceFavoris = inject(FavorisService);
+  private readonly auth = inject(AuthService);
+  private readonly authModals = inject(AuthModalService);
 
-  retirer(favori: TrajetFavori, prochainElement: HTMLElement): void {
-    this.favorisRetires.update((ids) => [...ids, favori.id]);
-    this.annonce.set(`Trajet de ${favori.depart} à ${favori.destination} retiré des favoris.`);
+  readonly connecte = this.auth.isLoggedIn;
+  readonly retour = signal<{ message: string; erreur: boolean } | null>(null);
+  readonly enCours = signal(false);
+  readonly recherche = signal('');
+  readonly favoris = this.serviceFavoris.favoris;
+  readonly trajetsAjoutables = this.serviceFavoris.trajetsAjoutables;
+
+  constructor() {
+    // À l'ouverture (et après connexion) : favoris à jour et premiers trajets proposés.
+    effect(() => {
+      if (!this.connecte()) return;
+      untracked(() => void this.actualiser());
+    });
+  }
+
+  nomArret(arret: ArretFavori | null): string {
+    return arret?.nom ?? 'Arrêt supprimé';
+  }
+
+  intitule(favori: Favori): string {
+    return favori.depart
+      ? `${this.nomArret(favori.depart)} → ${this.nomArret(favori.arrivee)}`
+      : `Vers ${this.nomArret(favori.arrivee)}`;
+  }
+
+  async seConnecter(): Promise<void> {
+    await this.authModals.openLogin();
+  }
+
+  async rechercher(evenement: Event): Promise<void> {
+    evenement.preventDefault();
+    await this.executer(() => this.serviceFavoris.rechercherTrajets(this.recherche()));
+  }
+
+  async ajouter(trajet: TrajetPropose, prochainElement: HTMLElement): Promise<void> {
+    const ok = await this.executer(() => this.serviceFavoris.ajouter(trajet));
+    if (!ok) return;
+    this.retour.set({ message: 'Trajet enregistré dans les favoris.', erreur: false });
     prochainElement.focus();
   }
 
-  reinitialiser(): void {
-    this.favorisRetires.set([]);
-    this.annonce.set('');
+  async retirer(favori: Favori, prochainElement: HTMLElement): Promise<void> {
+    const ok = await this.executer(() => this.serviceFavoris.retirer(favori));
+    if (!ok) return;
+    this.retour.set({ message: `Trajet ${this.intitule(favori)} retiré des favoris.`, erreur: false });
+    prochainElement.focus();
+  }
+
+  private async actualiser(): Promise<void> {
+    await this.executer(() =>
+      Promise.all([this.serviceFavoris.charger(), this.serviceFavoris.rechercherTrajets(this.recherche())]),
+    );
+  }
+
+  /** Une seule opération à la fois ; l'erreur de l'API est affichée telle quelle. */
+  private async executer(action: () => Promise<unknown>): Promise<boolean> {
+    if (this.enCours()) return false;
+    this.enCours.set(true);
+    try {
+      await action();
+      return true;
+    } catch (erreur) {
+      const message = erreur instanceof FavorisError ? erreur.message : 'Une erreur est survenue. Réessayez.';
+      this.retour.set({ message, erreur: true });
+      return false;
+    } finally {
+      this.enCours.set(false);
+    }
   }
 }

@@ -1,0 +1,13 @@
+@if (recherche.resultatChoisi(); as r) {
+  <section aria-live="polite">
+    <h3 #titre tabindex="-1">Ligne {{ r.ligne }}</h3>
+    <p>De {{ r.depart }} à {{ r.destination }} — bus immatriculé {{ r.immatriculation }}.</p>
+    <!-- État du bus : si la donnée manque on le dit, on n'invente rien. -->
+    <p>État du bus : {{ r.etat ?? 'indisponible' }}</p>
+
+    <app-etapes-trajet [etapes]="r.etapes"></app-etapes-trajet>
+    <app-distance-duree [distanceKm]="r.distanceKm" [dureeMin]="r.dureeMin"></app-distance-duree>
+
+    <button type="button" class="fermer" (click)="recherche.fermerDetail()">Fermer</button>
+  </section>
+}
