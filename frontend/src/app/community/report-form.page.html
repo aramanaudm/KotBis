@@ -1,5 +1,5 @@
 <app-community-dialog title="Signaler un bus">
-  <p class="community-note">Démonstration : aucun signalement n'est transmis à un service en ligne.</p>
+  <p class="community-note">Votre signalement est transmis au service KotBis.</p>
   @if (receipt(); as report) {
   <div role="status" class="community-notice">
     Votre signalement pour le bus {{ report.busLine }} a été enregistré dans cette session. Statut : À vérifier.
@@ -51,6 +51,25 @@
         @if (form.controls.categoryId.touched && form.controls.categoryId.invalid) { Choisissez une catégorie. }
       </p>
     </fieldset>
+    <div class="community-field">
+      <label for="report-comment">Commentaire (facultatif)</label>
+      <textarea
+        id="report-comment"
+        formControlName="commentaire"
+        rows="3"
+        maxlength="600"
+        aria-describedby="report-comment-error"
+        [attr.aria-invalid]="form.controls.commentaire.touched && form.controls.commentaire.invalid"
+      ></textarea>
+      <p id="report-comment-error" class="community-error">
+        @if (form.controls.commentaire.touched && form.controls.commentaire.invalid) { Le commentaire ne peut pas
+        dépasser 600 caractères. }
+      </p>
+    </div>
+    <label class="community-check">
+      <input type="checkbox" formControlName="consentementGps" />
+      <span>Partager ma position GPS si elle est disponible.</span>
+    </label>
     @if (error()) {
     <p role="alert" class="community-error">{{ error() }}</p>
     }

@@ -64,13 +64,14 @@ export class FauxDepot implements DepotAuthentification {
     pseudo: string;
     motDePasseHash: string;
     etat?: string;
+    role?: string;
   }): CompteAvecSecret {
     const compteId = String(this.prochainId++);
     const compte: CompteAvecSecret = {
       compteId,
       identifiantPublic: randomUUID(),
       email: donnees.email.toLowerCase(),
-      role: "voyageur",
+      role: donnees.role ?? "voyageur",
       pseudo: donnees.pseudo,
       avatarRef: null,
       zoneLibre: null,

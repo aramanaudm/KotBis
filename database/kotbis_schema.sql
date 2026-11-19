@@ -156,16 +156,33 @@ CREATE TABLE signalements (
     id                    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     reference             VARCHAR(30) NOT NULL UNIQUE,
     auteur_id             BIGINT NOT NULL REFERENCES voyageurs(compte_id),
-    bus_id                BIGINT NOT NULL REFERENCES bus(id),
+    bus_id                BIGINT REFERENCES bus(id),
+    trajet_id             BIGINT REFERENCES trajets(id),
     type                  VARCHAR(30) NOT NULL,
     commentaire           VARCHAR(600),
     statut                VARCHAR(25) NOT NULL,
     version               INTEGER NOT NULL DEFAULT 1,
+    cle_idempotence       UUID NOT NULL,
+    observe_le            TIMESTAMPTZ NOT NULL,
+    recu_le               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    position              geometry(Point, 4326),
+    archive_le            TIMESTAMPTZ,
     cree_le               TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT chk_signalements_type CHECK (type IN ('en_panne','autre')),
-    CONSTRAINT chk_signalements_statut CHECK (statut IN ('a_verifier','confirme','classe_sans_suite'))
+    CONSTRAINT chk_signalements_statut CHECK (statut IN ('a_verifier','confirme','classe_sans_suite')),
+    CONSTRAINT chk_signalements_cible CHECK (bus_id IS NOT NULL OR trajet_id IS NOT NULL),
+    CONSTRAINT chk_signalements_dates CHECK (observe_le <= recu_le),
+    CONSTRAINT chk_signalements_position CHECK (position IS NULL OR (
+        ST_X(position) BETWEEN -180 AND 180
+        AND ST_Y(position) BETWEEN -90 AND 90
+    )),
+    CONSTRAINT uq_signalements_idempotence UNIQUE (auteur_id, cle_idempotence)
 );
-CREATE INDEX idx_signalements_statut ON signalements (statut, cree_le);
+CREATE INDEX idx_signalements_statut ON signalements (statut, recu_le DESC);
+CREATE INDEX idx_signalements_auteur ON signalements (auteur_id, recu_le DESC);
+CREATE INDEX idx_signalements_bus ON signalements (bus_id);
+CREATE INDEX idx_signalements_trajet ON signalements (trajet_id);
+CREATE INDEX idx_signalements_position ON signalements USING GIST (position);
 
 CREATE TABLE historique_signalements (
     id                    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

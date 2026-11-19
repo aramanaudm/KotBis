@@ -20,6 +20,7 @@ bootstrapApplication(AppComponent, {
     provideIonicAngular(),
     provideHttpClient(withFetch()),
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
+    provideHttpClient(withFetch()),
     provideAppInitializer(() => inject(AuthService).restore()),
   ],
 });
