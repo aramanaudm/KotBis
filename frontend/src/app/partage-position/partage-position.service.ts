@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../core/auth/auth.service';
 
@@ -23,7 +23,11 @@ export class PartagePositionService {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly api = 'http://localhost:3000/api';
-  private jeton: string | null = null;
+  /** Jeton obtenu par le formulaire de connexion de ce panneau (repli si le compte n'est pas connecté). */
+  private readonly jeton = signal<string | null>(null);
+
+  /** Vrai si un jeton est disponible : session du compte (AuthService) ou connexion du panneau. */
+  readonly connecte = computed(() => this.auth.isLoggedIn() || this.jeton() !== null);
 
   async connecter(identifiant: string, motDePasse: string): Promise<void> {
     const reponse = await firstValueFrom(
@@ -37,11 +41,11 @@ export class PartagePositionService {
       throw new Error('Aucun jeton reçu du serveur.');
     }
 
-    this.jeton = reponse.jeton;
+    this.jeton.set(reponse.jeton);
   }
 
   private headers(): HttpHeaders {
-    const token = this.auth.backendToken() || this.jeton;
+    const token = this.auth.token() ?? this.jeton();
 
     if (!token) {
       throw new Error('Connexion au serveur obligatoire.');
@@ -77,7 +81,7 @@ export class PartagePositionService {
   }
 
   async deconnecter(): Promise<void> {
-    if (!this.jeton) return;
+    if (!this.jeton()) return;
 
     try {
       await firstValueFrom(
@@ -88,7 +92,7 @@ export class PartagePositionService {
         ),
       );
     } finally {
-      this.jeton = null;
+      this.jeton.set(null);
     }
   }
 }
