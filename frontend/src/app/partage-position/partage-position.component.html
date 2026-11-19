@@ -9,88 +9,112 @@
 </button>
 
 <div class="indicateur-zone" role="status" aria-atomic="true">
-  @if (simulationActive()) {
+  @if (partageActif()) {
     <div class="indicateur-actif">
       <span class="point-actif" aria-hidden="true"></span>
 
       <div>
-        <strong>Simulation de partage active</strong>
-        <span>Aucune position réelle transmise.</span>
+        <strong>Session de partage active</strong>
+        <span>Aucune coordonnée GPS n'est encore transmise.</span>
       </div>
     </div>
   }
 </div>
 
-@if (simulationActive()) {
+@if (partageActif()) {
   <button
     class="arret-rapide"
     type="button"
-    (click)="arreterSimulation()"
+    [disabled]="chargement()"
+    (click)="arreterPartage()"
   >
-    Arrêter la simulation
+    Arrêter le partage
   </button>
 }
 
+@if (panneauOuvert()) {
+<div class="partage-overlay" (click)="basculerPanneau()"></div>
+}
+
 <section
+  role="dialog"
+  aria-modal="true"
   id="panneau-partage"
   class="panneau"
   aria-labelledby="titre-partage"
   [hidden]="!panneauOuvert()"
 >
-  <h2 id="titre-partage">Partage de position</h2>
+  <div class="partage-entete">
+    <h2 id="titre-partage">Partage de position</h2>
+    <button
+      type="button"
+      class="partage-fermer"
+      aria-label="Fermer"
+      (click)="basculerPanneau()"
+    >✕</button>
+  </div>
 
   <p class="demo">
-    Démonstration uniquement : aucun accès au GPS et aucune position
-    collectée ou transmise.
+    Cette fonctionnalité permet de démarrer et d'arrêter une session
+    de partage. La transmission des coordonnées GPS n'est pas encore activée.
   </p>
 
   <p
     class="etat"
     role="status"
-    [class.actif]="simulationActive()"
+    [class.actif]="partageActif()"
   >
     {{ message() }}
   </p>
+
+  @if (!backendConnecte()) {
+    <p class="aide">
+      Connectez-vous à votre compte KotBis pour activer le partage.
+    </p>
+  }
 
   <label class="consentement">
     <input
       type="checkbox"
       [checked]="consentement()"
+      [disabled]="!backendConnecte() || chargement()"
       (change)="changerConsentement($event)"
       aria-describedby="explication-partage"
     />
 
     <span>
-      J’accepte de démarrer une simulation du partage de position.
+      J'accepte de démarrer une session de partage de position.
     </span>
   </label>
 
   <p id="explication-partage" class="aide">
-    Cocher cette case ne démarre pas la simulation.
-    Vous pouvez retirer votre consentement ou arrêter à tout moment.
+    Votre consentement est obligatoire.
+    Vous pouvez arrêter le partage à tout moment.
   </p>
 
-  @if (simulationActive()) {
+  @if (partageActif()) {
     <button
       class="arreter"
       type="button"
-      (click)="arreterSimulation()"
+      [disabled]="chargement()"
+      (click)="arreterPartage()"
     >
-      Arrêter la simulation
+      {{ chargement() ? 'Traitement...' : 'Arrêter le partage' }}
     </button>
   } @else {
     <button
       class="demarrer"
       type="button"
-      [disabled]="!consentement()"
-      (click)="demarrerSimulation()"
+      [disabled]="!backendConnecte() || !consentement() || chargement()"
+      (click)="demarrerPartage()"
     >
-      Démarrer la simulation
+      {{ chargement() ? 'Démarrage...' : 'Démarrer le partage' }}
     </button>
   }
 
   <p class="aide">
-    La simulation est désactivée lorsque vous quittez la page.
-    Elle ne reprend pas automatiquement.
+    Le partage ne reprend pas automatiquement.
+    En cas de fermeture imprévue de l'application ou de perte de connexion,
+    l'arrêt côté serveur peut ne pas être confirmé.
   </p>
 </section>

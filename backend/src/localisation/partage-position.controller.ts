@@ -13,12 +13,7 @@ import { PartagePositionService } from "./partage-position.service";
 
 // Représente une requête HTTP associée à un compte authentifié.
 // Le middleware d'authentification devra renseigner cette propriété.
-interface RequeteAuthentifiee extends Request {
-    utilisateur?: {
-        compteId: string;
-        [cle: string]: unknown;
-    };
-}
+
 export class PartagePositionController {
 
     // Le service métier est fourni lors de la création du contrôleur.
@@ -33,7 +28,7 @@ export class PartagePositionController {
     // Vérifie l'authentification et le consentement avant
     // de transmettre la demande au service métier.
     demarrerPartage = async (
-        req: RequeteAuthentifiee,
+        req: Request,
         res: Response
     ): Promise<void> => {
 
@@ -102,7 +97,7 @@ export class PartagePositionController {
     // Vérifie l'authentification et transmet la demande au service métier.
     // Seul le propriétaire de la session peut arrêter son partage.
     arreterPartage = async (
-        req: RequeteAuthentifiee,
+        req: Request,
         res: Response
     ): Promise<void> => {
 
