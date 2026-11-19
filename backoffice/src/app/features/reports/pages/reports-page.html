@@ -47,7 +47,7 @@
 
   <app-pagination
     [page]="page()"
-    [total]="filteredReports().length"
+    [total]="total()"
     [pageSize]="pageSize"
     (pageChange)="changePage($event)"
   />

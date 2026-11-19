@@ -47,7 +47,29 @@ test("colonnes spatiales en EPSG:4326", async () => {
   );
   assert.deepEqual(rows, [
     { table_name: "arrets", colonne: "position", type: "POINT", srid: 4326 },
+    { table_name: "signalements", colonne: "position", type: "POINT", srid: 4326 },
     { table_name: "zones", colonne: "contour", type: "POLYGON", srid: 4326 }
+  ]);
+});
+
+test("signalements contient les colonnes du flux voyageur", async () => {
+  const { rows } = await obtenirPool().query<{ column_name: string }>(
+    `SELECT column_name
+       FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'signalements'
+        AND column_name = ANY($1)`,
+    [["bus_id", "trajet_id", "cle_idempotence", "observe_le", "recu_le", "position", "archive_le", "version"]]
+  );
+  assert.deepEqual(rows.map((r) => r.column_name).sort(), [
+    "archive_le",
+    "bus_id",
+    "cle_idempotence",
+    "observe_le",
+    "position",
+    "recu_le",
+    "trajet_id",
+    "version"
   ]);
 });
 

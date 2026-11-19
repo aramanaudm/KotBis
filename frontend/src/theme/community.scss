@@ -199,6 +199,20 @@
 .community-error:empty {
   margin: 0;
 }
+.community-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.community-check input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #0055a4;
+}
 .community-notice {
   padding: 12px;
   border-radius: var(--community-radius);

@@ -13,6 +13,10 @@ import { ServiceAuthentification } from "./authentification/service";
 import { creerRouteurAuthentification } from "./authentification/routes";
 import { creerMiddlewareSession, obtenirUtilisateurCourant } from "./middlewares/authentification";
 import { gestionnaireErreurs, routeInconnue } from "./middlewares/gestionErreurs";
+import { DepotSignalementsPostgres } from "./signalements/signalements.depot";
+import { ServiceSignalements } from "./signalements/signalements.service";
+import { SignalementsController } from "./signalements/signalements.controller";
+import { creerRoutesSignalements } from "./signalements/signalements.routes";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -29,6 +33,10 @@ const serviceAuthentification = new ServiceAuthentification(
 );
 const middlewareSession = creerMiddlewareSession(serviceAuthentification);
 app.use("/api", creerRouteurAuthentification(serviceAuthentification, middlewareSession));
+
+const serviceSignalements = new ServiceSignalements(new DepotSignalementsPostgres(obtenirPool));
+const controllerSignalements = new SignalementsController(serviceSignalements);
+app.use("/api/signalements", creerRoutesSignalements(controllerSignalements, middlewareSession));
 
 app.put('/api/utilisateurs/moi', middlewareSession, async (req: any, res: any) => {
   const client = await obtenirPool().connect();

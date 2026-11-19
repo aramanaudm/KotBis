@@ -45,56 +45,47 @@ export class ReportsPage {
   protected readonly reviewStatus = signal<ReportStatus>('pending');
   protected readonly feedback = signal('');
 
-  protected readonly filteredReports = computed(() => {
-    const search = this.search().trim().toLowerCase();
-    const filter = this.statusFilter();
+  protected readonly filteredReports = computed(() => this.reports.all());
+  protected readonly total = this.reports.total;
+  protected readonly pageCount = computed(() => Math.max(1, this.reports.pages()));
 
-    return this.reports.all().filter((report) => {
-      const matchesSearch =
-        !search ||
-        [report.id, report.bus, REPORT_TYPE_LABELS[report.type], report.comment, report.date].some(
-          (value) => value.toLowerCase().includes(search),
-        );
-      const matchesFilter = !filter || report.status === filter;
-
-      return matchesSearch && matchesFilter;
-    });
-  });
-
-  protected readonly pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.filteredReports().length / this.pageSize)),
-  );
-
-  protected readonly rows = computed<readonly TableRow[]>(() => {
-    const page = Math.min(this.page(), this.pageCount());
-    const start = (page - 1) * this.pageSize;
-
-    return this.filteredReports()
-      .slice(start, start + this.pageSize)
-      .map((report) => ({
+  protected readonly rows = computed<readonly TableRow[]>(() =>
+    this.filteredReports().map((report) => ({
+      id: report.id,
+      values: {
         id: report.id,
-        values: {
-          id: report.id,
-          bus: report.bus,
-          type: REPORT_TYPE_LABELS[report.type],
-          status: REPORT_STATUS_LABELS[report.status],
-          date: report.date,
-        },
-      }));
-  });
+        bus: report.bus,
+        type: REPORT_TYPE_LABELS[report.type],
+        status: REPORT_STATUS_LABELS[report.status],
+        date: report.date,
+      },
+    })),
+  );
 
   protected onSearch(event: Event): void {
     this.search.set((event.target as HTMLInputElement).value);
     this.page.set(1);
+    this.reload();
   }
 
   protected onFilter(event: Event): void {
     this.statusFilter.set((event.target as HTMLSelectElement).value as ReportStatus | '');
     this.page.set(1);
+    this.reload();
   }
 
   protected changePage(page: number): void {
     this.page.set(page);
+    this.reload();
+  }
+
+  private reload(): void {
+    this.reports.load({
+      q: this.search(),
+      statut: this.statusFilter(),
+      page: this.page(),
+      limit: this.pageSize,
+    });
   }
 
   protected openReview(row: TableRow): void {
@@ -116,7 +107,7 @@ export class ReportsPage {
     this.reviewStatus.set((event.target as HTMLSelectElement).value as ReportStatus);
   }
 
-  protected saveReview(event: Event): void {
+  protected async saveReview(event: Event): Promise<void> {
     event.preventDefault();
 
     const report = this.reviewTarget();
@@ -125,28 +116,32 @@ export class ReportsPage {
       return;
     }
 
-    const statut = this.reviewStatus();
-    this.reports.update(report.id, statut).subscribe({
-      next: () => {
-        this.closeReview();
-        this.showFeedback('Signalement mis à jour.');
-      },
-      error: (err) => this.showFeedback(apiError(err)),
-    });
+    try {
+      await this.reports.update(report.id, this.reviewStatus());
+      this.closeReview();
+      this.showFeedback('Signalement mis à jour.');
+    } catch (erreur) {
+      this.showFeedback(apiError(erreur));
+    }
   }
 
-  protected exportCsv(): void {
-    this.csv.export(
-      'kotbis-signalements.csv',
-      ['Référence', 'Bus', 'Type', 'Statut', 'Date'],
-      this.filteredReports().map((report) => [
-        report.id,
-        report.bus,
-        REPORT_TYPE_LABELS[report.type],
-        REPORT_STATUS_LABELS[report.status],
-        report.date,
-      ]),
-    );
+  protected async exportCsv(): Promise<void> {
+    try {
+      const rapports = await this.reports.listeComplete();
+      this.csv.export(
+        'kotbis-signalements.csv',
+        ['Référence', 'Bus', 'Type', 'Statut', 'Date'],
+        rapports.map((report) => [
+          report.id,
+          report.bus,
+          REPORT_TYPE_LABELS[report.type],
+          REPORT_STATUS_LABELS[report.status],
+          report.date,
+        ]),
+      );
+    } catch (erreur) {
+      this.showFeedback(apiError(erreur));
+    }
   }
 
   private showFeedback(message: string): void {

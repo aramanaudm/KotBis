@@ -3,4 +3,5 @@ export const environment = {
   apiBaseUrl: '/api',
   apiUrl: '',
   useMockApi: false,
+  signalementsApiUrl: '',
 } as const;
