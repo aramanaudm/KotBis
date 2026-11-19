@@ -1,0 +1,170 @@
+:host {
+  position: absolute;
+  top: calc(100px + env(safe-area-inset-top, 0px));
+  left: 18px;
+  z-index: 550;
+  width: min(360px, calc(100% - 36px));
+  color: #203448;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #203448;
+  outline-offset: 3px;
+}
+
+.ouvrir-partage,
+.demarrer {
+  background: #008060;
+  color: #fff;
+}
+
+.ouvrir-partage {
+  box-shadow: 0 4px 16px rgb(22 44 62 / 18%);
+}
+
+.panneau {
+  margin-top: 10px;
+  padding: 18px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgb(22 44 62 / 18%);
+}
+
+.panneau[hidden] {
+  display: none;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+}
+
+p {
+  line-height: 1.5;
+}
+
+.demo,
+.aide {
+  color: #596675;
+  font-size: 0.85rem;
+}
+
+.etat {
+  padding: 12px;
+  border: 1px solid #596675;
+  border-radius: 10px;
+  background: #edf0f3;
+  font-weight: 600;
+}
+
+.etat.actif {
+  color: #00664d;
+  border-color: #008060;
+  background: #e3f5ec;
+}
+
+.consentement {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+input {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  accent-color: #008060;
+}
+
+.demarrer,
+.arreter {
+  width: 100%;
+}
+
+.demarrer:disabled {
+  color: #465462;
+  background: #e1e5e9;
+  cursor: not-allowed;
+}
+
+.arreter {
+  color: #fff;
+  background: #203448;
+}
+
+@media (max-height: 500px) {
+  :host {
+    top: calc(75px + env(safe-area-inset-top, 0px));
+  }
+
+  .panneau {
+    max-height: 50dvh;
+  }
+}
+/* SCRUM-70 : indicateur visible même lorsque le panneau est fermé. */
+.indicateur-actif {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #008060;
+  border-radius: 12px;
+  background: #e3f5ec;
+  color: #00664d;
+}
+
+.indicateur-actif strong,
+.indicateur-actif div > span {
+  display: block;
+}
+
+.indicateur-actif strong {
+  font-size: 0.9rem;
+}
+
+.indicateur-actif div > span {
+  margin-top: 4px;
+  font-size: 0.8rem;
+}
+
+.point-actif {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #008060;
+}
+
+.arret-rapide {
+  width: 100%;
+  margin-top: 8px;
+  background: #203448;
+  color: #fff;
+}

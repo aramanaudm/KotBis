@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -22,6 +23,10 @@ export class UsersPage {
   private readonly users = inject(UsersService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.users.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = USER_STATUS_TONES;
@@ -141,8 +146,23 @@ export class UsersPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const editing = this.editingUser();
+    const user: Omit<User, 'id'> = {
+      pseudo: this.form.controls.pseudo.value,
+      email: this.form.controls.email.value,
+      role: this.form.controls.role.value,
+      status: this.form.controls.status.value,
+      points: editing?.points ?? 0,
+    };
+    const operation = editing ? this.users.update(editing.id, user) : this.users.create(user);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Utilisateur modifié.' : 'Utilisateur créé.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -158,12 +178,18 @@ export class UsersPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.users.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Compte désactivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {

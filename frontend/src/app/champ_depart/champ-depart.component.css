@@ -1,0 +1,19 @@
+.champ { display: grid; gap: 6px; margin: 10px 0; }
+label { font-weight: 700; color: #203448; }
+select, .position {
+  min-height: 44px; margin: 0; padding: 0 12px;
+  border: 1px solid #c9d3dd; border-radius: 12px;
+  display: flex; align-items: center; background: #fff; color: #203448;
+}
+.position-ligne { display: flex; gap: 8px; }
+.position-ligne .position { flex: 1; }
+.annuler {
+  min-height: 44px; padding: 0 14px; border: 1px solid #c9d3dd;
+  border-radius: 12px; background: #fff; color: #b3261e;
+  font-weight: 700; cursor: pointer;
+}
+.gps {
+  min-height: 44px; border: 1px solid #0cc493; border-radius: 12px;
+  background: #288a8a5b; color: #11750c; font-weight: 700; cursor: pointer;
+}
+.etat { margin: 0; font-size: 0.85rem; color: #596675; }

@@ -15,8 +15,11 @@ export const EMPTY_COUNTERS: Readonly<AccountCounters> = {
   points: 0,
 };
 
-/** Compte tel que stocké localement (inclut le secret haché : ne jamais l'exposer à l'UI). */
-export interface StoredAccount {
+/**
+ * Compte connecté tel qu'affiché par l'application. Les comptes sont créés et vérifiés par l'API
+ * (PostgreSQL) : aucun mot de passe ni empreinte n'existe côté application.
+ */
+export interface PublicAccount {
   id: string;
   pseudo: string;
   email: string;
@@ -24,21 +27,38 @@ export interface StoredAccount {
   city?: string;
   /** Facultatif à l'inscription (« Téléphone »). */
   phone?: string;
-  salt: string;
-  passwordHash: string;
   createdAt: string;
   counters: AccountCounters;
 }
-
-/** Vue publique d'un compte, sans aucun secret : seul type utilisable par les composants. */
-export type PublicAccount = Omit<StoredAccount, 'salt' | 'passwordHash'>;
 
 export interface RegisterPayload {
   pseudo: string;
   email: string;
   password: string;
+  /** Acceptation explicite des conditions d'utilisation (exigée par l'API). */
+  acceptTerms: boolean;
   city?: string;
   phone?: string;
+}
+
+/** Profil renvoyé par l'API (`ProfilUtilisateur` côté backend). */
+export interface ApiUserProfile {
+  compteId: string;
+  identifiantPublic: string;
+  email: string;
+  role: string;
+  pseudo: string | null;
+  avatarRef: string | null;
+  zoneLibre: string | null;
+  telephone: string | null;
+  creeLe: string;
+}
+
+/** Session conservée sur l'appareil : jeton opaque et profil public, jamais de mot de passe. */
+export interface StoredSession {
+  token: string;
+  expiresAt: string;
+  user: PublicAccount;
 }
 
 export type AuthErrorCode =
@@ -46,6 +66,10 @@ export type AuthErrorCode =
   | 'EMAIL_TAKEN'
   | 'INVALID_CREDENTIALS'
   | 'INVALID_RESET_CODE'
+  | 'INVALID_DATA'
+  | 'TOO_MANY_ATTEMPTS'
+  | 'NETWORK'
+  | 'UNAVAILABLE'
   | 'UNKNOWN';
 
 export class AuthError extends Error {

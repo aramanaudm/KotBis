@@ -1,86 +1,120 @@
-import { computed, inject, Injectable } from '@angular/core';
-import { BusesService } from '../../buses/services/buses.service';
-import { REPORT_TYPE_LABELS } from '../../reports/models/report';
-import { ReportsService } from '../../reports/services/reports.service';
-import { ReviewsService } from '../../reviews/services/reviews.service';
-import { RoutesService } from '../../routes/services/routes.service';
-import { StopsService } from '../../stops/services/stops.service';
-import { UsersService } from '../../users/services/users.service';
-import { ZonesService } from '../../zones/services/zones.service';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import type { BusStatus } from '../../buses/models/bus';
 import type { AttentionItem, DashboardMetric } from '../models/dashboard';
+import { apiError, apiUrl } from '../../../core/services/api';
+
+interface ApiIndicateurs {
+  bus_en_service: number;
+  zones_actives: number;
+  comptes_voyageurs: number;
+  signalements_a_verifier: number;
+}
+
+interface ApiBusFlotte {
+  id: string;
+  plaque: string;
+  etat: string;
+  ligne_code: string | null;
+  direction: string | null;
+}
+
+interface ApiDashboard {
+  success: boolean;
+  data: {
+    indicateurs: ApiIndicateurs;
+    flotte: ApiBusFlotte[];
+    avis_a_moderer: number;
+    arrets_actifs: number;
+    trajets_actifs: number;
+  };
+}
+
+const ETAT_TO_LABEL: Record<string, string> = {
+  actif: 'Actif',
+  inactif: 'Inactif',
+  en_panne: 'En panne',
+};
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private readonly buses = inject(BusesService);
-  private readonly zones = inject(ZonesService);
-  private readonly users = inject(UsersService);
-  private readonly reports = inject(ReportsService);
-  private readonly reviews = inject(ReviewsService);
-  private readonly stops = inject(StopsService);
-  private readonly routes = inject(RoutesService);
+  private readonly http = inject(HttpClient);
+  private readonly donnees = signal<ApiDashboard['data'] | null>(null);
+  private readonly erreur = signal('');
 
-  readonly fleet = computed(() => this.buses.all().slice(0, 4));
-  readonly activeBusCount = computed(
-    () => this.buses.all().filter((bus) => bus.status === 'active').length,
-  );
-  readonly stopCount = this.stops.total;
-  readonly routeCount = this.routes.total;
+  readonly error = this.erreur.asReadonly();
 
-  readonly metrics = computed<readonly DashboardMetric[]>(() => [
-    {
-      label: 'Bus en service',
-      value: this.activeBusCount(),
-      hint: `${this.buses.total()} bus dans la flotte`,
-      icon: 'bus',
-      link: '/bus',
-    },
-    {
-      label: 'Zones actives',
-      value: this.zones.active().length,
-      hint: `${this.zones.total()} zones configurées`,
-      icon: 'zone',
-      link: '/zones',
-    },
-    {
-      label: 'Utilisateurs',
-      value: this.users.total(),
-      hint: 'Comptes enregistrés',
-      icon: 'users',
-      link: '/utilisateurs',
-    },
-    {
-      label: 'Signalements à traiter',
-      value: this.reports.pending().length,
-      hint: 'En attente de vérification',
-      icon: 'flag',
-      link: '/signalements',
-    },
-  ]);
+  load(): void {
+    this.http.get<ApiDashboard>(`${apiUrl}/api/admin/dashboard`).subscribe({
+      next: (res) => {
+        this.erreur.set('');
+        this.donnees.set(res.data);
+      },
+      error: (err) => this.erreur.set(apiError(err)),
+    });
+  }
+
+  readonly metrics = computed<readonly DashboardMetric[]>(() => {
+    const data = this.donnees();
+    const indicateurs = data?.indicateurs;
+    return [
+      {
+        label: 'Bus en service',
+        value: Number(indicateurs?.bus_en_service ?? 0),
+        hint: `${data?.flotte.length ?? 0} bus dans la flotte`,
+        icon: 'bus',
+        link: '/bus',
+      },
+      {
+        label: 'Zones actives',
+        value: Number(indicateurs?.zones_actives ?? 0),
+        hint: 'Zones de couverture actives',
+        icon: 'zone',
+        link: '/zones',
+      },
+      {
+        label: 'Comptes voyageurs',
+        value: Number(indicateurs?.comptes_voyageurs ?? 0),
+        hint: 'Comptes enregistrés',
+        icon: 'users',
+        link: '/utilisateurs',
+      },
+      {
+        label: 'Signalements à traiter',
+        value: Number(indicateurs?.signalements_a_verifier ?? 0),
+        hint: 'En attente de vérification',
+        icon: 'flag',
+        link: '/signalements',
+      },
+    ];
+  });
 
   readonly attention = computed<readonly AttentionItem[]>(() => {
-    const items: AttentionItem[] = this.reports
-      .pending()
-      .slice(0, 2)
-      .map((report) => ({
-        id: report.id,
-        title: report.bus,
-        subtitle: `${REPORT_TYPE_LABELS[report.type]} · ${report.date}`,
-        icon: 'flag',
-        tone: report.type === 'breakdown' ? 'red' : 'orange',
-      }));
-
-    const pendingReviews = this.reviews.pending().length;
-
-    if (pendingReviews > 0) {
+    const data = this.donnees();
+    const items: AttentionItem[] = [];
+    if (data && data.avis_a_moderer > 0) {
       items.push({
         id: 'reviews',
-        title: `${pendingReviews} avis à modérer`,
+        title: `${data.avis_a_moderer} avis à modérer`,
         subtitle: 'Consultez les contributions',
         icon: 'chat',
         tone: 'orange',
       });
     }
-
     return items;
   });
+
+  readonly fleet = computed(() =>
+    (this.donnees()?.flotte ?? []).map((bus) => ({
+      id: bus.id,
+      plate: bus.plaque,
+      line: bus.ligne_code ?? '—',
+      direction: bus.direction ?? '—',
+      status: (ETAT_TO_LABEL[bus.etat] ? bus.etat : 'inactif') as BusStatus,
+    })),
+  );
+
+  readonly activeBusCount = computed(() => Number(this.donnees()?.indicateurs.bus_en_service ?? 0));
+  readonly stopCount = computed(() => Number(this.donnees()?.arrets_actifs ?? 0));
+  readonly routeCount = computed(() => Number(this.donnees()?.trajets_actifs ?? 0));
 }

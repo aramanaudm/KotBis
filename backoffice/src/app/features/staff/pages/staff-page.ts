@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { apiError } from '../../../core/services/api';
 import { CsvExportService } from '../../../core/services/csv-export.service';
 import { DataTable } from '../../../shared/components/data-table/data-table';
 import type { TableColumn, TableRow } from '../../../shared/components/data-table/table.types';
@@ -22,6 +23,10 @@ export class StaffPage {
   private readonly staff = inject(StaffService);
   private readonly csv = inject(CsvExportService);
   private readonly formBuilder = inject(FormBuilder);
+
+  constructor() {
+    this.staff.load();
+  }
 
   protected readonly pageSize = 6;
   protected readonly statusTones = STAFF_STATUS_TONES;
@@ -141,8 +146,24 @@ export class StaffPage {
       return;
     }
 
-    this.closeForm();
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    const editing = this.editingMember();
+    const member: Omit<StaffMember, 'id'> = {
+      name: this.form.controls.name.value,
+      email: this.form.controls.email.value,
+      role: this.form.controls.role.value,
+      status: this.form.controls.status.value,
+    };
+    const operation = editing
+      ? this.staff.update(editing.id, member)
+      : this.staff.create(member);
+
+    operation.subscribe({
+      next: () => {
+        this.closeForm();
+        this.showFeedback(editing ? 'Membre modifié.' : 'Membre ajouté.');
+      },
+      error: (err) => this.formError.set(apiError(err)),
+    });
   }
 
   protected askDelete(row: TableRow): void {
@@ -158,12 +179,18 @@ export class StaffPage {
   }
 
   protected confirmDelete(): void {
-    if (!this.deleteTarget()) {
+    const target = this.deleteTarget();
+    if (!target) {
       return;
     }
 
-    this.deleteTarget.set(null);
-    this.showFeedback('Aperçu du template — action à connecter à l’API.');
+    this.staff.delete(target.id).subscribe({
+      next: () => {
+        this.deleteTarget.set(null);
+        this.showFeedback('Membre désactivé.');
+      },
+      error: (err) => this.showFeedback(apiError(err)),
+    });
   }
 
   protected exportCsv(): void {

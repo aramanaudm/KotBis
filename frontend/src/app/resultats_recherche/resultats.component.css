@@ -1,0 +1,9 @@
+h3 { margin: 8px 0; color: #203448; }
+ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+button {
+  width: 100%; padding: 12px; text-align: left; border-radius: 14px;
+  border: 1px solid #c9d3dd; background: #fff; color: #203448;
+  font: inherit; cursor: pointer;
+}
+button[aria-pressed='true'] { border-color: #008060; box-shadow: 0 0 0 2px #008060; }
+.selection { margin: 6px 0 0; color: #596675; }
