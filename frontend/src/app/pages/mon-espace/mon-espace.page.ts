@@ -14,11 +14,14 @@ import {
   starOutline,
   timeOutline,
 } from 'ionicons/icons';
-import { AccountCounters, PublicAccount } from '../../core/auth/auth.models';
+
 import { AuthModalService } from '../../core/auth/auth-modal.service';
+import type { AccountCounters, PublicAccount } from '../../core/auth/auth.models';
+import { EMPTY_COUNTERS } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { countLabel } from '../../core/format';
 import { SectionNavigator } from '../../core/navigation/section-navigator.service';
+import { FavorisService } from '../../favoris/favoris.service';
 
 interface MenuRow {
   icon: string;
@@ -194,7 +197,7 @@ const SETTINGS_ROW = { icon: 'options-outline', title: 'Paramètres', subtitle: 
                   <span class="bm-tile"><ion-icon [name]="row.icon"></ion-icon></span>
                   <span class="txt">
                     <strong>{{ row.title }}</strong>
-                    <small>{{ row.subtitle(account.counters) }}</small>
+                    <small>{{ row.subtitle(counters()) }}</small>
                   </span>
                   <ion-icon class="chev" name="chevron-forward-outline"></ion-icon>
                 </button>
@@ -256,8 +259,13 @@ export class MonEspacePage {
   private readonly authModals = inject(AuthModalService);
   private readonly navigator = inject(SectionNavigator);
   private readonly nav = inject(NavController);
+  private readonly favoris = inject(FavorisService);
 
   protected readonly user = this.auth.user;
+  protected readonly counters = computed(() => ({
+    ...(this.user()?.counters ?? EMPTY_COUNTERS),
+    favoris: this.favoris.favoris().length,
+  }));
   protected readonly accountRows = ACCOUNT_ROWS;
   protected readonly settings = SETTINGS_ROW;
   protected readonly isLoggedIn = computed(() => this.user() !== null);

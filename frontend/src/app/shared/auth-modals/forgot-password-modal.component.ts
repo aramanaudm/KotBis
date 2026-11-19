@@ -269,8 +269,10 @@ export class ForgotPasswordModalComponent {
       this.requestedEmail.set(email.trim());
       this.devCode.set(devCode ?? null);
       this.step.set('confirm');
-    } catch {
-      this.serverError.set('La demande a échoué. Réessayez plus tard.');
+    } catch (error) {
+      this.serverError.set(
+        error instanceof AuthError ? error.message : 'La demande a échoué. Réessayez plus tard.',
+      );
     } finally {
       this.submitting.set(false);
     }

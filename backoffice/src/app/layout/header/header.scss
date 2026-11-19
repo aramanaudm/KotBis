@@ -2,6 +2,8 @@
   display: block;
 }
 
+/* Barre du haut */
+
 .app-header {
   display: flex;
   align-items: center;
@@ -61,21 +63,25 @@
   background: transparent;
   border: 0;
   border-radius: 8px;
+  cursor: pointer;
 }
 
 .icon-button:hover {
-  background: rgba(120, 144, 171, 0.1);
+  background: rgb(120 144 171 / 10%);
 }
 
 .menu-button {
   display: none;
 }
 
+/* Bouton rond AD dans la barre du haut */
+
 .avatar {
-  display: grid;
+  display: inline-grid;
   place-items: center;
   width: 34px;
   height: 34px;
+  padding: 0;
   color: #1b60cb;
   font-size: 11px;
   font-weight: 700;
@@ -83,11 +89,381 @@
   border-radius: 50%;
 }
 
+.profile-trigger {
+  border: 0;
+  cursor: pointer;
+}
+
+.profile-trigger:hover {
+  background: #dceaff;
+}
+
+.profile-trigger:focus-visible,
+.account-row:focus-visible,
+.account-panel button:focus-visible,
+.account-panel input:focus-visible {
+  outline: 2px solid #2878df;
+  outline-offset: 2px;
+}
+
+/* Menu qui s’ouvre sous AD */
+
+#profile-menu {
+  position: fixed;
+  inset: 68px 36px auto auto;
+  box-sizing: border-box;
+  width: min(298px, calc(100vw - 24px));
+  margin: 0;
+  padding: 5px;
+  color: var(--ink);
+  font: inherit;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(18 42 69 / 15%);
+}
+
+.account-identity,
+.identity-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-identity {
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-avatar {
+  display: inline-grid;
+  flex: 0 0 48px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  color: #1764cf;
+  font-size: 14px;
+  font-weight: 700;
+  background: #d7e8ff;
+  border: 1px solid #bad4fa;
+  border-radius: 50%;
+}
+
+.account-identity strong,
+.identity-card strong {
+  font-size: 14px;
+}
+
+.account-identity small,
+.account-row small,
+.identity-card small,
+.security-card small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 8px;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.account-row strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-row:enabled:hover {
+  background: color-mix(in srgb, var(--paper) 92%, #2878df);
+}
+
+.account-icon {
+  display: inline-grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #1764cf;
+  background: #edf4ff;
+  border-radius: 8px;
+}
+
+.chevron {
+  margin-left: auto;
+  padding-right: 6px;
+  font-size: 20px;
+}
+
+.account-row.logout {
+  color: #cf3540;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.logout .account-icon {
+  color: #cf3540;
+  background: #fff0f0;
+}
+
+.account-row:disabled {
+  cursor: default;
+}
+
+/* Panneau latéral commun à Mon profil et Sécurité du compte */
+
+.account-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  box-sizing: border-box;
+  width: min(465px, 100vw);
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font: inherit;
+  background: var(--paper);
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: -8px 0 32px rgb(18 42 69 / 12%);
+}
+
+.account-panel::backdrop {
+  background: rgb(15 29 46 / 36%);
+}
+
+.panel-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-heading {
+  position: relative;
+  flex-shrink: 0;
+  padding: 32px 64px 22px 21px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-heading form {
+  position: absolute;
+  top: 26px;
+  right: 18px;
+  margin: 0;
+}
+
+.panel-heading > small {
+  color: #2878df;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.panel-heading h2 {
+  margin: 10px 0 6px;
+  color: var(--ink);
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.panel-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Contenu et champs des deux formulaires */
+
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  padding: 24px 21px;
+  overflow-y: auto;
+}
+
+.identity-card,
+.security-card,
+.info-note {
+  box-sizing: border-box;
+  padding: 16px;
+  background: color-mix(in srgb, var(--paper) 95%, #2878df);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.identity-card > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.security-card strong {
+  font-size: 13px;
+}
+
+.panel-body label {
+  display: block;
+  margin: 20px 0 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.panel-body input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.role-field,
+.password-field {
+  position: relative;
+}
+
+.role-field input {
+  padding-right: 100px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--paper) 93%, gray);
+}
+
+.role-field span,
+.password-field button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
+.role-field span {
+  padding: 4px 7px;
+  color: var(--muted);
+  font-size: 10px;
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.password-field input {
+  padding-right: 78px;
+}
+
+.password-field button {
+  padding: 5px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.info-note {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--paper) 91%, #448aef);
+  border: 0;
+}
+
+.panel-body [role="status"] {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+/* Boutons en bas du panneau */
+
+.panel-footer {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 21px;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+}
+
+.panel-footer button {
+  min-height: 40px;
+  padding: 9px 15px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.panel-footer .save-button {
+  color: white;
+  background: #1768d5;
+  border-color: #1768d5;
+}
+
+.panel-footer .save-button:enabled:hover {
+  background: #1258b6;
+}
+
+.panel-footer button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Tablettes */
+
 @media (max-width: 1050px) {
   .app-header {
     padding: 0 24px;
   }
+
+  #profile-menu {
+    right: 24px;
+  }
 }
+
+/* Mobiles */
 
 @media (max-width: 700px) {
   .app-header {
@@ -110,4 +486,78 @@
   .breadcrumb {
     font-size: 10px;
   }
+
+  #profile-menu {
+    top: 56px;
+    right: 15px;
+  }
+
+.profile-role {
+  margin: 20px 0 0;
+}
+
+.profile-role dt {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.profile-role dd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 43px;
+  margin: 0;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--paper) 94%, gray);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.profile-role strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.profile-role span {
+  padding: 4px 7px;
+  color: var(--muted);
+  font-size: 10px;
+  background: var(--line);
+  border-radius: 4px;
+}  
+#profile-role-label {
+  margin: 20px 0 8px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 43px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--paper) 93%, gray);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.role-field strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.role-field span {
+  position: static;
+  transform: none;
+}
 }
