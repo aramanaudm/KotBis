@@ -11,28 +11,51 @@ interface ApiZone {
   contour: { type: string; coordinates: number[][][] };
 }
 
-const LARGEUR = 600;
-const HAUTEUR = 300;
-
 function versSommets(contour: ApiZone['contour']): readonly ZonePoint[] {
   const ring = contour?.coordinates?.[0] ?? [];
-  return ring.map(([longitude, latitude]) => [
-    Math.round(((longitude + 180) / 360) * LARGEUR),
-    Math.round(((90 - latitude) / 180) * HAUTEUR),
-  ]);
+
+  const points: ZonePoint[] = ring.map(
+    ([longitude, latitude]): ZonePoint => [
+      Number(longitude),
+      Number(latitude),
+    ],
+  );
+
+  // GeoJSON répète le premier point à la fin pour fermer le contour.
+  // On retire cette répétition dans l'éditeur.
+  if (points.length > 1) {
+    const first = points[0];
+    const last = points[points.length - 1];
+
+    if (first[0] === last[0] && first[1] === last[1]) {
+      points.pop();
+    }
+  }
+
+  return points;
 }
 
 function versContour(sommets: readonly ZonePoint[]) {
-  const ring = sommets.map(([x, y]) => [
-    Number((((x / LARGEUR) * 360) - 180).toFixed(4)),
-    Number((90 - (y / HAUTEUR) * 180).toFixed(4)),
+  const ring = sommets.map(([longitude, latitude]) => [
+    longitude,
+    latitude,
   ]);
-  const premier = ring[0];
-  const dernier = ring[ring.length - 1];
-  if (premier && (premier[0] !== dernier[0] || premier[1] !== dernier[1])) {
-    ring.push([...premier]);
+
+  // Fermer le contour pour respecter le format GeoJSON.
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+
+  if (
+    first &&
+    (!last || first[0] !== last[0] || first[1] !== last[1])
+  ) {
+    ring.push([...first]);
   }
-  return { type: 'Polygon', coordinates: [ring] };
+
+  return {
+    type: 'Polygon',
+    coordinates: [ring],
+  };
 }
 
 @Injectable({ providedIn: 'root' })
